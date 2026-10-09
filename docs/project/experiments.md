@@ -14,7 +14,7 @@
 - Prometheus KV/prefix/scheduler telemetry 解析，并采集可用的 `npu-smi info` 原始快照。
 - 模型与客户端 tokenizer 固定为同一个官方完整 commit SHA，并写入各类原始结果和 summary。
 - 普通 Benchmark 默认输入为 128/1024/2048 tokens；发送前检查 chat template 后的输入加输出预算是否超出配置上下文。显式指定的超长 workload 会报错，不截短输入；8K/16K 实验需同步提高服务与配置的上下文上限。
-- 远端项目环境课程测试、CLI 参数路由、Q/gate 布局和 metrics sampler 回归此前 68 项通过（4 个 CANN 安装目录 owner 警告）；随后为 benchmark 去重、Agent 重复轮次隔离、报告、profiler controller timeout、消融约束和项目内 `ASCEND_WORK_PATH` 补测试。最新 `test/course_project` 本机运行 56 项（55 通过、1 项因 Windows 无 Bash 跳过）；远端运行 56 项全部通过。本机使用已有 Python 测试运行时，未安装依赖。
+- 远端项目环境课程测试、CLI 参数路由、Q/gate 布局和 metrics sampler 回归此前 68 项通过（4 个 CANN 安装目录 owner 警告）；随后为 benchmark 去重、Agent 重复轮次隔离、报告、profiler controller timeout、消融约束和项目内 `ASCEND_WORK_PATH` 补测试。最新 `test/course_project` 本机运行 61 项（60 通过、1 项因 Windows 无 Bash 跳过）；远端运行 61 项全部通过。本机使用已有 Python 测试运行时，未安装依赖。
 - Ascend910 V1 上的 Qwen3.5-0.8B 确定性 API smoke test：默认 graph-mode 服务启动、预热成功；提示词 `Reply with exactly the word OK.` 返回 `OK`（HTTP 200）。此前同一请求输出句点；原因是 NPU 分支对 Q/gate 使用了全局二分，而模型布局为每个 query head 内交错。新增 per-head split 后，Q/gate、MHA、GDN 聚焦测试共 11 项通过。响应原始记录见 `results/raw/qwen35_0.8b_q_gate_fix_20261008_run10.json`。
 - 0.8B correctness runner 已执行 8 条中文/英文/数学/代码/长上下文/多轮请求并保存响应，见 `results/raw/correctness/qwen35_0.8b_20261008_run17.jsonl`。它是记录采集，不是自动 pass/fail，也未验证引擎原始 token ID。
 - 2026-10-09 Qwen3.5-4B bring-up：固定 revision 的两个 safetensors 分片均以 SHA-256 校验通过，离线 `AutoConfig` 与分片 header 可读。隔离到空闲 NPU 0 后，TP=1 服务完成 load/warmup，`/v1/models` 和引擎 metrics 均 HTTP 200。correctness collector 记录 6 个用例、8 条请求，见 `results/raw/correctness/qwen35-4b_20261009_run1.jsonl`；引擎原始 output token IDs 不可得，`token_correctness_verified=false`，因此仅算 chat/API smoke，不算完整正确性或性能结果。服务日志在 `.tmp/qwen35_4b_serve_20261009_run1.log` 与 `.tmp/qwen35_4b_correctness_20261009_run1.log`。
@@ -46,10 +46,11 @@
   ```
 
   `one-session` 仅让 `session-0` 在首轮后的每轮请求前等待，并在其 user 文本中附加固定 mock tool result；它是客户端注入的普通文本，不代表服务端工具协议、请求挂起或 KV 保留。单条请求的 TTFT、TPOT、E2E 从请求发出后计时，不包含此前客户端 sleep；每轮 wall time 与据此计算的吞吐量包含该等待。
+- Workload F 已完成：360 条请求、18 份 summary、36 份 NPU 前后快照；126 条请求仅对 `session-0` 注入固定结果并等待 100 ms。原始数据见 `results/raw/agent/qwen35_4b_20261009_tool_wait/`，报告见 `results/plots/after_4b_agent_tool_wait_20261009/`。跨端同步的 38 个文件 SHA-256 全部一致。三轮中位数和结论见 [`Qwen3.5-4B Agent Workload F`](final_results.md#qwen35-4b-agent-workload-f-2026-10-09)。结果曲线非单调，且并发 4 的 KV 峰值达到 1.0；该描述性测量不作为 prefix-cache 优化收益。
 - 自动报告读取 `results/raw/**/*.summary.jsonl` 生成 CSV/SVG；按实验类别隔离 baseline 与 Agent 数据，对重复轮次取中位数，并仅在同一配置组存在至少两个横轴取值时生成趋势图。新增矩阵归属后，`results/plots/ablation_20261009/` 生成 summary CSV 与 7 张 SVG，包括 E0–E3 消融图和按 E2/E3 变体隔离的 chunk 512/1024 对比。`results/plots/after_9b_baseline_20261009/` 与最新 `results/plots/after_4b_baseline_20261009/` 均保留独立输出；最新 baseline 图将 0.8B、4B、9B 分成不同模型序列。持久 Session reuse、KV block 与 TP 对比仍无真实 sweep 数据，不生成趋势图。
 - 2026-10-09 Profiler 复采：设置项目内 `ASCEND_WORK_PATH` 后，以三 warmup 重采 prefill/decode/Agent 场景，CANN `op_summary` 分别有 229,637/876,881/417,188 行，parser 日志未见 warning/error。CANN `Task Duration` 覆盖调度、加速器执行和响应结束，不是纯 AICore 时间；`Task Type` 为 N/A，且单轮数据不能确认瓶颈。旧 trace-only 采集的 flow 数字不与本轮混用。原始/规范化 trace 与 CANN 产物见 `results/profiles/qwen35-0.8b/ascend_work_path_fix_full/`，分析见 `docs/report/ascend_profile.md`。
 - Conda 激活脚本已兼容非登录 SSH PATH；在远端剥离 PATH 的 shell 中成功定位 `/opt/miniconda3`、激活项目 `.conda-env` 并通过课程测试。
-- `ASCEND_WORK_PATH` 已在 `scripts/use_project_env.sh` 固定到项目 `.tmp/ascend_work`；远端专用环境测试先失败后通过，并完成服务级三场景 CANN profiler 复采。最新 `test/course_project` 本机运行 56 项（55 通过、1 项按平台跳过），远端 56 项全部通过。
+- `ASCEND_WORK_PATH` 已在 `scripts/use_project_env.sh` 固定到项目 `.tmp/ascend_work`；远端专用环境测试先失败后通过，并完成服务级三场景 CANN profiler 复采。最新 `test/course_project` 本机运行 61 项（60 通过、1 项按平台跳过），远端 61 项全部通过。
 
 这条 smoke test 仅验证一个提示词的服务端到端生成，不替代完整 token-ID 对照，也不是性能数据。测试结束后已停止服务，NPU 进程清空。
 
