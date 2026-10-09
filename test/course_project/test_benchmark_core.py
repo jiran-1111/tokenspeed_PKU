@@ -331,6 +331,9 @@ class TestServeCommand(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("--base-url", result.stdout)
+                if script == "scripts/run_agent_benchmark.py":
+                    self.assertIn("--tool-wait-policy", result.stdout)
+                    self.assertIn("one-session", result.stdout)
 
 
 class TestAgentWorkload(unittest.TestCase):
