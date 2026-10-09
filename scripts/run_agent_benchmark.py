@@ -149,6 +149,9 @@ def main() -> None:
                                 tool_wait_ms=args.tool_wait_ms,
                             )
                         )
+                    requests_by_session = {
+                        request.session_id: request for request in requests
+                    }
                     started_at = time.perf_counter()
                     metrics_sampler = ServerMetricsSampler(metrics_url)
                     metrics_sampler.start()
@@ -182,7 +185,9 @@ def main() -> None:
                             }
                         )
                         session_history = histories[record["session_id"]]
-                        session_history.append({"role": "user", "content": user_message})
+                        session_history.append(
+                            requests_by_session[record["session_id"]].messages[-1]
+                        )
                         session_history.append({"role": "assistant", "content": record["output_text"]})
                         append_jsonl(raw_path, record)
                     all_records.extend(turn_records)

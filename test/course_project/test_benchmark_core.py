@@ -335,6 +335,77 @@ class TestServeCommand(unittest.TestCase):
                     self.assertIn("--tool-wait-policy", result.stdout)
                     self.assertIn("one-session", result.stdout)
 
+    def test_agent_script_keeps_sent_mock_result_in_later_history(self) -> None:
+        from scripts import run_agent_benchmark as agent_script
+
+        class FakeTokenizer:
+            def encode(self, text, add_special_tokens=False):
+                return list(text)
+
+            def decode(self, token_ids):
+                return "".join(token_ids)
+
+        sent_messages = []
+
+        def run_requests(*, requests, **_kwargs):
+            sent_messages.extend(request.messages for request in requests)
+            return [
+                {"session_id": request.session_id, "output_text": f"answer-{request.turn_index}"}
+                for request in requests
+            ]
+
+        args = SimpleNamespace(
+            config=Path("fake.yaml"),
+            output_dir=Path("unused-output"),
+            concurrency=[1],
+            shared_prefix_ratios=[0],
+            prefix_tokens=1,
+            turns=3,
+            tool_wait_ms=100,
+            tool_wait_policy="one-session",
+            output_tokens=1,
+            warmup_requests=0,
+            runs=1,
+            base_url="http://unused",
+        )
+        config = {
+            "served_model_name": "fake-model",
+            "model_id": "fake-id",
+            "model_revision": "fake-revision",
+            "tp_size": 1,
+        }
+        sampler = Mock()
+        sampler.stop.return_value = {}
+
+        with (
+            patch.dict(
+                sys.modules,
+                {"transformers": SimpleNamespace(AutoTokenizer=Mock(return_value=FakeTokenizer()))},
+            ),
+            patch.object(agent_script, "parse_args", return_value=args),
+            patch.object(agent_script, "load_model_config", return_value=config),
+            patch.object(agent_script, "model_load_path", return_value="unused-model"),
+            patch.object(agent_script, "OpenAIChatClient", return_value=object()),
+            patch.object(agent_script, "metrics_server_url", return_value="http://unused"),
+            patch.object(agent_script, "build_agent_session_contexts", return_value={"session-0": "context"}),
+            patch.object(agent_script, "ServerMetricsSampler", return_value=sampler),
+            patch.object(agent_script, "snapshot_server_metrics", return_value={}),
+            patch.object(agent_script, "capture_npu_smi", return_value=False),
+            patch.object(agent_script, "run_concurrent_requests", side_effect=run_requests),
+            patch.object(agent_script, "summarize_records", return_value={}),
+            patch.object(agent_script, "add_metric_delta"),
+            patch.object(agent_script, "append_jsonl"),
+        ):
+            agent_script.main()
+
+        mock_result = runner.MOCK_TOOL_RESULT
+        self.assertEqual(len(sent_messages), 3)
+        self.assertIn(mock_result, sent_messages[1][-1]["content"])
+        self.assertIn(
+            f"Turn 2: analyze the current task and propose the next concrete action.\n\n{mock_result}",
+            [message["content"] for message in sent_messages[2]],
+        )
+
 
 class TestAgentWorkload(unittest.TestCase):
     def test_builds_policy_specific_turn_requests(self) -> None:
