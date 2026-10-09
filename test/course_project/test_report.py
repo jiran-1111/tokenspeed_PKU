@@ -68,6 +68,42 @@ class TestCourseReport(unittest.TestCase):
         self.assertEqual(records[0]["result_family"], "ablation")
         self.assertEqual(records[0].get("experiment_matrix"), matrix)
 
+    def test_ablation_matrix_leaf_preserves_matrix_and_generates_plot(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            matrix = "qwen35_0.8b_formal_chunk512_20261009"
+            raw_dir = Path(temporary) / "results" / "raw" / "ablation" / matrix
+            raw_dir.mkdir(parents=True)
+            summary = raw_dir / "sample.summary.jsonl"
+            summary.write_text(
+                "\n".join(
+                    json.dumps(
+                        {
+                            "experiment_index": index,
+                            "variant": f"E{index}",
+                            "token_throughput": float(index + 1),
+                            "target_input_tokens": 2048,
+                            "target_output_tokens": 32,
+                            "tp_size": 1,
+                        }
+                    )
+                    for index in range(2)
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            records = load_summary_records(raw_dir)
+            generated = generate_standard_reports(records, raw_dir.parent / "plots")
+            names = {path.name for path in generated}
+            ablation_svg = (raw_dir.parent / "plots" / "ablation.svg").read_text(
+                encoding="utf-8"
+            )
+
+        self.assertEqual({record["result_family"] for record in records}, {"ablation"})
+        self.assertEqual({record["experiment_matrix"] for record in records}, {matrix})
+        self.assertIn("ablation.svg", names)
+        self.assertIn(f"experiment_matrix={matrix}", ablation_svg)
+
     def test_ablation_plots_show_variants_and_keep_chunk_sweeps_separate(self) -> None:
         records = []
         for chunk_size in (512, 1024):

@@ -236,9 +236,24 @@ def load_summary_records(raw_dir: Path) -> list[dict]:
                 continue
             record = {**json.loads(line), "result_family": result_family}
             if result_family == "ablation":
-                matrix_index = 0 if raw_dir.name == "ablation" else 1
-                matrix_index = min(matrix_index, len(relative_path.parts) - 1)
-                record["experiment_matrix"] = relative_path.parts[matrix_index]
+                if raw_dir.name == result_family:
+                    family_relative_path = relative_path
+                else:
+                    family_root = next(
+                        (
+                            parent
+                            for parent in raw_dir.parents
+                            if parent.name == result_family
+                        ),
+                        None,
+                    )
+                    family_relative_path = (
+                        path.relative_to(family_root)
+                        if family_root is not None
+                        else Path(*relative_path.parts[1:])
+                    )
+                if family_relative_path.parts:
+                    record["experiment_matrix"] = family_relative_path.parts[0]
             records.append(record)
     return records
 
