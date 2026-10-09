@@ -386,17 +386,22 @@ class TestAgentWorkload(unittest.TestCase):
     def test_other_session_enters_chat_while_one_session_waits(self) -> None:
         self.assertIsNotNone(build_agent_turn_request, "agent turn request builder is missing")
         wait_started = threading.Event()
-        release_wait = threading.Event()
-        other_chat_entered = threading.Event()
+        wait_released = threading.Event()
+        other_called_during_wait = threading.Event()
 
         def controlled_sleep(seconds: float) -> None:
             wait_started.set()
-            self.assertTrue(release_wait.wait(timeout=2), "wait was not released")
+            if not other_called_during_wait.wait(timeout=2):
+                raise AssertionError("session-1 did not call chat during session-0 wait")
+            wait_released.set()
 
         class FakeClient:
             def chat(self, *, model: str, messages: list, max_tokens: int) -> SimpleNamespace:
                 if messages[-1]["content"] == "session-1":
-                    other_chat_entered.set()
+                    if not wait_started.wait(timeout=2):
+                        raise AssertionError("session-0 did not start waiting")
+                    if not wait_released.is_set():
+                        other_called_during_wait.set()
                 return SimpleNamespace(
                     text="done", input_tokens=2, output_tokens=1, ttft_ms=1.0,
                     tpot_ms=1.0, e2e_ms=2.0, inter_chunk_latencies_ms=[],
@@ -422,9 +427,12 @@ class TestAgentWorkload(unittest.TestCase):
                     model="test", max_tokens=4,
                 )
                 self.assertTrue(wait_started.wait(timeout=2), "session-0 did not enter wait")
-                self.assertTrue(other_chat_entered.wait(timeout=2), "session-1 did not enter chat")
-                release_wait.set()
+                self.assertTrue(
+                    other_called_during_wait.wait(timeout=2),
+                    "session-1 did not call chat during session-0 wait",
+                )
                 records = future.result(timeout=2)
+        self.assertTrue(wait_released.is_set())
         self.assertEqual(len(records), 2)
         self.assertEqual(
             {record["session_id"]: record["mock_tool_result_injected"] for record in records},
