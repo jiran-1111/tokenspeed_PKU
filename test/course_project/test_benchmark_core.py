@@ -388,6 +388,7 @@ class TestAgentWorkload(unittest.TestCase):
         wait_started = threading.Event()
         wait_released = threading.Event()
         other_called_during_wait = threading.Event()
+        session1_chat_states: list[tuple[bool, bool]] = []
 
         def controlled_sleep(seconds: float) -> None:
             wait_started.set()
@@ -395,13 +396,22 @@ class TestAgentWorkload(unittest.TestCase):
                 raise AssertionError("session-1 did not call chat during session-0 wait")
             wait_released.set()
 
+        class GatedThreadPoolExecutor(ThreadPoolExecutor):
+            def map(self, fn, requests, timeout=None, chunksize=1):
+                def gated(request):
+                    if request.session_id == "session-1" and not wait_started.wait(timeout=2):
+                        raise AssertionError("session-0 did not start waiting")
+                    return fn(request)
+
+                return super().map(gated, requests, timeout=timeout, chunksize=chunksize)
+
         class FakeClient:
             def chat(self, *, model: str, messages: list, max_tokens: int) -> SimpleNamespace:
                 if messages[-1]["content"] == "session-1":
-                    if not wait_started.wait(timeout=2):
-                        raise AssertionError("session-0 did not start waiting")
-                    if not wait_released.is_set():
-                        other_called_during_wait.set()
+                    session1_chat_states.append(
+                        (wait_started.is_set(), wait_released.is_set())
+                    )
+                    other_called_during_wait.set()
                 return SimpleNamespace(
                     text="done", input_tokens=2, output_tokens=1, ttft_ms=1.0,
                     tpot_ms=1.0, e2e_ms=2.0, inter_chunk_latencies_ms=[],
@@ -419,7 +429,10 @@ class TestAgentWorkload(unittest.TestCase):
             )
             for session_index in range(2)
         ]
-        with patch("benchmarks.course_project.runner.time.sleep", controlled_sleep):
+        with (
+            patch("benchmarks.course_project.runner.time.sleep", controlled_sleep),
+            patch("benchmarks.course_project.runner.ThreadPoolExecutor", GatedThreadPoolExecutor),
+        ):
             with ThreadPoolExecutor(max_workers=2) as executor:
                 future = executor.submit(
                     run_concurrent_requests,
@@ -433,6 +446,7 @@ class TestAgentWorkload(unittest.TestCase):
                 )
                 records = future.result(timeout=2)
         self.assertTrue(wait_released.is_set())
+        self.assertEqual(session1_chat_states, [(True, False)])
         self.assertEqual(len(records), 2)
         self.assertEqual(
             {record["session_id"]: record["mock_tool_result_injected"] for record in records},
