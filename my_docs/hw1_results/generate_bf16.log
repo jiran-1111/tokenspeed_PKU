@@ -1,0 +1,86 @@
+Physical chip: 5; logical device: npu:0
+	No process in device.
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/_path_manager.py:66: UserWarning: Permission mismatch: The owner of /opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/lib/libop_plugin_atb.so does not match.
+  warnings.warn(f"Permission mismatch: The owner of {path} does not match.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+Loaded 320 text tensors on npu:0; physical chip 5
+/home/u2601213425/hw1/tokenspeed_PKU/tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py:57: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at build/CMakeFiles/torch_npu.dir/compiler_depend.ts:338.)
+  out = torch.zeros_like(x, dtype=torch.float32)
+{
+  "input_tokens": 17,
+  "generated_tokens": 29,
+  "token_ids": [
+    98116,
+    108820,
+    102357,
+    95983,
+    3709,
+    116888,
+    125188,
+    5205,
+    96655,
+    100796,
+    5205,
+    100121,
+    97201,
+    100144,
+    141732,
+    3709,
+    113234,
+    2005,
+    101717,
+    109705,
+    828,
+    95793,
+    2005,
+    96748,
+    105573,
+    53935,
+    248046,
+    198,
+    248044
+  ],
+  "ttft_ms": 288.27799996361136,
+  "decode_step_ms": [
+    51.37766001280397,
+    40.44880997389555,
+    39.9437400046736,
+    39.96888000983745,
+    39.910239982418716,
+    40.08656996302307,
+    39.9655899964273,
+    39.5883999299258,
+    39.705939940176904,
+    39.81624997686595,
+    39.88050005864352,
+    40.63463001511991,
+    39.76984997279942,
+    40.557940024882555,
+    40.019060019403696,
+    39.8092899704352,
+    39.83648994471878,
+    40.350049966946244,
+    40.00753001309931,
+    40.63345002941787,
+    39.74935004953295,
+    40.85251991637051,
+    39.719210006296635,
+    39.74889009259641,
+    40.030339965596795,
+    40.03852000460029,
+    39.83482997864485,
+    39.79066992178559
+  ],
+  "decode_mean_ms": 40.43125713360496,
+  "peak_allocated_mib": 1517.361328125,
+  "peak_reserved_mib": 1560.0,
+  "prompt": "请用一句话介绍北京。",
+  "text": "北京是中国的首都，是一座历史悠久、文化多元、风景秀丽的古都，被誉为“东方巴黎”和“世界文化遗产”。\n"
+}

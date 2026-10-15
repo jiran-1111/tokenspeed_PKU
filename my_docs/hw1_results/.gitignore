@@ -1,0 +1,3 @@
+# Keep generated binary profiling captures out of source control.
+native_profiler_raw/
+*.partial

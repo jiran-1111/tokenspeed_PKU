@@ -1,0 +1,88 @@
+	No process in device.
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/_path_manager.py:66: UserWarning: Permission mismatch: The owner of /opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/lib/libop_plugin_atb.so does not match.
+  warnings.warn(f"Permission mismatch: The owner of {path} does not match.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+Loaded 320 text tensors on npu:0; physical chip 5
+/home/u2601213425/hw1/tokenspeed_PKU/tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py:52: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at build/CMakeFiles/torch_npu.dir/compiler_depend.ts:338.)
+  out = torch.zeros_like(x, dtype=torch.float32)
+{
+  "prefill/qwen35/embedding": {
+    "calls": 1,
+    "elapsed_ms": 0.07101998198777437
+  },
+  "prefill/qwen35/norm": {
+    "calls": 61,
+    "elapsed_ms": 11.530159157700837
+  },
+  "prefill/qwen35/projection": {
+    "calls": 186,
+    "elapsed_ms": 13.741220231167972
+  },
+  "prefill/qwen35/conv": {
+    "calls": 18,
+    "elapsed_ms": 9.60142002440989
+  },
+  "prefill/qwen35/gdn": {
+    "calls": 18,
+    "elapsed_ms": 184.68887032940984
+  },
+  "prefill/qwen35/gated_norm": {
+    "calls": 18,
+    "elapsed_ms": 3.9923900039866567
+  },
+  "prefill/qwen35/rope": {
+    "calls": 6,
+    "elapsed_ms": 1.7898601945489645
+  },
+  "prefill/qwen35/attention": {
+    "calls": 6,
+    "elapsed_ms": 2.3905501002445817
+  },
+  "prefill/qwen35/lm_head": {
+    "calls": 1,
+    "elapsed_ms": 0.5878199590370059
+  },
+  "decode/qwen35/embedding": {
+    "calls": 2,
+    "elapsed_ms": 0.12158998288214207
+  },
+  "decode/qwen35/norm": {
+    "calls": 122,
+    "elapsed_ms": 18.094900879077613
+  },
+  "decode/qwen35/projection": {
+    "calls": 372,
+    "elapsed_ms": 19.983210135251284
+  },
+  "decode/qwen35/conv": {
+    "calls": 36,
+    "elapsed_ms": 14.877229696139693
+  },
+  "decode/qwen35/gdn": {
+    "calls": 36,
+    "elapsed_ms": 30.495270038954914
+  },
+  "decode/qwen35/gated_norm": {
+    "calls": 36,
+    "elapsed_ms": 6.339990417473018
+  },
+  "decode/qwen35/rope": {
+    "calls": 12,
+    "elapsed_ms": 2.5876901345327497
+  },
+  "decode/qwen35/attention": {
+    "calls": 12,
+    "elapsed_ms": 3.4223400289192796
+  },
+  "decode/qwen35/lm_head": {
+    "calls": 2,
+    "elapsed_ms": 0.9159300243481994
+  }
+}

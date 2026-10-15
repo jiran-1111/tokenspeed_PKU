@@ -1,0 +1,26 @@
+	No process in device.
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/_path_manager.py:66: UserWarning: Permission mismatch: The owner of /opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/lib/libop_plugin_atb.so does not match.
+  warnings.warn(f"Permission mismatch: The owner of {path} does not match.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+Loaded 320 text tensors on npu:0; physical chip 7
+/home/u2601213425/hw1/tokenspeed_PKU/tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py:52: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at build/CMakeFiles/torch_npu.dir/compiler_depend.ts:338.)
+  out = torch.zeros_like(x, dtype=torch.float32)
+{'input_tokens': 32, 'generated_tokens': 8, 'ttft_ms': 49.01382001116872, 'decode_mean_ms': 40.272258571349084, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 0}
+{'input_tokens': 32, 'generated_tokens': 8, 'ttft_ms': 49.553849967196584, 'decode_mean_ms': 40.115317163456766, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 1}
+{'input_tokens': 32, 'generated_tokens': 8, 'ttft_ms': 47.11806995328516, 'decode_mean_ms': 39.30267003098769, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 2}
+{'input_tokens': 32, 'generated_tokens': 32, 'ttft_ms': 49.12395996507257, 'decode_mean_ms': 39.03670967631643, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 0}
+{'input_tokens': 32, 'generated_tokens': 32, 'ttft_ms': 47.41394997108728, 'decode_mean_ms': 38.41544451161979, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 1}
+{'input_tokens': 32, 'generated_tokens': 32, 'ttft_ms': 50.12703000102192, 'decode_mean_ms': 38.143382899673476, 'peak_allocated_mib': 1518.28271484375, 'peak_reserved_mib': 1562.0, 'repeat': 2}
+{'input_tokens': 512, 'generated_tokens': 8, 'ttft_ms': 173.27469994779676, 'decode_mean_ms': 40.46061854543431, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 0}
+{'input_tokens': 512, 'generated_tokens': 8, 'ttft_ms': 173.98224002681673, 'decode_mean_ms': 37.643928579720004, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 1}
+{'input_tokens': 512, 'generated_tokens': 8, 'ttft_ms': 171.46352992858738, 'decode_mean_ms': 37.42429145079638, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 2}
+{'input_tokens': 512, 'generated_tokens': 32, 'ttft_ms': 172.29328001849353, 'decode_mean_ms': 37.95711063749848, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 0}
+{'input_tokens': 512, 'generated_tokens': 32, 'ttft_ms': 175.21706991828978, 'decode_mean_ms': 37.82066708851245, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 1}
+{'input_tokens': 512, 'generated_tokens': 32, 'ttft_ms': 177.7781400596723, 'decode_mean_ms': 39.06564032208295, 'peak_allocated_mib': 1567.15869140625, 'peak_reserved_mib': 1628.0, 'repeat': 2}

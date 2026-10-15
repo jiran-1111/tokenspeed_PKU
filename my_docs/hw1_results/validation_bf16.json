@@ -1,0 +1,272 @@
+{
+  "reference": "Transformers 5.17.0 Qwen3_5ForCausalLM CPU FP32, eager attention",
+  "dtype": "torch.bfloat16",
+  "limits": {
+    "max_abs": 0.5,
+    "relative_rmse": 0.02,
+    "cosine": 0.999
+  },
+  "records": [
+    {
+      "input_tokens": 1,
+      "decode_step": 0,
+      "max_abs": 0.24529558420181274,
+      "rmse": 0.05665273905954918,
+      "relative_rmse": 0.018485689050416025,
+      "cosine": 0.9998502899108227,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 1,
+      "decode_step": 1,
+      "max_abs": 0.14665770530700684,
+      "rmse": 0.026975704325377083,
+      "relative_rmse": 0.00788041850804906,
+      "cosine": 0.9999702388533953,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 1,
+      "decode_step": 2,
+      "max_abs": 0.10727262496948242,
+      "rmse": 0.022352607068089017,
+      "relative_rmse": 0.007593841620419808,
+      "cosine": 0.9999718128906163,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 1,
+      "decode_step": 3,
+      "max_abs": 0.1390080451965332,
+      "rmse": 0.02723989926379776,
+      "relative_rmse": 0.011828951633336431,
+      "cosine": 0.9999328495800128,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 1,
+      "decode_step": 4,
+      "max_abs": 0.14005374908447266,
+      "rmse": 0.027408339599505817,
+      "relative_rmse": 0.011015493404451345,
+      "cosine": 0.9999425864808766,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 17,
+      "decode_step": 0,
+      "max_abs": 0.11461475491523743,
+      "rmse": 0.023533024745384875,
+      "relative_rmse": 0.00898408653163925,
+      "cosine": 0.9999602702621863,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 17,
+      "decode_step": 1,
+      "max_abs": 0.10504150390625,
+      "rmse": 0.02399809606568994,
+      "relative_rmse": 0.007693523255156915,
+      "cosine": 0.999970584098151,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 17,
+      "decode_step": 2,
+      "max_abs": 0.15952610969543457,
+      "rmse": 0.02928241765756997,
+      "relative_rmse": 0.010589540047002207,
+      "cosine": 0.9999470085814944,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 17,
+      "decode_step": 3,
+      "max_abs": 0.1318068504333496,
+      "rmse": 0.027913857723089817,
+      "relative_rmse": 0.008201824643151808,
+      "cosine": 0.9999705165312756,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 17,
+      "decode_step": 4,
+      "max_abs": 0.16015386581420898,
+      "rmse": 0.03461629927797104,
+      "relative_rmse": 0.011436460115296648,
+      "cosine": 0.9999427373671412,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 65,
+      "decode_step": 0,
+      "max_abs": 0.12641406059265137,
+      "rmse": 0.024827850691948383,
+      "relative_rmse": 0.010399759536258496,
+      "cosine": 0.9999468590405061,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 65,
+      "decode_step": 1,
+      "max_abs": 0.13218212127685547,
+      "rmse": 0.028102430327784533,
+      "relative_rmse": 0.01307174821250852,
+      "cosine": 0.9999145612646806,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 65,
+      "decode_step": 2,
+      "max_abs": 0.13550615310668945,
+      "rmse": 0.025688579011822404,
+      "relative_rmse": 0.008979070648685444,
+      "cosine": 0.9999597644607547,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 65,
+      "decode_step": 3,
+      "max_abs": 0.16162991523742676,
+      "rmse": 0.03008953282015143,
+      "relative_rmse": 0.008468392400660328,
+      "cosine": 0.9999642736948182,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 65,
+      "decode_step": 4,
+      "max_abs": 0.1315314769744873,
+      "rmse": 0.026245889345904973,
+      "relative_rmse": 0.007676533759524381,
+      "cosine": 0.9999709886251099,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 128,
+      "decode_step": 0,
+      "max_abs": 0.12503433227539062,
+      "rmse": 0.024636872023720564,
+      "relative_rmse": 0.010506038298224737,
+      "cosine": 0.9999464613859423,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 128,
+      "decode_step": 1,
+      "max_abs": 0.1365799903869629,
+      "rmse": 0.024372151172111133,
+      "relative_rmse": 0.0077250500402840285,
+      "cosine": 0.9999705044049374,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 128,
+      "decode_step": 2,
+      "max_abs": 0.17114615440368652,
+      "rmse": 0.03318584377481274,
+      "relative_rmse": 0.011999364815113663,
+      "cosine": 0.9999354354594235,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 128,
+      "decode_step": 3,
+      "max_abs": 0.15173721313476562,
+      "rmse": 0.027770745320208994,
+      "relative_rmse": 0.012875624923229158,
+      "cosine": 0.9999171077026947,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 128,
+      "decode_step": 4,
+      "max_abs": 0.1508626937866211,
+      "rmse": 0.02782741194872323,
+      "relative_rmse": 0.009845476854190991,
+      "cosine": 0.9999577359140992,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 512,
+      "decode_step": 0,
+      "max_abs": 0.1604156494140625,
+      "rmse": 0.031180025835582947,
+      "relative_rmse": 0.005489072145651952,
+      "cosine": 0.9999849427034795,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 512,
+      "decode_step": 1,
+      "max_abs": 0.13257074356079102,
+      "rmse": 0.030528954620107365,
+      "relative_rmse": 0.009286877183364314,
+      "cosine": 0.9999663079412405,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 512,
+      "decode_step": 2,
+      "max_abs": 0.143341064453125,
+      "rmse": 0.026133731447035558,
+      "relative_rmse": 0.004653469660292303,
+      "cosine": 0.9999893522927649,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 512,
+      "decode_step": 3,
+      "max_abs": 0.13593792915344238,
+      "rmse": 0.02878951044084469,
+      "relative_rmse": 0.009855552689662964,
+      "cosine": 0.9999574497872065,
+      "top1_agreement": 1.0,
+      "pass": true
+    },
+    {
+      "input_tokens": 512,
+      "decode_step": 4,
+      "max_abs": 0.15064024925231934,
+      "rmse": 0.03106731717014332,
+      "relative_rmse": 0.008351818541847461,
+      "cosine": 0.9999758443418172,
+      "top1_agreement": 1.0,
+      "pass": true
+    }
+  ],
+  "request_isolation": "bitwise pass",
+  "chunk_continuation": {
+    "max_abs": 0.125,
+    "rmse": 0.026454265548322167,
+    "relative_rmse": 0.010111047105567662,
+    "cosine": 0.9999507094409721,
+    "top1_agreement": 1.0
+  },
+  "loaded_weight_tensors": 320,
+  "ignored_non_text_tensors": 168,
+  "pass": true
+}

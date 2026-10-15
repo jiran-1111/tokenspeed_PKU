@@ -1,0 +1,23 @@
+WARNING: Skipping /usr/local/Ascend/cann-9.0.0/python/site-packages/cannsim-0.1.0.dist-info due to invalid metadata entry 'name'
+WARNING: Skipping /usr/local/Ascend/cann-9.0.0/python/site-packages/cannsim-0.1.0.dist-info due to invalid metadata entry 'name'
+Collecting pytest
+  Downloading pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting einops
+  Downloading einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+Collecting iniconfig>=1.0.1 (from pytest)
+  Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: packaging>=22 in /opt/miniconda3/envs/aics/lib/python3.11/site-packages (from pytest) (26.3)
+Collecting pluggy<2,>=1.5 (from pytest)
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Requirement already satisfied: pygments>=2.7.2 in /opt/miniconda3/envs/aics/lib/python3.11/site-packages (from pytest) (2.21.0)
+Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 386.5/386.5 kB 9.1 kB/s eta 0:00:00
+Downloading einops-0.8.2-py3-none-any.whl (65 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.6/65.6 kB 8.4 kB/s eta 0:00:00
+Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+WARNING: Skipping /usr/local/Ascend/cann-9.0.0/python/site-packages/cannsim-0.1.0.dist-info due to invalid metadata entry 'name'
+Installing collected packages: pluggy, iniconfig, einops, pytest
+Successfully installed einops-0.8.2 iniconfig-2.3.1 pluggy-1.6.0 pytest-9.1.1
+WARNING: Skipping /usr/local/Ascend/cann-9.0.0/python/site-packages/cannsim-0.1.0.dist-info due to invalid metadata entry 'name'
+WARNING: Skipping /usr/local/Ascend/cann-9.0.0/python/site-packages/cannsim-0.1.0.dist-info due to invalid metadata entry 'name'

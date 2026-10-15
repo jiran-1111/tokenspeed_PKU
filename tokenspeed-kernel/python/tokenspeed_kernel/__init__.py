@@ -18,8 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from tokenspeed_kernel.profiling import (
-    bootstrap_profiling_from_env as _bootstrap_profiling_from_env,
-)
+"""Kernel package; optional profiling must not load GPU compilers eagerly."""
 
-_bootstrap_profiling_from_env()
+import os
+
+if any(
+    os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+    for name in ("TOKENSPEED_KERNEL_PROFILE", "TOKENSPEED_KERNEL_CAPTURE_SHAPES")
+):
+    from tokenspeed_kernel.profiling import bootstrap_profiling_from_env
+
+    bootstrap_profiling_from_env()

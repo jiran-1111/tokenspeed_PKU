@@ -1,0 +1,21 @@
+{
+  "fp32": {
+    "pass": true,
+    "comparisons": 25,
+    "max_abs": 9.34600830078125e-05,
+    "max_relative_rmse": 5.404595454874026e-06,
+    "min_cosine": 0.9999999999859466,
+    "top1_all_equal": true
+  },
+  "bf16": {
+    "pass": true,
+    "comparisons": 25,
+    "max_abs": 0.24529558420181274,
+    "max_relative_rmse": 0.018485689050416025,
+    "min_cosine": 0.9998502899108227,
+    "top1_all_equal": true
+  },
+  "benchmark_runs": 12,
+  "operator_tests_passed": 57,
+  "serving_integration": "not implemented; offline text harness only"
+}

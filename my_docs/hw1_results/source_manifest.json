@@ -1,0 +1,18 @@
+{
+  "base_commit": "f494dac3f2fa644632196a112300b3b9b3ff23e5",
+  "reference_source": "/opt/miniconda3/envs/aics/lib/python3.11/site-packages/transformers/models/qwen3_5/modeling_qwen3_5.py",
+  "reference_sha256": "762feb6c7426a7f15b5bf830df54c07438bf9e7c27b8cdb23179045920412c3b",
+  "files": {
+    "python/tokenspeed/experiments/__init__.py": "b5a5398bd1a91a00b34bb59099ef3894d252f82e307469a0a6f60c637fbd5f4f",
+    "python/tokenspeed/experiments/qwen35/__init__.py": "8166916686ecc2b7fb41ba5025e12ffa901c16c7a111ce4d777fafe2244069be",
+    "python/tokenspeed/experiments/qwen35/model.py": "d22aa543fa59e1826c385efa80585bf602558d98ba817260413c3915bb3dad6f",
+    "python/tokenspeed/experiments/qwen35/run.py": "66a0e19ad3bb6ab3f59f894529f0ccf1637bc51ed70c5ed4f5252eb8258eac8a",
+    "test/experiments/run_qwen35.sh": "5c588341cf955cdb9ad6925cf5f6c679cc524a0a892b2e3c96399b588866ad6b",
+    "test/experiments/test_qwen35_aten.py": "6e7574dd5b03175c93f2112767cc0bcb8b86854817aedc5131f157b45efc22d4",
+    "test/experiments/bench_qwen35_gdn.py": "484a0fdb64d80615032ce31af98aac880de29607052150870d60fd1a9302fc68",
+    "tokenspeed-kernel/python/tokenspeed_kernel/__init__.py": "a064055fbb9cf5e8bd66a1b96cb378a92135cb338d215393b500ce87aa2e9f36",
+    "tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py": "7b9d82c33f1528ccf6cce5531062022ec3a1da355e2b892f44956ce7c85d1977",
+    "docs/design/qwen35-offline-ascend.md": "5cb12fd6f15b9b55d43714cf24834865a834fa0901daa7a81903d75920c7b82b",
+    "my_docs/hw1_ascend_report.md": "e36395e65e429649a844069fe1fc1b3e781008c3bc962998f28a4b3fad7cb8df"
+  }
+}

@@ -1,0 +1,4822 @@
+{
+  "method": "Intrusive per-stage host wall time, synchronized before/after each scope. Includes dispatch, compute and synchronization; not raw device kernel time.",
+  "run": {
+    "input_tokens": 512,
+    "generated_tokens": 3,
+    "token_ids": [
+      33303,
+      11,
+      4779
+    ],
+    "ttft_ms": 245.25053007528186,
+    "decode_step_ms": [
+      63.55863995850086,
+      60.38288993295282
+    ],
+    "decode_mean_ms": 61.97076494572684,
+    "peak_allocated_mib": 1567.15869140625,
+    "peak_reserved_mib": 1630.0
+  },
+  "totals": {
+    "prefill/qwen35/embedding": {
+      "calls": 1,
+      "elapsed_ms": 0.07101998198777437
+    },
+    "prefill/qwen35/norm": {
+      "calls": 61,
+      "elapsed_ms": 11.530159157700837
+    },
+    "prefill/qwen35/projection": {
+      "calls": 186,
+      "elapsed_ms": 13.741220231167972
+    },
+    "prefill/qwen35/conv": {
+      "calls": 18,
+      "elapsed_ms": 9.60142002440989
+    },
+    "prefill/qwen35/gdn": {
+      "calls": 18,
+      "elapsed_ms": 184.68887032940984
+    },
+    "prefill/qwen35/gated_norm": {
+      "calls": 18,
+      "elapsed_ms": 3.9923900039866567
+    },
+    "prefill/qwen35/rope": {
+      "calls": 6,
+      "elapsed_ms": 1.7898601945489645
+    },
+    "prefill/qwen35/attention": {
+      "calls": 6,
+      "elapsed_ms": 2.3905501002445817
+    },
+    "prefill/qwen35/lm_head": {
+      "calls": 1,
+      "elapsed_ms": 0.5878199590370059
+    },
+    "decode/qwen35/embedding": {
+      "calls": 2,
+      "elapsed_ms": 0.12158998288214207
+    },
+    "decode/qwen35/norm": {
+      "calls": 122,
+      "elapsed_ms": 18.094900879077613
+    },
+    "decode/qwen35/projection": {
+      "calls": 372,
+      "elapsed_ms": 19.983210135251284
+    },
+    "decode/qwen35/conv": {
+      "calls": 36,
+      "elapsed_ms": 14.877229696139693
+    },
+    "decode/qwen35/gdn": {
+      "calls": 36,
+      "elapsed_ms": 30.495270038954914
+    },
+    "decode/qwen35/gated_norm": {
+      "calls": 36,
+      "elapsed_ms": 6.339990417473018
+    },
+    "decode/qwen35/rope": {
+      "calls": 12,
+      "elapsed_ms": 2.5876901345327497
+    },
+    "decode/qwen35/attention": {
+      "calls": 12,
+      "elapsed_ms": 3.4223400289192796
+    },
+    "decode/qwen35/lm_head": {
+      "calls": 2,
+      "elapsed_ms": 0.9159300243481994
+    }
+  },
+  "records": [
+    {
+      "phase": "prefill",
+      "stage": "qwen35/embedding",
+      "elapsed_ms": 0.07101998198777437
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15655998140573502
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08624990005046129
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07001007907092571
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05170993972569704
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049769994802773
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4871799610555172
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.48028005566448
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1694100210443139
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06729993037879467
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13411010149866343
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0743399141356349
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07009005639702082
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07027003448456526
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.12619001790881157
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08509005419909954
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07263000588864088
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05059002432972193
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.047320034354925156
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.491649960167706
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.452610112726688
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17367000691592693
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06450002547353506
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13794004917144775
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0814199447631836
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07277005352079868
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06841996219009161
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1404898939654231
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07954007014632225
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06376008968800306
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.048569985665380955
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04654005169868469
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4919100319966674
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.469459949992597
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1751199597492814
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06727001164108515
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13470998965203762
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07438007742166519
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06549002137035131
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06747001316398382
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1386499498039484
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07315992843359709
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1473498996347189
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05538994446396828
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.146389938890934
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046810018830001354
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.22110005374997854
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.3018999705091119
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06183004006743431
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1490199938416481
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07456995081156492
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0801699934527278
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07474003359675407
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14095008373260498
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07536995690315962
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.060450052842497826
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042230007238686085
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03845000173896551
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.48259005416184664
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.636460057459772
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1697699772194028
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05886005237698555
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.136009999550879
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06896990817040205
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06725999992340803
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06550003308802843
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14442997053265572
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07327005732804537
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05981000140309334
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.040800077840685844
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04088995046913624
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.47915999311953783
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.551300037652254
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17703999765217304
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06363005377352238
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.143699930049479
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07180997636169195
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06935989949852228
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0716199865564704
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14220993034541607
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08408993016928434
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06275996565818787
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04343001637607813
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0397699186578393
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4871200071647763
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.113990003243089
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.20854989998042583
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08686003275215626
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.28082996141165495
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08183997124433517
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08720997720956802
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0647599808871746
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1489499118179083
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08939998224377632
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.2440999960526824
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054080039262771606
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1532500609755516
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.073309987783432
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.27891993522644043
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.3198900958523154
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0646000262349844
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1548099098727107
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08505000732839108
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08354999590665102
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.10087003465741873
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13576995115727186
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.325010041706264
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.11046999134123325
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06355997174978256
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06441003642976284
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.49335998483002186
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.816859965212643
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1882599899545312
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06065994966775179
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14607002958655357
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07370999082922935
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07107004057615995
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07194990757852793
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15642005018889904
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07916998583823442
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06065994966775179
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0439200084656477
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04024000372737646
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.48222998157143593
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 8.698360063135624
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.19241997506469488
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06963999476283789
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14532997738569975
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07463002111762762
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07099006325006485
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07031997665762901
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1607999438419938
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09400001727044582
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07855996955186129
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06660993676632643
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04762003663927317
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4962100647389889
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.863630053587258
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.19625003915280104
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.066359993070364
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.17943000420928001
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07945997640490532
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08913001511245966
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06757001392543316
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15326007269322872
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07672002539038658
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.5153999663889408
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.30368997249752283
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.3863999154418707
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08987996261566877
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.3449200885370374
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.5509100155904889
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0764400465413928
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1872499706223607
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08452008478343487
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07672002539038658
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07588998414576054
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16308994963765144
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08681998588144779
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0786499585956335
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053020077757537365
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053480034694075584
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.5940799601376057
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.799999999813735
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.20563998259603977
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07364992052316666
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16633991617709398
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08321006316691637
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07668999023735523
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07650000043213367
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.17199991270899773
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.11129002086818218
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.11373998131603003
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06074993871152401
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05416001658886671
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.5666699726134539
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.4141298905015
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.19605993293225765
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07075001485645771
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16286002937704325
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07809000089764595
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07913995068520308
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07426994852721691
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15768990851938725
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09346997831016779
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06853009108453989
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04979991354048252
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.048470101319253445
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.49306999426335096
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 10.967670008540154
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.3009600332006812
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.1484300009906292
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.40595000609755516
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.13171997852623463
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07842003833502531
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08094997610896826
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.19693002104759216
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08144997991621494
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.25744992308318615
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06872997619211674
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.22355001419782639
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05401007365435362
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.3195700701326132
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.4396700533106923
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06503995973616838
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1636400120332837
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07465004455298185
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06997003220021725
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0681199599057436
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14876003842800856
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08034997154027224
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06639002822339535
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051209935918450356
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04032999277114868
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.51146000623703
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.57078009378165
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.19259005784988403
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07473002187907696
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15315006021410227
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.1395100262016058
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07889990229159594
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07027003448456526
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1490899594500661
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0798199325799942
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.059150042943656445
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04303990863263607
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042350031435489655
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.48057001549750566
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 13.312869938090444
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.28186000417917967
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07913995068520308
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.23765000514686108
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08642999455332756
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0790000194683671
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08001003880053759
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.23860996589064598
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09936001151800156
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07575994823127985
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05433999467641115
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05280005279928446
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.6244300166144967
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 14.431480085477233
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.2865699352696538
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07650000043213367
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.24318008217960596
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08321995846927166
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0768899917602539
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07497996557503939
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.2437999937683344
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08734001312404871
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.26064994744956493
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06254995241761208
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.2436599461361766
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09182002395391464
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.3556200535967946
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.4597100196406245
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07475994061678648
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.25328004267066717
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0856500118970871
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07712002843618393
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07258006371557713
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.24111999664455652
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08909008465707302
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07635995279997587
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05405000410974026
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05107000470161438
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.6635900354012847
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 14.97258001472801
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.2919400576502085
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08059001993387938
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.24903996381908655
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08657993748784065
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08195999544113874
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07690000347793102
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.2422198886051774
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09155005682259798
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07459998596459627
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05459005478769541
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05050003528594971
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.6421300349757075
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 12.471590074710548
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.397350057028234
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.11144997552037239
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.17925002612173557
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07670000195503235
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06987003143876791
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07133011240512133
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16159005463123322
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0867500202730298
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06458000279963017
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049690017476677895
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05110003985464573
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.634009949862957
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 9.66481992509216
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.18893007654696703
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0670900335535407
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1529600704088807
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07346004713326693
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0676700146868825
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0690600136294961
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14406000263988972
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08093006908893585
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15746999997645617
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.056270044296979904
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14824001118540764
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052179908379912376
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.26972999330610037
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.31846994534134865
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06084004417061806
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1522499369457364
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07551000453531742
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06779993418604136
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06321992259472609
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.19385002087801695
+    },
+    {
+      "phase": "prefill",
+      "stage": "qwen35/lm_head",
+      "elapsed_ms": 0.5878199590370059
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/embedding",
+      "elapsed_ms": 0.0642499653622508
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16292999498546124
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07170008029788733
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04552002064883709
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.041930004954338074
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04106992855668068
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41536998469382524
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.9119200985878706
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.18932006787508726
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05849997978657484
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1474700402468443
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05338003393262625
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05038001108914614
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054729986004531384
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15582004562020302
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05911989137530327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04349998198449612
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044479966163635254
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04237005487084389
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41470001451671124
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8488099556416273
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17325999215245247
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05049991887062788
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14904001727700233
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04787999205291271
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04687998443841934
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05231006070971489
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1559699885547161
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06700004450976849
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0529199605807662
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.047110021114349365
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045140041038393974
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41674007661640644
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8402300300076604
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1718900166451931
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055699958465993404
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14005007687956095
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05222007166594267
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0524700153619051
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04158006049692631
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1365200150758028
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044899992644786835
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14143006410449743
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0516700092703104
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14262006152421236
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0472700921818614
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.20597991533577442
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.31728006433695555
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05828996654599905
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14830997679382563
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05638995207846165
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04549999721348286
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04475004971027374
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13860990293323994
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05540996789932251
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04637998063117266
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03951007965952158
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03665999975055456
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3951099934056401
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8206999627873302
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17009000293910503
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04931003786623478
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13363000471144915
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04994997289031744
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045149936340749264
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.048050074838101864
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14307000674307346
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05347991827875376
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04337006248533726
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.037689926102757454
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03635999746620655
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.42851001489907503
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8106499444693327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.18176005687564611
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04864996299147606
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1377699663862586
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05396001506596804
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0463300384581089
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04819000605493784
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14307000674307346
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05634000990539789
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044740037992596626
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03642996307462454
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03762997221201658
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.39492000360041857
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8407599525526166
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.21652004215866327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055789947509765625
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14715001452714205
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04980002995580435
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04513992462307215
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04694005474448204
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14451006427407265
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04959001671522856
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15465007163584232
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04671991337090731
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1476299948990345
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04329998046159744
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.2113500377163291
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.29252003878355026
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04584994167089462
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15760993119329214
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05083996802568436
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04904007073491812
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04430999979376793
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1430100528523326
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.056279939599335194
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04588998854160309
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04213000647723675
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.040560029447078705
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41662005241960287
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8778700139373541
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17420994117856026
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05438004154711962
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.147530110552907
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05522998981177807
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04912004806101322
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04773004911839962
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15022000297904015
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06067997310310602
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04785996861755848
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04313001409173012
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04406995140016079
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.407799961976707
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8458499796688557
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17600005958229303
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05237001460045576
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14796992763876915
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05356001202017069
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05059002432972193
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04857010208070278
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.172110041603446
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.059669953770935535
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045119901187717915
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042019993998110294
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03984000068157911
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4087799461558461
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8474199566990137
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16858999151736498
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051239971071481705
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14818005729466677
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05392997991293669
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04660990089178085
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046569970436394215
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14224008191376925
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05301996134221554
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14788005501031876
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04555995110422373
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14994991943240166
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04657998215407133
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.21358998492360115
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.29396999161690474
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08278002496808767
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15463994350284338
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054539996199309826
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05161995068192482
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0492599792778492
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14796992763876915
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06132002454251051
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04771002568304539
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044199987314641476
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04372000694274902
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4102499224245548
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8466299623250961
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17514999490231276
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05461997352540493
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1409099204465747
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05403999239206314
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05004997365176678
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04971993621438742
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1511400332674384
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06272003520280123
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04578998778015375
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.040569924749433994
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03774999640882015
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.43847993947565556
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8353301091119647
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16964005772024393
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051489914767444134
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14430994633585215
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05442008841782808
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049869995564222336
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04724005702883005
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13979000505059958
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05874002818018198
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04563992843031883
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04148995503783226
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.039529986679553986
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.40797004476189613
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.835479935631156
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17973000649362803
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.056900084018707275
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15709002036601305
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054629985243082047
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04867010284215212
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05025009158998728
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1478699268773198
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0538600143045187
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14839996583759785
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04928000271320343
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15060999430716038
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04636996891349554
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.22539007477462292
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.297949998639524
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05637994036078453
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14856003690510988
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05747994873672724
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04851992707699537
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04579999949783087
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15059998258948326
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055119977332651615
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04989991430193186
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03796000964939594
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03723008558154106
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41002000216394663
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8874699706211686
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1748900394886732
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05142996087670326
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14494010247290134
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05495990626513958
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04696997348219156
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04429998807609081
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14009000733494759
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05641009192913771
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09424006566405296
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.1785499043762684
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.12532994151115417
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.6573799764737487
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.9415600216016173
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.18302001990377903
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0520399771630764
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.18569000530987978
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05171995144337416
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.058549921959638596
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053080031648278236
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.3894000547006726
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0754200154915452
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.2947798930108547
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.1419299514964223
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06800994742661715
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.46293996274471283
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 1.2494900729507208
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.20818994380533695
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05368003621697426
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14085008297115564
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055870041251182556
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.048779998905956745
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050419941544532776
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14721008483320475
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05592009983956814
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15058997087180614
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06371992640197277
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1843899954110384
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050509930588304996
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.2206200733780861
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.28840999584645033
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05030992906540632
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1704300520941615
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06143003702163696
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04989001899957657
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0521800247952342
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14856003690510988
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06225006654858589
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04822993651032448
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04220998380333185
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04125002305954695
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.39315002504736185
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8278699824586511
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1820400357246399
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053209951147437096
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1433000434190035
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05231006070971489
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051930081099271774
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05228002555668354
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1514999894425273
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06074004340916872
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04376005381345749
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03867002669721842
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03820005804300308
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.4299499560147524
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8371199946850538
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17809995915740728
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053060008212924004
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14234997797757387
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05137000698596239
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04767999053001404
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05029002204537392
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13719999697059393
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0578099861741066
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046959961764514446
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04024000372737646
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0399700365960598
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3933999687433243
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8716000011190772
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16726995818316936
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04998990334570408
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13619998935610056
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05425000563263893
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04822004120796919
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04918000195175409
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14388002455234528
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04179996903985739
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1370200188830495
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04783004987984896
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13920001219958067
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04587997682392597
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.24321000091731548
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.28053997084498405
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053060008212924004
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.148270046338439
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054279924370348454
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04850002005696297
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050720060244202614
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14678004663437605
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/lm_head",
+      "elapsed_ms": 0.4580600652843714
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/embedding",
+      "elapsed_ms": 0.05734001751989126
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16190006863325834
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0613899901509285
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04466006066650152
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03958994057029486
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04039995837956667
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.40141004137694836
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8228500373661518
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17083005513995886
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05747005343437195
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13238994870334864
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05327991675585508
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.047720037400722504
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05024997517466545
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14526001177728176
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.057699973694980145
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04925008397549391
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0407099723815918
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04099996294826269
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3971399273723364
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.7947499398142099
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.15996000729501247
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053299940191209316
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13470998965203762
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049959984607994556
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046600005589425564
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05001004319638014
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1314000692218542
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05859998054802418
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04513002932071686
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.040520098991692066
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03955001011490822
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41755998972803354
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.823009992018342
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1713000237941742
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05461007822304964
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13305991888046265
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05701999180018902
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051999930292367935
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04761002492159605
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14218001160770655
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.056209973990917206
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13832002878189087
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05340005736798048
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14502997510135174
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046149943955242634
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.21007005125284195
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.2744999947026372
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04012999124825001
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13954995665699244
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051570008508861065
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04979001823812723
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04994007758796215
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.16923004295676947
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.063000014051795
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04910002462565899
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04525005351752043
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0417300034314394
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.45023998245596886
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8145400788635015
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16864005010575056
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054510077461600304
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1403900096192956
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.056240009143948555
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053939991630613804
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.038529979065060616
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13696006499230862
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06177998147904873
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04892994184046984
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04239997360855341
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.043050036765635014
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3955099964514375
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8910800097510219
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17180002760142088
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05528004840016365
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13729999773204327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055270036682486534
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052029965445399284
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0461899908259511
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14488003216683865
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05937996320426464
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04855997394770384
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04138995427638292
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044070067815482616
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3879200667142868
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.802599941380322
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17176009714603424
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052660005167126656
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14285999350249767
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05405000410974026
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051749986596405506
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05282997153699398
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14202005695551634
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.08490995969623327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1395299332216382
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05191005766391754
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14325999654829502
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04767999053001404
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.1973399193957448
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.27680001221597195
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042050029151141644
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14721998013556004
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054909964092075825
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04992005415260792
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04187994636595249
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13744004536420107
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.058909994550049305
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04749000072479248
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045410008169710636
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042770057916641235
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.38833997678011656
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8151399670168757
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17709005624055862
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05509995389729738
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1591000473126769
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05328003317117691
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04534993786364794
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046749948523938656
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15021988656371832
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.24620001204311848
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042980071157217026
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04099996294826269
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03788003232330084
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3969999961555004
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8026100695133209
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16855006106197834
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.051299924962222576
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13453001156449318
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052329967729747295
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05125999450683594
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04517997149378061
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1414299476891756
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05289004184305668
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0436300178989768
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03672007005661726
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.037229969166219234
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3874900285154581
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8016399806365371
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17771997954696417
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04938000347465277
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1395199215039611
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.048209913074970245
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.046320026740431786
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04697998519986868
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13609998859465122
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05067000165581703
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1434599980711937
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.043289968743920326
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1425800146535039
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04624004941433668
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.21352001931518316
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.26921997778117657
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04779000300914049
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1403701025992632
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052080024033784866
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04604004789143801
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0421799486503005
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13888999819755554
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04979001823812723
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.041070044972002506
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04094000905752182
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03820005804300308
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41246996261179447
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8037899388000369
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1687499461695552
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05309993866831064
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1330999657511711
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0563599169254303
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050600036047399044
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04188006278127432
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1343300100415945
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.060730031691491604
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045269960537552834
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03836001269519329
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.036340090446174145
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.38166996091604233
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8012700127437711
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.19833003170788288
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05389004945755005
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13734004460275173
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04972994793206453
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04455004818737507
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04600000102072954
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1370300306007266
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05616003181785345
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0393999507650733
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03690994344651699
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03748002927750349
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3825799794867635
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8031500037759542
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.17061992548406124
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.053419964388012886
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1463099615648389
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04627997986972332
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.044230022467672825
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.047770095989108086
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14269002713263035
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0525499926880002
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14143995940685272
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04537997301667929
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13661000411957502
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045070075429975986
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.23520004469901323
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.27650000993162394
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0463300384581089
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14665001071989536
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049440073780715466
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04436005838215351
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04722992889583111
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13876997400075197
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05250005051493645
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0429799547418952
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.036739977076649666
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04011997953057289
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.3794400254264474
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.813139951787889
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.16719999257475138
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049390015192329884
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1393799902871251
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04892004653811455
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04396995063871145
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045749940909445286
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1362999901175499
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06337999366223812
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042109983041882515
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03881007432937622
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03736000508069992
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.41427998803555965
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8147400803864002
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1648799516260624
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.055060023441910744
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13532000593841076
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04652002826333046
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04658009856939316
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04237005487084389
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14116999227553606
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05862000398337841
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.042109983041882515
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03706000279635191
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.03749004099518061
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.38839003536850214
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8010099409148097
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1905900426208973
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04775007255375385
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1389399403706193
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.052600051276385784
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04722003359347582
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04000996705144644
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13939000200480223
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05229003727436066
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13810000382363796
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04736008122563362
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1385000068694353
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0502199400216341
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.20523008424788713
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.27732993476092815
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05003996193408966
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14722009655088186
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05497003439813852
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09877001866698265
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05646003410220146
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1406000228598714
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06556010339409113
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.047530047595500946
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.043689971789717674
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.045930035412311554
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.38966990541666746
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8437300566583872
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.165530014783144
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05154998507350683
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1428700052201748
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.054729986004531384
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049819936975836754
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05401996895670891
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.17756992019712925
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0878599239513278
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.2546299947425723
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.058450037613511086
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05468004383146763
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.39015989750623703
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.8368800627067685
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1603499986231327
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.09921996388584375
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.23044005502015352
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.555100035853684
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.07026991806924343
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.0507299555465579
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1685800962150097
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.06501004099845886
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05259003955870867
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.043629901483654976
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04636007361114025
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/conv",
+      "elapsed_ms": 0.413870089687407
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gdn",
+      "elapsed_ms": 0.832580029964447
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/gated_norm",
+      "elapsed_ms": 0.1764199696481228
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05498004611581564
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.14511996414512396
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05558994598686695
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.049869995564222336
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04627997986972332
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13925007078796625
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05494989454746246
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1716898987069726
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050080008804798126
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.15326007269322872
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.04859000910073519
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/rope",
+      "elapsed_ms": 0.2061899285763502
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/attention",
+      "elapsed_ms": 0.27732003945857286
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05177001003175974
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.13780000153928995
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05761999636888504
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.05009002052247524
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/projection",
+      "elapsed_ms": 0.050020054914057255
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/norm",
+      "elapsed_ms": 0.1413499703630805
+    },
+    {
+      "phase": "decode",
+      "stage": "qwen35/lm_head",
+      "elapsed_ms": 0.457869959063828
+    }
+  ],
+  "physical_chip": "5"
+}

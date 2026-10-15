@@ -1,0 +1,37 @@
+	No process in device.
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/_path_manager.py:66: UserWarning: Permission mismatch: The owner of /opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/lib/libop_plugin_atb.so does not match.
+  warnings.warn(f"Permission mismatch: The owner of {path} does not match.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+Loaded 320 text tensors on npu:0; physical chip 7
+/home/u2601213425/hw1/tokenspeed_PKU/tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py:52: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at build/CMakeFiles/torch_npu.dir/compiler_depend.ts:338.)
+  out = torch.zeros_like(x, dtype=torch.float32)
+[2026-10-15 07:06:47] [WARNING] [826122] profiler.py: Invalid parameter export_type: None, reset it to text.
+[2026-10-15 07:06:47] [WARNING] [826122] profiler.py: Invalid parameter export_type: None, reset it to text.
+[2026-10-15 07:06:47] [WARNING] [826122] profiler.py: Incorrect schedule: Stop profiler while current state is RECORD which may result in incomplete parsed data.
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/opt/miniconda3/envs/aics/lib/python3.11/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-9.0.0/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+[2026-10-15 07:06:48] [INFO] [945174] profiler.py: Start parsing profiling data: /home/u2601213425/hw1/tokenspeed_PKU/export_only_prof_dir/5664fbce7f43_826122_20261015070647468_ascend_pt
+|/-\[2026-10-15 07:06:51] [INFO] [946345] profiler.py: CANN profiling data parsed in a total time of 0:00:03.025584
+[2026-10-15 07:06:52] [ERROR] [945174] profiler.py: Task [CANNTimelineParser] run failed.
+[2026-10-15 07:06:52] [ERROR] [945174] profiler.py: Task [RelationParser] run failed.
+[2026-10-15 07:06:52] [ERROR] [945174] profiler.py: Task [TraceViewParser] run failed.
+[2026-10-15 07:06:52] [INFO] [945174] profiler.py: All profiling data parsed in a total time of 0:00:04.014622
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/u2601213425/hw1/tokenspeed_PKU/python/tokenspeed/experiments/qwen35/run.py", line 195, in <module>
+    main()
+  File "/home/u2601213425/hw1/tokenspeed_PKU/python/tokenspeed/experiments/qwen35/run.py", line 191, in main
+    print(prof.key_averages().table(sort_by="self_cpu_time_total",row_limit=25))
+          ^^^^^^^^^^^^^^^^^
+AttributeError: 'profile' object has no attribute 'key_averages'
+[ERROR] 2026-10-15-07:06:54 (PID:826122, Device:0, RankID:-1) ERR99999 UNKNOWN applicaiton exception
