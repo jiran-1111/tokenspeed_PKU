@@ -127,7 +127,7 @@ class EngineClient(Protocol):
     async def open_session(
         self,
         obj: OpenSessionReqInput,
-    ) -> str | None: ...
+    ) -> str: ...
 
     async def close_session(
         self,

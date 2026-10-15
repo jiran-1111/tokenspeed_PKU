@@ -195,6 +195,16 @@ class EngineMetrics:
             multiprocess_mode="livemax",
             **kw,
         )
+        self.kv_lcm_blocks = {
+            state: Gauge(
+                name=f"tokenspeed:kv_lcm_blocks_{state}",
+                documentation=f"Rank-local device LCM blocks: {state}; excludes reserved null pages.",
+                labelnames=labelnames,
+                multiprocess_mode="livemax",
+                **kw,
+            )
+            for state in ("total", "active", "cached", "empty", "allocated")
+        }
         self.iteration_tokens_total = Histogram(
             name="tokenspeed:iteration_tokens_total",
             documentation="Tokens scheduled in one scheduler forward step.",
@@ -268,6 +278,7 @@ class EngineMetrics:
         running: int,
         waiting: int,
         num_active_pages: int,
+        num_cached_pages: int,
         num_total_pages: int,
         num_iteration_tokens: int,
     ) -> None:
@@ -279,6 +290,16 @@ class EngineMetrics:
             waiting=waiting,
             kv_cache_usage_ratio=ratio,
         )
+        allocated = num_active_pages + num_cached_pages
+        counts = {
+            "total": num_total_pages,
+            "active": num_active_pages,
+            "cached": num_cached_pages,
+            "empty": num_total_pages - allocated,
+            "allocated": allocated,
+        }
+        for state, count in counts.items():
+            self.kv_lcm_blocks[state].labels(**self.labels).set(count)
         if num_iteration_tokens > 0:
             self.observe_iteration_tokens(float(num_iteration_tokens))
 
@@ -423,7 +444,7 @@ class RequestMetrics:
 
         self.histogram_inter_token_latency_seconds = Histogram(
             name="tokenspeed:inter_token_latency_seconds",
-            documentation="Histogram of inter-token latency in seconds.",
+            documentation="Histogram of inter-token latency from engine output timestamps in seconds.",
             labelnames=labelnames,
             buckets=[
                 0.002,

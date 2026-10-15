@@ -41,7 +41,11 @@ from collections.abc import Iterator
 from typing import Any
 
 from tokenspeed.runtime.engine.async_llm import AsyncLLM
-from tokenspeed.runtime.engine.io_struct import GenerateReqInput
+from tokenspeed.runtime.engine.io_struct import (
+    CloseSessionReqInput,
+    GenerateReqInput,
+    OpenSessionReqInput,
+)
 
 # Sentinel marking the end of a streaming bridge. Identity-compared,
 # so a dict payload happening to equal this value is impossible.
@@ -96,6 +100,22 @@ class LLM:
             return await gen.__anext__()
 
         return self.run(_one())
+
+    def open_session(self, session_id: str | None = None) -> str:
+        session_id_len = len(session_id) if session_id is not None else 0
+        return self.run(
+            self.async_llm.open_session(
+                OpenSessionReqInput(
+                    capacity_of_str_len=session_id_len,
+                    session_id=session_id,
+                )
+            )
+        )
+
+    def close_session(self, session_id: str) -> None:
+        return self.run(
+            self.async_llm.close_session(CloseSessionReqInput(session_id=session_id))
+        )
 
     def generate_stream(self, obj: GenerateReqInput) -> Iterator[dict]:
         """Run ``AsyncLLM.generate_request`` and yield each output dict

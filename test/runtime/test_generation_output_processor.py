@@ -117,6 +117,29 @@ def test_mixed_forward_updates_reserve_for_decode_slots_only():
     assert reserve_events[0].reserve_num_tokens_in_next_schedule_event == 1
 
 
+def test_delayed_forward_without_request_state_still_reports_completion():
+    processor = OutputProcesser(_Sender(), attn_tp_rank=0, metrics=_Metrics())
+
+    class _DelayedForwardOp:
+        request_ids = ["finished-session-turn"]
+        request_pool_indices = [0]
+        input_lengths = [1]
+        prefill_lengths = []
+        extend_prefix_lens = []
+        extend_replay_lens = []
+
+        def num_extends(self):
+            return 0
+
+    events = processor.post_process_forward_op(
+        _DelayedForwardOp(), _ExecutionResult(), is_prefill_instance=False
+    )
+
+    assert [type(event).__name__ for event in events] == ["ExtendResult"]
+    assert events[0].request_id == "finished-session-turn"
+    assert list(events[0].tokens) == []
+
+
 def test_cached_tokens_count_the_replayed_window_as_a_hit():
     """A bounded-replay chunk starts its model input below the prefix hit;
     the request still hit through the end of the replayed window, and a

@@ -81,6 +81,7 @@ class RequestState:
         multimodal_inputs=None,
         prompt_input_ids_unpadded: list[int] | None = None,
         created_time: float = 0.0,
+        session_id: str | None = None,
     ) -> None:
         # --- Extracted from recv_req (immutable) ---
         self.prompt_input_ids: list[int] = prompt_input_ids
@@ -109,6 +110,7 @@ class RequestState:
 
         # request stats (host-side); tracker attached only with --enable-log-request-stats
         self.created_time: float = created_time
+        self.session_id = session_id
         self.stats: RequestStatsTracker = NOOP_STATS
         # Sampled-token logprobs, accumulated per generated token.
         # None when return_logprob is False.
@@ -175,6 +177,11 @@ class RequestState:
             multimodal_inputs=getattr(recv_req, "multimodal_inputs", None),
             prompt_input_ids_unpadded=getattr(recv_req, "input_ids_unpadded", None),
             created_time=getattr(recv_req, "created_time", 0.0),
+            session_id=(
+                recv_req.session_params.id
+                if getattr(recv_req, "session_params", None) is not None
+                else None
+            ),
         )
 
     @property
@@ -331,6 +338,7 @@ class OutputProcesser:
         physical_context_len: int | None = None,
         *,
         metrics: EngineMetrics,
+        session_info_fn=None,
         defer_to_device=None,
     ) -> None:
         # BatchTokenIDOut is pushed directly to
@@ -354,6 +362,7 @@ class OutputProcesser:
         self.physical_context_len = physical_context_len
         self.stream_interval = stream_interval
         self.metrics = metrics
+        self.session_info_fn = session_info_fn
         self.enable_log_request_stats = enable_log_request_stats
         # previous forward step ts, for host-side preempt timing
         self._last_step_ts: float = 0.0
@@ -706,6 +715,7 @@ class OutputProcesser:
 
             if rid not in self.rid_to_state:
                 # means it's delayed token, do not process
+                request_changes.append(make_extend_result_event(rid))
                 continue
 
             request_state: RequestState = self.rid_to_state[rid]
@@ -1099,7 +1109,17 @@ class OutputProcesser:
                 spec_verify_ct.append(rs.spec_verify_ct)
                 batch_accept_draft_tokens.append(rs.accept_draft_tokens)
 
-            output_extra_infos.append({"decode_prefix_len": rs.prefix_len})
+            output_extra_info = {"decode_prefix_len": rs.prefix_len}
+            if rs.finished and rs.session_id is not None and self.session_info_fn:
+                session_info = self.session_info_fn(rs.session_id)
+                if session_info is not None:
+                    output_extra_info["session"] = {
+                        "session_id": rs.session_id,
+                        "total_context_tokens": session_info.total_context_tokens,
+                        "newly_prefilled_tokens": session_info.newly_prefilled_tokens,
+                        "reused_context_tokens": session_info.reused_context_tokens,
+                    }
+            output_extra_infos.append(output_extra_info)
 
             if rs.return_logprob and rs.output_token_logprobs_val is not None:
                 # Send only the slice not yet shipped; send_token_offset was

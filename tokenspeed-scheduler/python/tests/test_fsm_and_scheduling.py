@@ -465,6 +465,26 @@ class TestDecodeBatch:
         assert plan.forward[0].num_extends() == 0
         assert plan.forward[0].request_ids == ["r1"]
 
+    def test_new_request_is_admitted_before_long_decode_finishes(self):
+        s = Scheduler(make_config(max_scheduled_tokens=512, max_batch_size=2))
+        self._get_to_decoding(s, "short", list(range(4)))
+        self._get_to_decoding(s, "long", list(range(4)), decoding_peers=["short"])
+
+        advance_forward(s, "short", finish=True)
+        submit(s, "new", list(range(8)))
+        send_reserve_num_tokens(s, "long", 0)
+        plan = s.next_execution_plan()
+
+        assert s.request_token_size("short") == -1
+        assert s.request_token_size("long") >= 4
+        assert s.decoding_size() == 1
+        assert s.waiting_size() == 0
+        assert "new" in plan.forward[0].request_ids
+        assert plan.forward[0].num_extends() == 1
+        advance_forward(s, "long", finish=True)
+        advance_forward(s, "new", finish=True)
+        s.next_execution_plan()
+
     def test_decode_step_appends_token(self):
         """Each decode advance appends one output token."""
         s = Scheduler(make_config(max_scheduled_tokens=512))

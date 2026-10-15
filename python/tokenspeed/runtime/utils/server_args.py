@@ -128,6 +128,7 @@ class ServerArgs:
     # Engine host and base port for derived control-plane endpoints.
     host: str = "127.0.0.1"
     port: int = 8000
+    metrics_port: int | None = None
 
     # Memory and scheduling
     gpu_memory_utilization: float | None = None
@@ -1043,6 +1044,12 @@ class ServerArgs:
         )
         parser.add_argument(
             "--port", type=int, default=ServerArgs.port, help="The port of the server."
+        )
+        parser.add_argument(
+            "--metrics-port",
+            type=int,
+            default=ServerArgs.metrics_port,
+            help="The port for the TokenSpeed Prometheus metrics endpoint.",
         )
         parser.add_argument(
             "--tokenizer-mode",

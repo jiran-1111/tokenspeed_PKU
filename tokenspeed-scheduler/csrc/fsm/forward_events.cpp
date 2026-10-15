@@ -91,6 +91,38 @@ std::variant<PrefillDone, PrefillAwaitingResult, Prefilling> SchedulePrefillEven
     return Prefilling{std::move(state.resources), window, reserve_num_tokens_in_next_schedule_event_};
 }
 
+SessionPending QueueSessionTurnEvent::operator()(SessionIdle&& state) {
+    return SessionPending{std::move(state.resources), computed_tokens_};
+}
+
+std::variant<PrefillDone, Prefilling> ScheduleSessionPrefillEvent::operator()(SessionPending&& state) {
+    const TokenContainer::Window window{
+        .begin = state.computed_tokens,
+        .size = tokens_this_round_,
+    };
+    if (window.begin + window.size == state.resources.token_container->PrefillSize()) {
+        return PrefillDone{std::move(state.resources), window, reserve_num_tokens_in_next_schedule_event_};
+    }
+    return Prefilling{std::move(state.resources), window, reserve_num_tokens_in_next_schedule_event_};
+}
+
+template <typename State>
+SessionIdle ParkSessionEvent::park(State&& state) {
+    return SessionIdle{std::move(state.resources), computed_tokens_};
+}
+
+SessionIdle ParkSessionEvent::operator()(PrefillDone&& state) {
+    return park(std::move(state));
+}
+
+SessionIdle ParkSessionEvent::operator()(PrefillAwaitingResult&& state) {
+    return park(std::move(state));
+}
+
+SessionIdle ParkSessionEvent::operator()(Decoding&& state) {
+    return park(std::move(state));
+}
+
 template <typename State>
 Decoding ScheduleDecodeEvent::decode(State&& state) {
     return Decoding{std::move(state.resources), decode_input_tokens_};
@@ -124,6 +156,10 @@ Finished FinishEvent::operator()(PrefillAwaitingResult&& state) {
 }
 
 Finished FinishEvent::operator()(Decoding&& state) {
+    return finish(std::move(state));
+}
+
+Finished FinishEvent::operator()(SessionIdle&& state) {
     return finish(std::move(state));
 }
 
@@ -163,6 +199,14 @@ Finished AbortEvent::operator()(PrefillAwaitingResult&& state) {
 }
 
 Finished AbortEvent::operator()(Decoding&& state) {
+    return abortForward(std::move(state));
+}
+
+Finished AbortEvent::operator()(SessionIdle&& state) {
+    return abortForward(std::move(state));
+}
+
+Finished AbortEvent::operator()(SessionPending&& state) {
     return abortForward(std::move(state));
 }
 

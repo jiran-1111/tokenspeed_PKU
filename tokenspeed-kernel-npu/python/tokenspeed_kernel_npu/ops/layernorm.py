@@ -71,8 +71,8 @@ def qk_rmsnorm(
     k_heads = k.reshape(-1, k.shape[-1] // head_dim, head_dim)
     q_scale = torch.rsqrt(q_heads.float().square().mean(-1, keepdim=True) + eps)
     k_scale = torch.rsqrt(k_heads.float().square().mean(-1, keepdim=True) + eps)
-    q_out = (q_heads * q_scale.to(q.dtype) * q_weight).reshape(q_shape)
-    k_out = (k_heads * k_scale.to(k.dtype) * k_weight).reshape(k_shape)
+    q_out = (q_heads.float() * q_scale * q_weight.float()).to(q.dtype).reshape(q_shape)
+    k_out = (k_heads.float() * k_scale * k_weight.float()).to(k.dtype).reshape(k_shape)
     return q_out, k_out
 
 

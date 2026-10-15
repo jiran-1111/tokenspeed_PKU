@@ -230,11 +230,17 @@ def aligned_max_scheduled_tokens(
     return max_scheduled_tokens - max_scheduled_tokens % grain
 
 
-def make_spec(rid: str, tokens: list[int], max_new_tokens: int = 0) -> RequestSpec:
+def make_spec(
+    rid: str,
+    tokens: list[int],
+    max_new_tokens: int = 0,
+    session_id: str | None = None,
+) -> RequestSpec:
     spec = RequestSpec()
     spec.request_id = rid
     spec.tokens = tokens
     spec.max_new_tokens = max_new_tokens
+    spec.session_id = session_id or ""
     return spec
 
 

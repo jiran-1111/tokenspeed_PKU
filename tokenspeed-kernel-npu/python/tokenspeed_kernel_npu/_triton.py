@@ -21,8 +21,8 @@
 """Single import boundary for the Triton-Ascend distribution."""
 
 import triton
+from tokenspeed_triton import profiler as proton
 from triton import language as tl
-from triton import profiler as proton
 from triton.language.extra import libdevice
 
 

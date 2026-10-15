@@ -1,0 +1,88 @@
+"""Audit current production baseline and sampled HBM; never edits input data."""
+from pathlib import Path
+import csv
+import hashlib
+import json
+import re
+import statistics
+
+root = Path("results/raw/homework1_final_baseline_hbm_20261015")
+output = Path("results/analysis/homework1_final_baseline_hbm_20261015")
+output.mkdir()
+summaries, requests = [], []
+for directory in [root / "out32", root / "out128"]:
+    paths = list(directory.glob("*.jsonl"))
+    assert len(paths) == 2
+    for path in paths:
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        (summaries if path.name.endswith(".summary.jsonl") else requests).extend(rows)
+assert len(requests) == 96 and len(summaries) == 12
+assert len(list(root.glob("out*/hardware/*.txt"))) == 24
+metrics = ["ttft_p50_ms", "tpot_p50_ms", "itl_mean_ms", "e2e_p50_ms", "output_token_throughput"]
+table = []
+for input_target in [128, 1024]:
+    for output_target in [32, 128]:
+        subset = [r for r in requests if r["target_input_tokens"] == input_target and r["target_output_tokens"] == output_target]
+        runs = [r for r in summaries if r["target_input_tokens"] == input_target and r["target_output_tokens"] == output_target]
+        assert len(subset) == 24 and len(runs) == 3
+        assert {r["repetition"] for r in runs} == {1, 2, 3}
+        assert {r["output_tokens"] for r in subset} == {output_target}
+        actual_input = {r["input_tokens"] for r in subset}
+        assert len(actual_input) == 1
+        for run in runs:
+            assert run["request_count"] == 8 and run["concurrency"] == 1
+            assert run["server_metrics_available"]
+            assert run["itl_observation"] == "server_prometheus_histogram_delta"
+            assert run["itl_observation_count"] == 8 * (output_target - 1)
+            assert not any(run[k] for k in ["prefix_caching", "mixed_batch", "overlap_schedule"])
+        table.append({"target_input": input_target, "actual_input": actual_input.pop(), "actual_output": output_target,
+                      "requests": 24, "runs": 3, **{key: statistics.mean(r[key] for r in runs) for key in metrics}})
+with (output / "summary.csv").open("x", newline="") as stream:
+    writer = csv.DictWriter(stream, fieldnames=list(table[0]))
+    writer.writeheader()
+    writer.writerows(table)
+
+
+def hbm_usage(text: str) -> int:
+    rows = []
+    for line in text.splitlines():
+        columns = [column.strip() for column in line.split("|") if column.strip()]
+        if (len(columns) >= 2 and re.fullmatch(r"0\s+2", columns[0])
+                and re.fullmatch(r"[0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.\d", columns[1])):
+            match = re.search(r"(\d+)\s*/\s*(\d+)\s*$", columns[-1])
+            assert match and int(match[2]) == 65536
+            rows.append(int(match[1]))
+    assert len(rows) == 1, "expected one logical2 HBM usage row"
+    return rows[0]
+
+
+samples = [json.loads(line) for line in (root / "hbm_samples.jsonl").read_text().splitlines()]
+assert samples and all(r["returncode"] == 0 for r in samples)
+assert all(r["ended_ns"] >= r["started_ns"] for r in samples)
+for phase in ["startup", "measurement-out32", "measurement-out128"]:
+    assert any(r["phase"] == phase for r in samples)
+sample_rows = [{"phase": r["phase"], "started_ns": r["started_ns"], "ended_ns": r["ended_ns"],
+                "used_hbm_mb": hbm_usage(r["stdout"])} for r in samples]
+with (output / "hbm_samples.csv").open("x", newline="") as stream:
+    writer = csv.DictWriter(stream, fieldnames=list(sample_rows[0]))
+    writer.writeheader()
+    writer.writerows(sample_rows)
+exit_text = (root / "exit_device.txt").read_text()
+assert (root / "processes_after.txt").read_text().count("No process in device.") == 2
+hbm = {"before_mb": hbm_usage((root / "before_device.txt").read_text()),
+       "loaded_mb": hbm_usage((root / "loaded_device.txt").read_text()),
+       "exit_mb": hbm_usage(exit_text), "sample_count": len(samples),
+       "sampled_peak_by_phase_mb": {phase: max(r["used_hbm_mb"] for r in sample_rows if r["phase"] == phase)
+                                    for phase in sorted({r["phase"] for r in sample_rows})},
+       "query_seconds_max": max((r["ended_ns"] - r["started_ns"]) / 1e9 for r in samples),
+       "start_interval_seconds_max": max((b["started_ns"] - a["started_ns"]) / 1e9 for a, b in zip(samples, samples[1:]))}
+with (output / "audit.json").open("x") as stream:
+    json.dump({"scope": "final-source 2x2 baseline; physical NPU1/chip0; legacy per-round NPU0 snapshots excluded from resource conclusions",
+               "request_count": len(requests), "summary_count": len(summaries), "rows": table, "hbm": hbm,
+               "raw_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob("*") if p.is_file()},
+               "source_script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+               "limits": ["Run-level P50 values are averaged, not pooled request percentiles.",
+                          "HBM is driver device usage, not model tensor/KV-only bytes.",
+                          "Sample peaks can miss short spikes and include condition warmup.",
+                          "No profiler or diagnostic hooks; source snapshots retained."]}, stream, indent=2)
+print(json.dumps({"rows": table, "hbm": hbm}, indent=2))

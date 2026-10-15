@@ -199,6 +199,51 @@ protected:
     }
 };
 
+class SessionTurnKvCacheEventTestSuite : public SchedulerTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        SchedulerConfig cfg = SchedulerTestSuite::MakeConfig();
+        cfg.disable_l2_cache = true;
+        cfg.enable_kv_cache_events = true;
+        return cfg;
+    }
+};
+
+TEST_F(SessionTurnKvCacheEventTestSuite, SessionTurnIdReuseDoesNotReuseAnotherRequestHashProgress) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first = MakeRequestSpec("turn-1", 2, 1);
+    first.session_id = "session-a";
+    Submit(first);
+    PlanOnce();
+    SendForwardDone("turn-1", {50});
+    SendFinish("turn-1");
+
+    RequestSpec second = MakeRequestSpec("turn-2", 1, 60);
+    second.session_id = "session-a";
+    Submit(second);
+    PlanOnce();
+    SendForwardDone("turn-2", {70});
+    SendFinish("turn-2");
+    ASSERT_TRUE(scheduler_->CloseSession("session-a"));
+
+    const RequestSpec reused_id = MakeRequestSpec("turn-1", 2, 100);
+    Submit(reused_id);
+    PlanOnce();
+    SendForwardDone("turn-1", {200});
+    SendFinish("turn-1");
+
+    const std::vector<KvCacheEvent> events = scheduler_->DrainKvEvents();
+    const auto stored = std::find_if(events.begin(), events.end(), [&reused_id](const KvCacheEvent& event) {
+        const auto* block = std::get_if<KvBlockStoredEvent>(&event);
+        return block != nullptr &&
+               block->token_ids == std::vector<std::int32_t>(reused_id.tokens.begin(), reused_id.tokens.begin() + 2);
+    });
+    ASSERT_NE(stored, events.end());
+    const KvBlockStoredEvent& block = std::get<KvBlockStoredEvent>(*stored);
+    ASSERT_EQ(block.block_hashes.size(), 1u);
+    EXPECT_EQ(block.block_hashes.front(), HashKvBlock(block.token_ids, block.parent_block_hash));
+}
+
 TEST_F(SchedulerKvCacheEventTestSuite, PublishesStoredBlockAndDrainsItOnce) {
     const RequestSpec spec = MakeRequestSpec("r1", 1);
     Submit(spec);
@@ -515,6 +560,441 @@ TEST_F(SchedulerTestSuite, SubmitRequestsRejectsEmptyTokens) {
     EXPECT_THROW(Submit(RequestSpec{.request_id = "empty"}), std::invalid_argument);
 }
 
+TEST_F(SchedulerTestSuite, SessionRegistryOpenDuplicateAndCloseBeforeFirstTurn) {
+    const std::int32_t available_blocks = scheduler_->AvailableLcmBlocks();
+
+    EXPECT_FALSE(scheduler_->OpenSession(""));
+    EXPECT_FALSE(scheduler_->HasSession(""));
+    EXPECT_TRUE(scheduler_->OpenSession("session-a"));
+    EXPECT_TRUE(scheduler_->HasSession("session-a"));
+    EXPECT_FALSE(scheduler_->OpenSession("session-a"));
+    EXPECT_EQ(scheduler_->WaitingSize(), 0u);
+    EXPECT_EQ(scheduler_->PrefillSize(), 0u);
+    EXPECT_EQ(scheduler_->DecodingSize(), 0u);
+    EXPECT_EQ(scheduler_->AvailableLcmBlocks(), available_blocks);
+
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+    EXPECT_FALSE(scheduler_->HasSession("session-a"));
+    EXPECT_FALSE(scheduler_->CloseSession("session-a"));
+    EXPECT_EQ(scheduler_->AvailableLcmBlocks(), available_blocks);
+}
+
+TEST_F(SchedulerTestSuite, SessionTurnInfoUsesTheRequestPrefillFrontier) {
+    EXPECT_FALSE(scheduler_->CanSubmitSessionTurn("missing"));
+    EXPECT_FALSE(scheduler_->CanDeferSessionTurn("missing"));
+    EXPECT_FALSE(scheduler_->SessionInfoForSession("missing").has_value());
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_FALSE(scheduler_->CanDeferSessionTurn("session-a"));
+    EXPECT_FALSE(scheduler_->SessionInfoForSession("session-a").has_value());
+
+    RequestSpec first = MakeRequestSpec("turn-1", 1);
+    first.session_id = "session-a";
+    Submit(first);
+    EXPECT_FALSE(scheduler_->CanSubmitSessionTurn("session-a"));
+    auto info = scheduler_->SessionInfoForSession("session-a");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_TRUE(info->turn_active);
+    EXPECT_EQ(info->total_context_tokens, 2);
+    EXPECT_EQ(info->newly_prefilled_tokens, 2);
+    EXPECT_EQ(info->reused_context_tokens, 0);
+
+    PlanOnce();
+    SendForwardDone("turn-1", {99});
+    SendFinish("turn-1");
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    info = scheduler_->SessionInfoForSession("session-a");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_FALSE(info->turn_active);
+    EXPECT_EQ(info->total_context_tokens, 2);
+    EXPECT_EQ(info->newly_prefilled_tokens, 2);
+    EXPECT_EQ(info->reused_context_tokens, 0);
+
+    RequestSpec second = MakeRequestSpec("turn-2", 1, 100);
+    second.session_id = "session-a";
+    Submit(second);
+    EXPECT_FALSE(scheduler_->CanSubmitSessionTurn("session-a"));
+    info = scheduler_->SessionInfoForSession("session-a");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_TRUE(info->turn_active);
+    EXPECT_EQ(info->total_context_tokens, 5);
+    EXPECT_EQ(info->reused_context_tokens, 2);
+    EXPECT_EQ(info->newly_prefilled_tokens, 3);
+}
+
+class SessionOverlapTestSuite : public SchedulerTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        SchedulerConfig cfg = SchedulerTestSuite::MakeConfig();
+        cfg.overlap_schedule_depth = 1;
+        return cfg;
+    }
+};
+
+TEST_F(SessionOverlapTestSuite, CanDeferSessionTurnOnlyWhileOverlapResultsDrain) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first = MakeRequestSpec("turn-1", 1);
+    first.max_new_tokens = 8;
+    first.session_id = "session-a";
+    Submit(first);
+
+    PlanOnce();
+    SendForwardDone("turn-1", {99});
+    PlanOnce();
+    PlanOnce();
+    SendForwardDone("turn-1", {100});
+    SendFinish("turn-1");
+
+    EXPECT_FALSE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_TRUE(scheduler_->CanDeferSessionTurn("session-a"));
+
+    SendForwardDone("turn-1", {101});
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_FALSE(scheduler_->CanDeferSessionTurn("session-a"));
+}
+
+class SessionFifoTestSuite : public SchedulerTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        SchedulerConfig cfg = SchedulerTestSuite::MakeConfig();
+        cfg.max_batch_size = 2;
+        cfg.max_scheduled_tokens = 4;
+        return cfg;
+    }
+};
+
+TEST_F(SessionFifoTestSuite, ResumedSessionMovesBehindAnInterleavedPrefill) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first_turn = MakeRequestSpec("turn-1", 1);
+    first_turn.session_id = "session-a";
+    Submit(first_turn);
+    const ExecutionPlan first_plan = PlanOnce();
+    const ForwardBatch* first_batch = FindForwardBatch(first_plan);
+    ASSERT_NE(first_batch, nullptr);
+    ASSERT_EQ(first_batch->request_ids, std::vector<std::string>{"turn-1"});
+    SendForwardDone("turn-1", {50});
+    SendFinish("turn-1");
+
+    Submit(MakeRequestSpec("middle", 4, 100));
+    const ExecutionPlan middle_plan = PlanOnce();
+    const ForwardBatch* middle_batch = FindForwardBatch(middle_plan);
+    ASSERT_NE(middle_batch, nullptr);
+    ASSERT_EQ(middle_batch->request_ids, std::vector<std::string>{"middle"});
+    ASSERT_EQ(middle_batch->input_lengths, std::vector<std::int32_t>{4});
+    SendForwardDone("middle");
+
+    RequestSpec resumed_turn = MakeRequestSpec("turn-2", 1, 200);
+    resumed_turn.session_id = "session-a";
+    Submit(resumed_turn);
+
+    const ExecutionPlan competing_plan = PlanOnce();
+    const ForwardBatch* competing_batch = FindForwardBatch(competing_plan);
+    ASSERT_NE(competing_batch, nullptr);
+    EXPECT_EQ(competing_batch->request_ids, std::vector<std::string>{"middle"});
+}
+
+class SessionRetractionInfoTestSuite : public SchedulerTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        SchedulerConfig cfg = SchedulerTestSuite::MakeConfig();
+        cfg.device_allocator.total_pages = 6;
+        cfg.cache_groups.front().total_pages = cfg.device_allocator.total_pages;
+        cfg.disable_l2_cache = true;
+        cfg.disable_prefix_cache = true;
+        cfg.max_batch_size = 4;
+        cfg.max_scheduled_tokens = 2;
+        return cfg;
+    }
+};
+
+TEST_F(SessionRetractionInfoTestSuite, RetractionClearsSessionReuseFromTurnInfo) {
+    ASSERT_EQ(scheduler_->MaxSingleRequestTokens(), 10);
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first_turn = MakeRequestSpec("turn-1", 1);
+    first_turn.session_id = "session-a";
+    Submit(first_turn);
+    ExecutionPlan first_plan = PlanOnce();
+    ASSERT_NE(FindForwardBatch(first_plan), nullptr);
+    SendForwardDone("turn-1", {50});
+    SendFinish("turn-1");
+
+    Submit(MakeRequestSpec("middle", 1, 100));
+    ExecutionPlan middle_plan = PlanOnce();
+    const ForwardBatch* middle_batch = FindForwardBatch(middle_plan);
+    ASSERT_NE(middle_batch, nullptr);
+    ASSERT_EQ(middle_batch->request_ids, std::vector<std::string>{"middle"});
+    SendForwardDone("middle", {150});
+
+    RequestSpec resumed_turn = MakeRequestSpec("turn-2", 3, 200);
+    resumed_turn.session_id = "session-a";
+    Submit(resumed_turn);
+    auto info = scheduler_->SessionInfoForSession("session-a");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_TRUE(info->turn_active);
+    EXPECT_EQ(info->total_context_tokens, 9);
+    EXPECT_EQ(info->reused_context_tokens, 2);
+    EXPECT_EQ(info->newly_prefilled_tokens, 7);
+
+    for (int chunk = 0; chunk < 2; ++chunk) {
+        ExecutionPlan plan = PlanOnce();
+        const ForwardBatch* batch = FindForwardBatch(plan);
+        ASSERT_NE(batch, nullptr);
+        ASSERT_EQ(batch->request_ids, std::vector<std::string>{"turn-2"});
+        SendForwardDone("turn-2");
+    }
+
+    PlanOnce();
+    ASSERT_EQ(scheduler_->WaitingSize(), 1u) << "the session continuation should have been retracted";
+    info = scheduler_->SessionInfoForSession("session-a");
+    ASSERT_TRUE(info.has_value());
+    EXPECT_TRUE(info->turn_active);
+    EXPECT_EQ(info->total_context_tokens, 9);
+    EXPECT_EQ(info->reused_context_tokens, 0);
+    EXPECT_EQ(info->newly_prefilled_tokens, info->total_context_tokens);
+}
+
+TEST_F(SchedulerTestSuite, SessionCumulativeContextAndGenerationReserveRejectOverLimit) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first_turn = MakeRequestSpec("turn-1", 1);
+    first_turn.session_id = "session-a";
+    Submit(first_turn);
+    PlanOnce();
+    SendForwardDone("turn-1", {50});
+    SendFinish("turn-1");
+
+    const std::int32_t context_tokens = scheduler_->RequestTokenSize("turn-1");
+    const std::int32_t max_tokens = scheduler_->MaxSingleRequestTokens();
+    ASSERT_GT(max_tokens, context_tokens + 1);
+
+    RequestSpec over_limit = MakeRequestSpec("turn-2", 1, 200);
+    over_limit.tokens.resize(static_cast<std::size_t>(max_tokens - context_tokens), 200);
+    over_limit.max_new_tokens = 1;
+    over_limit.session_id = "session-a";
+    EXPECT_THROW(Submit(over_limit), std::invalid_argument);
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-1"), context_tokens);
+}
+
+TEST_F(SchedulerTestSuite, SessionCumulativeContextAndGenerationReserveAcceptExactLimit) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first_turn = MakeRequestSpec("turn-1", 1);
+    first_turn.session_id = "session-a";
+    Submit(first_turn);
+    PlanOnce();
+    SendForwardDone("turn-1", {50});
+    SendFinish("turn-1");
+
+    const std::int32_t context_tokens = scheduler_->RequestTokenSize("turn-1");
+    const std::int32_t max_tokens = scheduler_->MaxSingleRequestTokens();
+    ASSERT_GT(max_tokens, context_tokens + 1);
+
+    RequestSpec exact_limit = MakeRequestSpec("turn-2", 1, 200);
+    exact_limit.tokens.resize(static_cast<std::size_t>(max_tokens - context_tokens - 1), 200);
+    exact_limit.max_new_tokens = 1;
+    exact_limit.session_id = "session-a";
+    EXPECT_NO_THROW(Submit(exact_limit));
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-2"), max_tokens - 1);
+    EXPECT_FALSE(scheduler_->CanSubmitSessionTurn("session-a"));
+}
+
+TEST_F(SchedulerTestSuite, SessionFinishRetainsPagesUntilClose) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    const std::int32_t active_before = scheduler_->ActiveLcmBlocks();
+    RequestSpec turn = MakeRequestSpec("turn-1", 1);
+    turn.session_id = "session-a";
+
+    Submit(turn);
+    PlanOnce();
+    EXPECT_FALSE(scheduler_->CloseSession("session-a"));
+    SendForwardDone("turn-1", {99});
+    SendFinish("turn-1");
+
+    EXPECT_TRUE(scheduler_->HasSession("session-a"));
+    EXPECT_GT(scheduler_->ActiveLcmBlocks(), active_before);
+    EXPECT_EQ(scheduler_->PrefillSize(), 0u);
+    EXPECT_EQ(scheduler_->DecodingSize(), 0u);
+
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), active_before);
+    EXPECT_FALSE(scheduler_->HasSession("session-a"));
+}
+
+TEST_F(SchedulerTestSuite, SchedulerDestructionReleasesRetainedSessionResourcesBeforePools) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec turn = MakeRequestSpec("turn-1", 1);
+    turn.session_id = "session-a";
+    Submit(turn);
+    PlanOnce();
+    SendForwardDone("turn-1", {99});
+    SendFinish("turn-1");
+
+    ASSERT_TRUE(scheduler_->HasSession("session-a"));
+    ASSERT_GT(scheduler_->ActiveLcmBlocks(), 0);
+    scheduler_.reset();
+}
+
+TEST_F(SchedulerTestSuite, SessionWaitsForLateForwardResultBeforeClose) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec turn = MakeRequestSpec("turn-1", 1);
+    turn.session_id = "session-a";
+    Submit(turn);
+    PlanOnce();
+    SendForwardDone("turn-1", {99});
+    PlanOnce();
+    SendFinish("turn-1");
+
+    RequestSpec next = MakeRequestSpec("turn-2", 1, 100);
+    next.session_id = "session-a";
+    EXPECT_THROW(Submit(next), std::invalid_argument);
+    EXPECT_TRUE(scheduler_->CanDeferSessionTurn("session-a"));
+    EXPECT_FALSE(scheduler_->CloseSession("session-a"));
+    EXPECT_NO_THROW(SendForwardDone("turn-1", {100}));
+    EXPECT_FALSE(scheduler_->CanDeferSessionTurn("session-a"));
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+}
+
+TEST_F(SessionOverlapTestSuite, LateForwardResultAfterStatelessFinishIsIgnored) {
+    RequestSpec request = MakeRequestSpec("request", 1);
+    request.max_new_tokens = 8;
+    Submit(request);
+
+    PlanOnce();
+    SendForwardDone("request", {99});
+    PlanOnce();
+    SendFinish("request");
+
+    EXPECT_NO_THROW(SendForwardDone("request", {100}));
+}
+
+TEST_F(SchedulerTestSuite, SessionAbortWaitsForInFlightForwardBeforeReleasingPages) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec turn = MakeRequestSpec("turn-1", 1);
+    turn.session_id = "session-a";
+    Submit(turn);
+    PlanOnce();
+    const std::int32_t active_during_forward = scheduler_->ActiveLcmBlocks();
+    ASSERT_GT(active_during_forward, 0);
+
+    SendAbortEvent("turn-1");
+    EXPECT_FALSE(scheduler_->HasSession("session-a"));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), active_during_forward);
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-1"), static_cast<std::int32_t>(turn.tokens.size()));
+    EXPECT_NO_THROW(SendForwardDone("turn-1", {99}));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-1"), static_cast<std::int32_t>(turn.tokens.size()));
+
+    PlanOnce();
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-1"), -1);
+}
+
+TEST_F(SchedulerTestSuite, SessionRejectsUnknownAndOverlappingTurns) {
+    RequestSpec unknown = MakeRequestSpec("unknown-turn", 1);
+    unknown.session_id = "missing";
+    EXPECT_THROW(Submit(unknown), std::invalid_argument);
+
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first = MakeRequestSpec("turn-1", 1);
+    first.session_id = "session-a";
+    Submit(first);
+
+    RequestSpec overlapping = MakeRequestSpec("turn-2", 1, 100);
+    overlapping.session_id = "session-a";
+    EXPECT_THROW(Submit(overlapping), std::invalid_argument);
+    EXPECT_FALSE(scheduler_->CloseSession("session-a"));
+
+    SendAbortEvent("turn-1");
+    PlanOnce();
+    EXPECT_FALSE(scheduler_->HasSession("session-a"));
+}
+
+TEST_F(SchedulerTestSuite, SessionTurnReusesRequestAndSchedulesItsSuffix) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first = MakeRequestSpec("turn-1", 1);
+    first.session_id = "session-a";
+    Submit(first);
+    PlanOnce();
+    SendForwardDone("turn-1", {99});
+    SendFinish("turn-1");
+
+    const std::int32_t active_after_first_turn = scheduler_->ActiveLcmBlocks();
+    RequestSpec next = MakeRequestSpec("turn-2", 1, 100);
+    next.tokens = {101, 102};
+    next.session_id = "session-a";
+    Submit(next);
+
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-1"), -1);
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-2"), 5);
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), active_after_first_turn);
+    ASSERT_EQ(scheduler_->PrefillSize(), 1u);
+
+    const ExecutionPlan plan = PlanOnce();
+    const ForwardBatch* batch = FindForwardBatch(plan);
+    ASSERT_NE(batch, nullptr);
+    ASSERT_EQ(batch->request_ids, std::vector<std::string>{"turn-2"});
+    EXPECT_GT(batch->input_lengths.front(), 0);
+
+    SendForwardDone("turn-2", {103});
+    SendFinish("turn-2");
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+}
+
+TEST_F(SchedulerTestSuite, ClosedSessionCleanupDoesNotEraseReusedRequestId) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    RequestSpec first = MakeRequestSpec("reused-turn", 1);
+    first.session_id = "session-a";
+    Submit(first);
+    PlanOnce();
+    SendForwardDone("reused-turn", {99});
+    SendFinish("reused-turn");
+    ASSERT_TRUE(scheduler_->CloseSession("session-a"));
+
+    const RequestSpec replacement = MakeRequestSpec("reused-turn", 1, 200);
+    Submit(replacement);
+    const ExecutionPlan plan = PlanOnce();
+    const ForwardBatch* batch = FindForwardBatch(plan);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"reused-turn"});
+    EXPECT_EQ(scheduler_->RequestTokenSize("reused-turn"), static_cast<std::int32_t>(replacement.tokens.size()));
+
+    SendForwardDone("reused-turn", {199});
+    SendFinish("reused-turn");
+    EXPECT_EQ(scheduler_->PrefillSize(), 0u);
+    EXPECT_EQ(scheduler_->DecodingSize(), 0u);
+}
+
+TEST_F(SchedulerTestSuite, SessionTurnsRemainIsolated) {
+    ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+    ASSERT_TRUE(scheduler_->OpenSession("session-b"));
+    RequestSpec first_a = MakeRequestSpec("turn-a1", 1, 100);
+    RequestSpec first_b = MakeRequestSpec("turn-b1", 1, 200);
+    first_a.session_id = "session-a";
+    first_b.session_id = "session-b";
+    Submit(std::vector<RequestSpec>{first_a, first_b});
+    PlanOnce();
+    SendForwardDone("turn-a1", {301});
+    SendForwardDone("turn-b1", {302});
+    SendFinish("turn-a1");
+    SendFinish("turn-b1");
+
+    RequestSpec next_a = MakeRequestSpec("turn-a2", 1, 400);
+    next_a.session_id = "session-a";
+    Submit(next_a);
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-b1"), 3);
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-a1"), -1);
+
+    const ExecutionPlan plan = PlanOnce();
+    const ForwardBatch* batch = FindForwardBatch(plan);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"turn-a2"});
+    SendForwardDone("turn-a2", {401});
+    SendFinish("turn-a2");
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+    EXPECT_TRUE(scheduler_->CloseSession("session-b"));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+}
+
 TEST_F(SchedulerTestSuite, SubmitRequestsValidatesWholeBatchBeforeInsertion) {
     const RequestSpec valid = MakeRequestSpec("valid", 1);
     RequestSpec invalid = MakeRequestSpec("invalid", 1);
@@ -547,6 +1027,114 @@ protected:
         return spec;
     }
 };
+
+class HybridSessionChunkingTestSuite : public HybridPrefixPromotionTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        SchedulerConfig cfg = HybridPrefixPromotionTestSuite::MakeConfig();
+        cfg.device_allocator.total_pages = 512;
+        for (CacheGroupConfig& group : cfg.cache_groups) {
+            group.total_pages = 512;
+        }
+        return cfg;
+    }
+};
+
+TEST_F(HybridPrefixPromotionTestSuite, SessionTurnRetainsHybridStatePages) {
+    ASSERT_TRUE(scheduler_->OpenSession("hybrid-session"));
+    RequestSpec first = MakeHybridRequest("hybrid-turn-1", 500);
+    first.session_id = "hybrid-session";
+    Submit(first);
+    PlanOnce();
+    SendForwardDone("hybrid-turn-1", {900});
+    SendFinish("hybrid-turn-1");
+
+    const std::int32_t active_after_first_turn = scheduler_->ActiveLcmBlocks();
+    RequestSpec next = MakeRequestSpec("hybrid-turn-2", 1, 1000);
+    next.tokens = {1001};
+    next.session_id = "hybrid-session";
+    Submit(next);
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), active_after_first_turn);
+
+    const ExecutionPlan plan = PlanOnce();
+    const ForwardBatch* batch = FindForwardBatch(plan);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"hybrid-turn-2"});
+    EXPECT_EQ(batch->block_tables.size(), config_.cache_groups.size());
+
+    SendForwardDone("hybrid-turn-2", {1002});
+    SendFinish("hybrid-turn-2");
+    EXPECT_TRUE(scheduler_->CloseSession("hybrid-session"));
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+}
+
+TEST_F(HybridSessionChunkingTestSuite, SessionContinuationKeepsHybridStateSlotsAcrossPrefillChunks) {
+    ASSERT_TRUE(scheduler_->OpenSession("hybrid-session"));
+    RequestSpec first = MakeHybridRequest("hybrid-turn-1", 500);
+    first.session_id = "hybrid-session";
+    Submit(first);
+
+    const ExecutionPlan first_plan = PlanOnce();
+    const ForwardBatch* first_batch = FindForwardBatch(first_plan);
+    ASSERT_NE(first_batch, nullptr);
+    const std::vector<std::int32_t>& initial_state_table = first_batch->block_tables.at("linear_attention_0").front();
+    ASSERT_EQ(initial_state_table.size(), 7u);
+    EXPECT_EQ(std::vector<std::int32_t>(initial_state_table.begin(), initial_state_table.begin() + 4),
+              (std::vector<std::int32_t>{0, 0, 0, 0}));
+    for (std::size_t slot = 4; slot < initial_state_table.size(); ++slot) {
+        EXPECT_NE(initial_state_table[slot], 0);
+    }
+
+    SendForwardDone("hybrid-turn-1", {900});
+    SendFinish("hybrid-turn-1");
+
+    RequestSpec next = MakeRequestSpec("hybrid-turn-2", 1, 1000);
+    next.tokens.resize(65);
+    for (std::size_t i = 0; i < next.tokens.size(); ++i) {
+        next.tokens[i] = 10000 + static_cast<std::int32_t>(i);
+    }
+    next.session_id = "hybrid-session";
+    Submit(next);
+
+    const ExecutionPlan first_suffix_plan = PlanOnce();
+    const ForwardBatch* first_suffix_batch = FindForwardBatch(first_suffix_plan);
+    ASSERT_NE(first_suffix_batch, nullptr);
+    EXPECT_EQ(first_suffix_batch->input_lengths, std::vector<std::int32_t>{1});
+    const std::vector<std::int32_t>& first_suffix_state_table =
+        first_suffix_batch->block_tables.at("linear_attention_0").front();
+    ASSERT_EQ(first_suffix_state_table.size(), initial_state_table.size());
+    EXPECT_EQ(first_suffix_state_table[4], 0);
+    EXPECT_EQ(first_suffix_state_table[5], initial_state_table[5]);
+    EXPECT_EQ(first_suffix_state_table[6], initial_state_table[6]);
+    SendForwardDone("hybrid-turn-2");
+
+    const ExecutionPlan middle_suffix_plan = PlanOnce();
+    const ForwardBatch* middle_suffix_batch = FindForwardBatch(middle_suffix_plan);
+    ASSERT_NE(middle_suffix_batch, nullptr);
+    EXPECT_EQ(middle_suffix_batch->input_lengths, std::vector<std::int32_t>{64});
+    const std::vector<std::int32_t>& middle_state_table =
+        middle_suffix_batch->block_tables.at("linear_attention_0").front();
+    ASSERT_EQ(middle_state_table.size(), 38u);
+    EXPECT_EQ(std::vector<std::int32_t>(middle_state_table.begin(), middle_state_table.begin() + 5),
+              (std::vector<std::int32_t>{0, 0, 0, 0, 0}));
+    for (std::size_t slot = 5; slot < middle_state_table.size(); ++slot) {
+        EXPECT_NE(middle_state_table[slot], 0);
+    }
+    SendForwardDone("hybrid-turn-2");
+
+    const ExecutionPlan final_suffix_plan = PlanOnce();
+    const ForwardBatch* final_suffix_batch = FindForwardBatch(final_suffix_plan);
+    ASSERT_NE(final_suffix_batch, nullptr);
+    EXPECT_EQ(final_suffix_batch->input_lengths, std::vector<std::int32_t>{1});
+    const std::vector<std::int32_t>& final_state_table =
+        final_suffix_batch->block_tables.at("linear_attention_0").front();
+    ASSERT_EQ(final_state_table.size(), 40u);
+    EXPECT_EQ(std::vector<std::int32_t>(final_state_table.begin(), final_state_table.begin() + 37),
+              std::vector<std::int32_t>(37, 0));
+    for (std::size_t slot = 37; slot < final_state_table.size(); ++slot) {
+        EXPECT_NE(final_state_table[slot], 0);
+    }
+}
 
 TEST_F(HybridPrefixPromotionTestSuite, ThirdRequestReusesPromotedStateBoundary) {
     Submit(MakeHybridRequest("seed", 100));

@@ -1,0 +1,7 @@
+{
+  "vectors_checked": 272,
+  "mismatches": 0,
+  "max_relative_l2_recalculation_difference": 2.501471252358556e-15,
+  "formula": "NumPy sqrt(sum(delta*delta))/sqrt(sum(reference*reference)); raw original vectors; no shared compare_tensor",
+  "audit_source_sha256": "33312fab688e7e2be286bfe6e90e00d85071d4cb77a9679f5cec085c5be99fbf"
+}

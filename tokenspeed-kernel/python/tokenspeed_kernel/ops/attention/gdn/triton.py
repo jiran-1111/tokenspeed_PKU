@@ -75,7 +75,7 @@ from tokenspeed_kernel.signature import format_signatures
     "gdn_chunk_prefill",
     name="triton_gdn_chunk_prefill",
     solution="triton",
-    capability=CapabilityRequirement(vendors=frozenset({"nvidia", "amd"})),
+    capability=CapabilityRequirement(vendors=frozenset({"nvidia", "amd", "ascend"})),
     signatures=format_signatures(
         ("q", "k", "v"), "dense", {torch.float16, torch.bfloat16}
     ),
@@ -170,11 +170,24 @@ def _fused_gdn_decode_update_kernel(
     CACHE_INTERMEDIATE_STATES: tl.constexpr,
     HAS_OUTPUT_STATE_INDICES: tl.constexpr,
     HAS_PER_TOKEN_OUTPUT_STATE_INDICES: tl.constexpr,
-    Q_STRIDES: tl.constexpr,
-    K_STRIDES: tl.constexpr,
-    V_STRIDES: tl.constexpr,
-    A_STRIDES: tl.constexpr,
-    B_STRIDES: tl.constexpr,
+    Q_STRIDE_B: tl.constexpr,
+    Q_STRIDE_T: tl.constexpr,
+    Q_STRIDE_H: tl.constexpr,
+    Q_STRIDE_K: tl.constexpr,
+    K_STRIDE_B: tl.constexpr,
+    K_STRIDE_T: tl.constexpr,
+    K_STRIDE_H: tl.constexpr,
+    K_STRIDE_K: tl.constexpr,
+    V_STRIDE_B: tl.constexpr,
+    V_STRIDE_T: tl.constexpr,
+    V_STRIDE_H: tl.constexpr,
+    V_STRIDE_K: tl.constexpr,
+    A_STRIDE_B: tl.constexpr,
+    A_STRIDE_T: tl.constexpr,
+    A_STRIDE_H: tl.constexpr,
+    B_STRIDE_B: tl.constexpr,
+    B_STRIDE_T: tl.constexpr,
+    B_STRIDE_H: tl.constexpr,
     ENABLE_PDL: tl.constexpr,
 ):
     """Dense-batch (no varlen) sigmoid-gating delta-rule decode/MTP update.
@@ -212,14 +225,14 @@ def _fused_gdn_decode_update_kernel(
     o_k = i_k * BK + tl.arange(0, BK)
     o_v = i_v * BV + tl.arange(0, BV)
 
-    p_q = q + i_n * Q_STRIDES[0] + i_h * Q_STRIDES[2] + o_k * Q_STRIDES[3]
-    p_k = k + i_n * K_STRIDES[0] + i_h * K_STRIDES[2] + o_k * K_STRIDES[3]
-    p_v = v + i_n * V_STRIDES[0] + i_hv * V_STRIDES[2] + o_v * V_STRIDES[3]
-    p_b = b + i_n * B_STRIDES[0] + i_hv * B_STRIDES[2]
+    p_q = q + i_n * Q_STRIDE_B + i_h * Q_STRIDE_H + o_k * Q_STRIDE_K
+    p_k = k + i_n * K_STRIDE_B + i_h * K_STRIDE_H + o_k * K_STRIDE_K
+    p_v = v + i_n * V_STRIDE_B + i_hv * V_STRIDE_H + o_v * V_STRIDE_K
+    p_b = b + i_n * B_STRIDE_B + i_hv * B_STRIDE_H
     p_o = o + (i_n * T * HV + i_hv) * V + o_v
 
     p_A_log = A_log + i_hv
-    p_a = a + i_n * A_STRIDES[0] + i_hv * A_STRIDES[2]
+    p_a = a + i_n * A_STRIDE_B + i_hv * A_STRIDE_H
     p_dt_bias = dt_bias + i_hv
 
     mask_k = o_k < K
@@ -302,12 +315,12 @@ def _fused_gdn_decode_update_kernel(
                     mask=mask_h,
                 )
 
-        p_q += Q_STRIDES[1]
-        p_k += K_STRIDES[1]
-        p_v += V_STRIDES[1]
-        p_b += B_STRIDES[1]
+        p_q += Q_STRIDE_T
+        p_k += K_STRIDE_T
+        p_v += V_STRIDE_T
+        p_b += B_STRIDE_T
         p_o += HV * V
-        p_a += A_STRIDES[1]
+        p_a += A_STRIDE_T
 
     if HAS_OUTPUT_STATE_INDICES:
         out_idx = tl.load(output_state_indices + i_n).to(tl.int64)
@@ -398,11 +411,24 @@ def _launch_fused_gdn_decode_update(
         CACHE_INTERMEDIATE_STATES=intermediate_states_buffer is not None,
         HAS_OUTPUT_STATE_INDICES=output_state_indices is not None,
         HAS_PER_TOKEN_OUTPUT_STATE_INDICES=(per_token_output_state_indices is not None),
-        Q_STRIDES=q.stride(),
-        K_STRIDES=k.stride(),
-        V_STRIDES=v.stride(),
-        A_STRIDES=a.stride(),
-        B_STRIDES=b.stride(),
+        Q_STRIDE_B=q.stride(0),
+        Q_STRIDE_T=q.stride(1),
+        Q_STRIDE_H=q.stride(2),
+        Q_STRIDE_K=q.stride(3),
+        K_STRIDE_B=k.stride(0),
+        K_STRIDE_T=k.stride(1),
+        K_STRIDE_H=k.stride(2),
+        K_STRIDE_K=k.stride(3),
+        V_STRIDE_B=v.stride(0),
+        V_STRIDE_T=v.stride(1),
+        V_STRIDE_H=v.stride(2),
+        V_STRIDE_K=v.stride(3),
+        A_STRIDE_B=a.stride(0),
+        A_STRIDE_T=a.stride(1),
+        A_STRIDE_H=a.stride(2),
+        B_STRIDE_B=b.stride(0),
+        B_STRIDE_T=b.stride(1),
+        B_STRIDE_H=b.stride(2),
         num_warps=1,
         num_stages=3,
         ENABLE_PDL=enable_pdl,
@@ -416,7 +442,7 @@ def _launch_fused_gdn_decode_update(
     "gdn_decode_step",
     name="triton_gdn_decode_step",
     solution="triton",
-    capability=CapabilityRequirement(vendors=frozenset({"nvidia", "amd"})),
+    capability=CapabilityRequirement(vendors=frozenset({"nvidia", "amd", "ascend"})),
     signatures=format_signatures(
         ("q", "k", "v"), "dense", {torch.float16, torch.bfloat16}
     ),

@@ -26,10 +26,10 @@ import threading
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 try:
     from benchmarks.course_project import core
@@ -75,11 +75,32 @@ class _StreamingHandler(BaseHTTPRequestHandler):
                 "usage": {"prompt_tokens": 3, "completion_tokens": 2},
             },
         ]
+        if "/reasoning/" in self.path:
+            events = [
+                {"choices": [{"delta": {"reasoning_content": "think"}}]},
+                {"choices": [{"delta": {"content": "answer"}}]},
+                {
+                    "choices": [],
+                    "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                },
+            ]
+        if "/chunks/" in self.path:
+            events = [
+                {"choices": [{"delta": {"content": ""}}]},
+                {"choices": [{"delta": {"content": "a"}}]},
+                {"choices": [{"delta": {"reasoning_content": ""}}]},
+                {"choices": [{"delta": {"reasoning_content": "bc"}}]},
+                {
+                    "choices": [],
+                    "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                },
+            ]
         for event in events:
             self.wfile.write(f"data: {json.dumps(event)}\n\n".encode())
             self.wfile.flush()
             time.sleep(0.005)
-        self.wfile.write(b"data: [DONE]\n\n")
+        if "/missing-done/" not in self.path:
+            self.wfile.write(b"data: [DONE]\n\n")
 
     def log_message(self, format: str, *args) -> None:
         del format, args
@@ -142,14 +163,18 @@ class TestModelConfig(unittest.TestCase):
         self.assertIsNotNone(load_model_config, "course benchmark core is missing")
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "model.yaml"
-            path.write_text(json.dumps({"model_id": "Qwen/Qwen3.5-0.8B"}), encoding="utf-8")
+            path.write_text(
+                json.dumps({"model_id": "Qwen/Qwen3.5-0.8B"}), encoding="utf-8"
+            )
             with self.assertRaisesRegex(ValueError, "served_model_name"):
                 load_model_config(path)
 
 
 class TestChatTemplateTokenIds(unittest.TestCase):
     def test_unwraps_transformers_batch_encoding(self) -> None:
-        self.assertIsNotNone(chat_template_token_ids, "chat template token helper is missing")
+        self.assertIsNotNone(
+            chat_template_token_ids, "chat template token helper is missing"
+        )
         tokenizer = Mock()
         tokenizer.apply_chat_template.return_value = {
             "input_ids": [[11, 22, 33]],
@@ -174,7 +199,9 @@ class TestMetrics(unittest.TestCase):
         )
 
     def test_calculates_streaming_latency_metrics(self) -> None:
-        self.assertIsNotNone(calculate_request_metrics, "course benchmark core is missing")
+        self.assertIsNotNone(
+            calculate_request_metrics, "course benchmark core is missing"
+        )
         metrics = calculate_request_metrics(
             started_at=10.0,
             first_token_at=10.2,
@@ -224,7 +251,9 @@ class TestServeCommand(unittest.TestCase):
         self.assertIsNotNone(model_load_path, "model path resolver is missing")
         repo_root = Path(core.__file__).resolve().parents[2]
         self.assertEqual(
-            model_load_path({"model_id": "Qwen/model", "local_model_path": "benchmarks"}),
+            model_load_path(
+                {"model_id": "Qwen/model", "local_model_path": "benchmarks"}
+            ),
             str(repo_root / "benchmarks"),
         )
 
@@ -255,7 +284,9 @@ class TestServeCommand(unittest.TestCase):
             "enforce_eager": True,
         }
         command = build_serve_command(config, host="0.0.0.0", port=8000)
-        self.assertEqual(command[:5], ["python", "-m", "tokenspeed.cli", "serve", config["model_id"]])
+        self.assertEqual(
+            command[:5], ["python", "-m", "tokenspeed.cli", "serve", config["model_id"]]
+        )
         expected_pairs = {
             "--revision": config["model_revision"],
             "--prometheus-port": str(config["prometheus_port"]),
@@ -284,7 +315,9 @@ class TestServeCommand(unittest.TestCase):
         self.assertIn("--enforce-eager", command)
         self.assertNotIn("--block-size", command)
         graph_index = command.index("--cudagraph-capture-sizes")
-        self.assertEqual(command[graph_index + 1 : graph_index + 5], ["1", "2", "4", "8"])
+        self.assertEqual(
+            command[graph_index + 1 : graph_index + 5], ["1", "2", "4", "8"]
+        )
 
     def test_serve_script_runs_from_source_checkout(self) -> None:
         repo_root = Path(__file__).resolve().parents[2]
@@ -308,9 +341,13 @@ class TestServeCommand(unittest.TestCase):
         self.assertIn("--metrics-port 39142", result.stdout)
         self.assertIn("--device npu", result.stdout)
 
-    def test_all_qwen35_npu_bringup_configs_disable_unsupported_mixed_batch(self) -> None:
+    def test_all_qwen35_npu_bringup_configs_disable_unsupported_mixed_batch(
+        self,
+    ) -> None:
         repo_root = Path(__file__).resolve().parents[2]
-        for config_path in sorted((repo_root / "configs/bringup").glob("qwen35_*.yaml")):
+        for config_path in sorted(
+            (repo_root / "configs/bringup").glob("qwen35_*.yaml")
+        ):
             with self.subTest(config=config_path.name):
                 config = load_model_config(config_path)
                 command = build_serve_command(config, host="127.0.0.1", port=8000)
@@ -350,13 +387,17 @@ class TestServeCommand(unittest.TestCase):
         def run_requests(*, requests, **_kwargs):
             sent_messages.extend(request.messages for request in requests)
             return [
-                {"session_id": request.session_id, "output_text": f"answer-{request.turn_index}"}
+                {
+                    "session_id": request.session_id,
+                    "output_text": f"answer-{request.turn_index}",
+                }
                 for request in requests
             ]
 
         args = SimpleNamespace(
             config=Path("fake.yaml"),
             output_dir=Path("unused-output"),
+            profile_single_request_ttft=False,
             concurrency=[1],
             shared_prefix_ratios=[0],
             prefix_tokens=1,
@@ -380,18 +421,30 @@ class TestServeCommand(unittest.TestCase):
         with (
             patch.dict(
                 sys.modules,
-                {"transformers": SimpleNamespace(AutoTokenizer=Mock(return_value=FakeTokenizer()))},
+                {
+                    "transformers": SimpleNamespace(
+                        AutoTokenizer=Mock(return_value=FakeTokenizer())
+                    )
+                },
             ),
             patch.object(agent_script, "parse_args", return_value=args),
             patch.object(agent_script, "load_model_config", return_value=config),
             patch.object(agent_script, "model_load_path", return_value="unused-model"),
             patch.object(agent_script, "OpenAIChatClient", return_value=object()),
-            patch.object(agent_script, "metrics_server_url", return_value="http://unused"),
-            patch.object(agent_script, "build_agent_session_contexts", return_value={"session-0": "context"}),
+            patch.object(
+                agent_script, "metrics_server_url", return_value="http://unused"
+            ),
+            patch.object(
+                agent_script,
+                "build_agent_session_contexts",
+                return_value={"session-0": "context"},
+            ),
             patch.object(agent_script, "ServerMetricsSampler", return_value=sampler),
             patch.object(agent_script, "snapshot_server_metrics", return_value={}),
             patch.object(agent_script, "capture_npu_smi", return_value=False),
-            patch.object(agent_script, "run_concurrent_requests", side_effect=run_requests),
+            patch.object(
+                agent_script, "run_concurrent_requests", side_effect=run_requests
+            ),
             patch.object(agent_script, "summarize_records", return_value={}),
             patch.object(agent_script, "add_metric_delta"),
             patch.object(agent_script, "append_jsonl"),
@@ -409,7 +462,9 @@ class TestServeCommand(unittest.TestCase):
 
 class TestAgentWorkload(unittest.TestCase):
     def test_builds_policy_specific_turn_requests(self) -> None:
-        self.assertIsNotNone(build_agent_turn_request, "agent turn request builder is missing")
+        self.assertIsNotNone(
+            build_agent_turn_request, "agent turn request builder is missing"
+        )
         mock_result = "Mock tool result: Search returned two relevant documents. Continue with the task."
         requests = [
             build_agent_turn_request(
@@ -424,8 +479,12 @@ class TestAgentWorkload(unittest.TestCase):
             for session_index in range(2)
         ]
         self.assertEqual([request.tool_wait_ms for request in requests], [100, 100])
-        self.assertEqual([request.mock_tool_result_injected for request in requests], [False, False])
-        self.assertTrue(all(mock_result not in str(request.messages) for request in requests))
+        self.assertEqual(
+            [request.mock_tool_result_injected for request in requests], [False, False]
+        )
+        self.assertTrue(
+            all(mock_result not in str(request.messages) for request in requests)
+        )
 
         requests = [
             build_agent_turn_request(
@@ -440,8 +499,13 @@ class TestAgentWorkload(unittest.TestCase):
             for session_index in range(2)
         ]
         self.assertEqual([request.tool_wait_ms for request in requests], [100, 0])
-        self.assertEqual([request.mock_tool_result_injected for request in requests], [True, False])
-        self.assertEqual(requests[0].messages[-1], {"role": "user", "content": f"Continue.\n\n{mock_result}"})
+        self.assertEqual(
+            [request.mock_tool_result_injected for request in requests], [True, False]
+        )
+        self.assertEqual(
+            requests[0].messages[-1],
+            {"role": "user", "content": f"Continue.\n\n{mock_result}"},
+        )
         self.assertNotIn(mock_result, requests[1].messages[-1]["content"])
 
         first_turn = build_agent_turn_request(
@@ -458,7 +522,9 @@ class TestAgentWorkload(unittest.TestCase):
         self.assertEqual(first_turn.messages[-1], {"role": "user", "content": "Start."})
 
     def test_other_session_enters_chat_while_one_session_waits(self) -> None:
-        self.assertIsNotNone(build_agent_turn_request, "agent turn request builder is missing")
+        self.assertIsNotNone(
+            build_agent_turn_request, "agent turn request builder is missing"
+        )
         wait_started = threading.Event()
         wait_released = threading.Event()
         other_called_during_wait = threading.Event()
@@ -467,28 +533,41 @@ class TestAgentWorkload(unittest.TestCase):
         def controlled_sleep(seconds: float) -> None:
             wait_started.set()
             if not other_called_during_wait.wait(timeout=2):
-                raise AssertionError("session-1 did not call chat during session-0 wait")
+                raise AssertionError(
+                    "session-1 did not call chat during session-0 wait"
+                )
             wait_released.set()
 
         class GatedThreadPoolExecutor(ThreadPoolExecutor):
             def map(self, fn, requests, timeout=None, chunksize=1):
                 def gated(request):
-                    if request.session_id == "session-1" and not wait_started.wait(timeout=2):
+                    if request.session_id == "session-1" and not wait_started.wait(
+                        timeout=2
+                    ):
                         raise AssertionError("session-0 did not start waiting")
                     return fn(request)
 
-                return super().map(gated, requests, timeout=timeout, chunksize=chunksize)
+                return super().map(
+                    gated, requests, timeout=timeout, chunksize=chunksize
+                )
 
         class FakeClient:
-            def chat(self, *, model: str, messages: list, max_tokens: int) -> SimpleNamespace:
+            def chat(
+                self, *, model: str, messages: list, max_tokens: int
+            ) -> SimpleNamespace:
                 if messages[-1]["content"] == "session-1":
                     session1_chat_states.append(
                         (wait_started.is_set(), wait_released.is_set())
                     )
                     other_called_during_wait.set()
                 return SimpleNamespace(
-                    text="done", input_tokens=2, output_tokens=1, ttft_ms=1.0,
-                    tpot_ms=1.0, e2e_ms=2.0, inter_chunk_latencies_ms=[],
+                    text="done",
+                    input_tokens=2,
+                    output_tokens=1,
+                    ttft_ms=1.0,
+                    tpot_ms=1.0,
+                    e2e_ms=2.0,
+                    inter_chunk_latencies_ms=[],
                 )
 
         requests = [
@@ -505,15 +584,23 @@ class TestAgentWorkload(unittest.TestCase):
         ]
         with (
             patch("benchmarks.course_project.runner.time.sleep", controlled_sleep),
-            patch("benchmarks.course_project.runner.ThreadPoolExecutor", GatedThreadPoolExecutor),
+            patch(
+                "benchmarks.course_project.runner.ThreadPoolExecutor",
+                GatedThreadPoolExecutor,
+            ),
         ):
             with ThreadPoolExecutor(max_workers=2) as executor:
                 future = executor.submit(
                     run_concurrent_requests,
-                    client=FakeClient(), requests=requests, concurrency=2,
-                    model="test", max_tokens=4,
+                    client=FakeClient(),
+                    requests=requests,
+                    concurrency=2,
+                    model="test",
+                    max_tokens=4,
                 )
-                self.assertTrue(wait_started.wait(timeout=2), "session-0 did not enter wait")
+                self.assertTrue(
+                    wait_started.wait(timeout=2), "session-0 did not enter wait"
+                )
                 self.assertTrue(
                     other_called_during_wait.wait(timeout=2),
                     "session-1 did not call chat during session-0 wait",
@@ -523,7 +610,10 @@ class TestAgentWorkload(unittest.TestCase):
         self.assertEqual(session1_chat_states, [(True, False)])
         self.assertEqual(len(records), 2)
         self.assertEqual(
-            {record["session_id"]: record["mock_tool_result_injected"] for record in records},
+            {
+                record["session_id"]: record["mock_tool_result_injected"]
+                for record in records
+            },
             {"session-0": True, "session-1": False},
         )
 
@@ -546,7 +636,9 @@ class TestAgentWorkload(unittest.TestCase):
         self.assertNotEqual(run0["session-0"][:16], run1["session-0"][:16])
 
     def test_builds_growing_multi_turn_histories(self) -> None:
-        self.assertIsNotNone(build_agent_conversation, "course benchmark core is missing")
+        self.assertIsNotNone(
+            build_agent_conversation, "course benchmark core is missing"
+        )
         requests = build_agent_conversation(
             session_id="session-0",
             system_prompt="You are a tool-using assistant.",
@@ -561,6 +653,68 @@ class TestAgentWorkload(unittest.TestCase):
         self.assertEqual(requests[0].messages[0]["role"], "system")
         self.assertIn("search", requests[0].messages[0]["content"])
         self.assertEqual(requests[2].messages[-1], {"role": "user", "content": "third"})
+
+
+class TestOpenAIChatClientHTTPStatus(unittest.TestCase):
+    def test_retains_successful_http_status_without_network(self) -> None:
+        class _Response:
+            status = 206
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def __iter__(self):
+                events = [
+                    {"choices": [{"delta": {"content": "ok"}}]},
+                    {
+                        "choices": [],
+                        "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+                    },
+                ]
+                for event in events:
+                    yield f"data: {json.dumps(event)}\n\n".encode()
+                yield b"data: [DONE]\n\n"
+
+        with patch.object(core.urllib.request, "urlopen", return_value=_Response()):
+            result = OpenAIChatClient("http://example.invalid/v1").chat(
+                model="fake",
+                messages=[{"role": "user", "content": "x"}],
+                max_tokens=1,
+            )
+
+        self.assertEqual(result.http_status, 206)
+
+    def test_request_send_callback_runs_before_immediate_http_error(self) -> None:
+        sends = []
+        error = core.urllib.error.HTTPError(
+            "http://example.invalid/v1/chat/completions",
+            503,
+            "unavailable",
+            {},
+            None,
+        )
+
+        def fail_urlopen(*_args, **_kwargs):
+            self.assertEqual(len(sends), 1)
+            raise error
+
+        with patch.object(core.urllib.request, "urlopen", side_effect=fail_urlopen):
+            with self.assertRaises(core.urllib.error.HTTPError):
+                OpenAIChatClient("http://example.invalid/v1").chat(
+                    model="fake",
+                    messages=[{"role": "user", "content": "x"}],
+                    max_tokens=1,
+                    on_request_send=lambda epoch_ns, monotonic_ns: sends.append(
+                        (epoch_ns, monotonic_ns)
+                    ),
+                )
+
+        self.assertEqual(len(sends), 1)
+        self.assertGreater(sends[0][0], 0)
+        self.assertGreater(sends[0][1], 0)
 
 
 class TestOpenAIChatClient(unittest.TestCase):
@@ -595,10 +749,137 @@ class TestOpenAIChatClient(unittest.TestCase):
         self.assertEqual(len(result.inter_chunk_latencies_ms), 1)
         self.assertGreater(result.inter_chunk_latencies_ms[0], 0)
         payload = _StreamingHandler.payloads[-1]
+        self.assertEqual(
+            payload,
+            {
+                "model": "qwen35-0.8b",
+                "messages": [{"role": "user", "content": "hello"}],
+                "max_tokens": 8,
+                "temperature": 0,
+                "do_sample": False,
+                "stream": True,
+                "stream_options": {"include_usage": True},
+            },
+        )
         self.assertEqual(payload["temperature"], 0)
         self.assertFalse(payload["do_sample"])
         self.assertTrue(payload["stream"])
         self.assertTrue(payload["stream_options"]["include_usage"])
+        self.assertNotIn("ignore_eos", payload)
+
+    def test_records_each_nonempty_content_and_reasoning_chunk(self) -> None:
+        port = self.server.server_address[1]
+        chunks = []
+        first_chunks = []
+        client = OpenAIChatClient(f"http://127.0.0.1:{port}/v1/chunks")
+
+        result = client.chat(
+            model="qwen35-0.8b",
+            messages=[{"role": "user", "content": "hello"}],
+            max_tokens=4,
+            on_chunk=chunks.append,
+            on_first_chunk=lambda field, epoch_ns, monotonic_ns: first_chunks.append(
+                (field, epoch_ns, monotonic_ns)
+            ),
+        )
+
+        self.assertEqual([event.chunk_index for event in chunks], [1, 2])
+        self.assertEqual(
+            [event.field for event in chunks], ["content", "reasoning_content"]
+        )
+        self.assertEqual([event.text_length for event in chunks], [1, 2])
+        self.assertEqual(tuple(chunks), result.chunk_events)
+        self.assertTrue(all(event.epoch_ns > 0 for event in chunks))
+        self.assertTrue(all(event.monotonic_ns > 0 for event in chunks))
+        self.assertEqual(
+            [event.epoch_ns for event in chunks],
+            sorted(event.epoch_ns for event in chunks),
+        )
+        self.assertEqual(
+            [event.monotonic_ns for event in chunks],
+            sorted(event.monotonic_ns for event in chunks),
+        )
+        self.assertTrue(chunks[0].__dataclass_params__.frozen)
+        self.assertEqual(len(first_chunks), 1)
+        self.assertEqual(first_chunks[0][0], "content")
+        self.assertEqual(result.text, "abc")
+        self.assertEqual(
+            set(vars(chunks[0])),
+            {"chunk_index", "field", "epoch_ns", "monotonic_ns", "text_length"},
+        )
+
+    def test_ignore_eos_is_only_added_when_enabled(self) -> None:
+        port = self.server.server_address[1]
+        client = OpenAIChatClient(f"http://127.0.0.1:{port}/v1")
+
+        client.chat(
+            model="qwen35-0.8b",
+            messages=[{"role": "user", "content": "hello"}],
+            max_tokens=4,
+            ignore_eos=True,
+        )
+
+        self.assertTrue(_StreamingHandler.payloads[-1]["ignore_eos"])
+
+    def test_first_chunk_callback_and_timestamps_precede_stream_drain(self) -> None:
+        port = self.server.server_address[1]
+        events = []
+        client = OpenAIChatClient(f"http://127.0.0.1:{port}/v1")
+
+        result = client.chat(
+            model="qwen35-0.8b",
+            messages=[{"role": "user", "content": "hello"}],
+            max_tokens=1,
+            on_first_chunk=lambda field, epoch_ns, monotonic_ns: events.append(
+                (field, epoch_ns, monotonic_ns)
+            ),
+        )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0][0], "content")
+        self.assertEqual(result.first_chunk_field, "content")
+        self.assertEqual(events[0][1], result.first_chunk_epoch_ns)
+        self.assertEqual(events[0][2], result.first_chunk_monotonic_ns)
+        self.assertGreater(result.request_send_epoch_ns, 0)
+        self.assertGreater(result.request_send_monotonic_ns, 0)
+        self.assertGreater(result.first_chunk_epoch_ns, 0)
+        self.assertGreater(result.first_chunk_monotonic_ns, 0)
+        self.assertGreater(result.stream_drain_epoch_ns, 0)
+        self.assertGreater(result.stream_drain_monotonic_ns, 0)
+        self.assertLessEqual(result.request_send_monotonic_ns, events[0][2])
+        self.assertLess(events[0][2], result.stream_drain_monotonic_ns)
+        self.assertTrue(result.stream_completed)
+
+    def test_first_nonempty_reasoning_chunk_triggers_callback_once(self) -> None:
+        port = self.server.server_address[1]
+        events = []
+        client = OpenAIChatClient(f"http://127.0.0.1:{port}/v1/reasoning")
+
+        result = client.chat(
+            model="qwen35-0.8b",
+            messages=[{"role": "user", "content": "hello"}],
+            max_tokens=1,
+            on_first_chunk=lambda field, epoch_ns, monotonic_ns: events.append(
+                (field, epoch_ns, monotonic_ns)
+            ),
+        )
+
+        self.assertEqual(events[0][0], "reasoning_content")
+        self.assertEqual(len(events), 1)
+        self.assertEqual(result.first_chunk_field, "reasoning_content")
+        self.assertEqual(result.text, "thinkanswer")
+
+    def test_stream_without_done_marker_is_not_marked_complete(self) -> None:
+        port = self.server.server_address[1]
+        client = OpenAIChatClient(f"http://127.0.0.1:{port}/v1/missing-done")
+
+        result = client.chat(
+            model="qwen35-0.8b",
+            messages=[{"role": "user", "content": "hello"}],
+            max_tokens=1,
+        )
+
+        self.assertFalse(result.stream_completed)
 
     def test_runs_concurrent_requests_without_losing_ids(self) -> None:
         self.assertIsNotNone(BenchmarkRequest, "benchmark runner is missing")
@@ -627,10 +908,92 @@ class TestOpenAIChatClient(unittest.TestCase):
         self.assertTrue(all(record["output_tokens"] == 2 for record in records))
         self.assertTrue(all(record["concurrency"] == 2 for record in records))
         self.assertTrue(all(record["itl_p95_ms"] is None for record in records))
+        self.assertTrue(
+            all(
+                record.get("itl_observation")
+                == "server_prometheus_histogram_run_summary_only"
+                for record in records
+            )
+        )
         self.assertTrue(all(record["chunk_latency_p95_ms"] > 0 for record in records))
         summary = summarize_records(records, wall_time_seconds=1.0)
         self.assertIsNone(summary["itl_p95_ms"])
+        self.assertEqual(
+            summary.get("itl_observation"), "server_prometheus_histogram_unavailable"
+        )
         self.assertGreater(summary["chunk_latency_p95_ms"], 0)
+
+    def test_profile_callbacks_run_after_tool_wait_and_before_stream_drain(
+        self,
+    ) -> None:
+        events = []
+        request = BenchmarkRequest(
+            request_id="profiled",
+            messages=[{"role": "user", "content": "prompt"}],
+            workload="agent",
+            tool_wait_ms=100,
+        )
+
+        class FakeClient:
+            def chat(self, *, on_first_chunk=None, **_kwargs):
+                events.append("send")
+                on_first_chunk("content", 200, 200)
+                events.append("drain")
+                return SimpleNamespace(
+                    text="answer",
+                    input_tokens=2,
+                    output_tokens=1,
+                    ttft_ms=1.0,
+                    tpot_ms=1.0,
+                    e2e_ms=2.0,
+                    inter_chunk_latencies_ms=(),
+                    request_send_epoch_ns=100,
+                    request_send_monotonic_ns=100,
+                    first_chunk_epoch_ns=200,
+                    first_chunk_monotonic_ns=200,
+                    stream_drain_epoch_ns=300,
+                    stream_drain_monotonic_ns=300,
+                    first_chunk_field="content",
+                    stream_completed=True,
+                )
+
+        with patch.object(
+            runner.time, "sleep", side_effect=lambda _seconds: events.append("wait")
+        ):
+            records = run_concurrent_requests(
+                client=FakeClient(),
+                requests=[request],
+                concurrency=1,
+                model="fake-model",
+                max_tokens=1,
+                before_request=lambda _request: events.append("start-ack"),
+                on_first_chunk=lambda _request, *_times: events.append("stop"),
+            )
+
+        self.assertEqual(events, ["wait", "start-ack", "send", "stop", "drain"])
+        self.assertEqual(records[0]["first_chunk_field"], "content")
+        self.assertEqual(records[0]["request_send_epoch_ns"], 100)
+        self.assertEqual(records[0]["stream_completed"], True)
+
+    def test_profile_callbacks_require_one_request_at_concurrency_one(self) -> None:
+        requests = [
+            BenchmarkRequest(
+                request_id=f"profiled-{index}",
+                messages=[{"role": "user", "content": "prompt"}],
+                workload="agent",
+            )
+            for index in range(2)
+        ]
+
+        with self.assertRaisesRegex(ValueError, "single-request"):
+            run_concurrent_requests(
+                client=SimpleNamespace(),
+                requests=requests,
+                concurrency=2,
+                model="fake-model",
+                max_tokens=1,
+                before_request=lambda _request: None,
+            )
 
 
 class TestTokenSpeedGenerateClient(unittest.TestCase):
@@ -649,7 +1012,9 @@ class TestTokenSpeedGenerateClient(unittest.TestCase):
         cls.thread.join()
 
     def test_uses_native_generate_route_and_returns_engine_token_ids(self) -> None:
-        self.assertIsNotNone(TokenSpeedGenerateClient, "native generation client is missing")
+        self.assertIsNotNone(
+            TokenSpeedGenerateClient, "native generation client is missing"
+        )
         port = self.server.server_address[1]
         client = TokenSpeedGenerateClient(f"http://127.0.0.1:{port - 1}/v1")
         result = client.generate(input_token_ids=[1, 2, 3], max_tokens=7)
@@ -665,6 +1030,7 @@ class TestTokenSpeedGenerateClient(unittest.TestCase):
             {"max_new_tokens": 7, "temperature": 0},
         )
 
+
 class TestJsonl(unittest.TestCase):
     def test_appends_traceable_records(self) -> None:
         self.assertIsNotNone(append_jsonl, "JSONL writer is missing")
@@ -677,7 +1043,9 @@ class TestJsonl(unittest.TestCase):
 
 
 class TestSummary(unittest.TestCase):
-    def test_fixed_length_benchmark_requests_are_unique_and_same_token_size(self) -> None:
+    def test_fixed_length_benchmark_requests_are_unique_and_same_token_size(
+        self,
+    ) -> None:
         from scripts import run_benchmark
 
         requests = run_benchmark._make_requests(
@@ -692,13 +1060,20 @@ class TestSummary(unittest.TestCase):
         self.assertEqual(len(set(contents)), 3)
         self.assertEqual([len(content) for content in contents], [128, 128, 128])
 
-    def test_benchmark_rejects_chat_template_context_overflow_before_requests(self) -> None:
+    def test_benchmark_rejects_chat_template_context_overflow_before_requests(
+        self,
+    ) -> None:
         from scripts import run_benchmark
 
-        config_path = Path(__file__).resolve().parents[2] / "configs/bringup/qwen35_0.8b.yaml"
+        config_path = (
+            Path(__file__).resolve().parents[2] / "configs/bringup/qwen35_0.8b.yaml"
+        )
         args = SimpleNamespace(
-            config=config_path, output_dir=Path("unused"), input_tokens=[4096],
-            output_tokens=128, base_url="http://127.0.0.1:8000/v1",
+            config=config_path,
+            output_dir=Path("unused"),
+            input_tokens=[4096],
+            output_tokens=128,
+            base_url="http://127.0.0.1:8000/v1",
         )
         tokenizer = Mock()
         tokenizer.apply_chat_template.return_value = {
@@ -720,10 +1095,34 @@ class TestSummary(unittest.TestCase):
     def test_summarizes_latency_and_throughput(self) -> None:
         self.assertIsNotNone(summarize_records, "benchmark summary is missing")
         records = [
-            {"ttft_ms": 10.0, "tpot_ms": 2.0, "e2e_ms": 20.0, "input_tokens": 10, "output_tokens": 5},
-            {"ttft_ms": 20.0, "tpot_ms": 4.0, "e2e_ms": 40.0, "input_tokens": 20, "output_tokens": 5},
-            {"ttft_ms": 30.0, "tpot_ms": 6.0, "e2e_ms": 60.0, "input_tokens": 30, "output_tokens": 5},
-            {"ttft_ms": 40.0, "tpot_ms": 8.0, "e2e_ms": 80.0, "input_tokens": 40, "output_tokens": 5},
+            {
+                "ttft_ms": 10.0,
+                "tpot_ms": 2.0,
+                "e2e_ms": 20.0,
+                "input_tokens": 10,
+                "output_tokens": 5,
+            },
+            {
+                "ttft_ms": 20.0,
+                "tpot_ms": 4.0,
+                "e2e_ms": 40.0,
+                "input_tokens": 20,
+                "output_tokens": 5,
+            },
+            {
+                "ttft_ms": 30.0,
+                "tpot_ms": 6.0,
+                "e2e_ms": 60.0,
+                "input_tokens": 30,
+                "output_tokens": 5,
+            },
+            {
+                "ttft_ms": 40.0,
+                "tpot_ms": 8.0,
+                "e2e_ms": 80.0,
+                "input_tokens": 40,
+                "output_tokens": 5,
+            },
         ]
         summary = summarize_records(records, wall_time_seconds=0.5)
         self.assertEqual(summary["request_count"], 4)
@@ -736,7 +1135,9 @@ class TestSummary(unittest.TestCase):
         self.assertEqual(summary["token_throughput"], 240.0)
 
     def test_builds_exact_token_sized_text(self) -> None:
-        self.assertIsNotNone(make_token_sized_text, "token-sized prompt builder is missing")
+        self.assertIsNotNone(
+            make_token_sized_text, "token-sized prompt builder is missing"
+        )
         text = make_token_sized_text(
             target_tokens=257,
             seed="abcdef",

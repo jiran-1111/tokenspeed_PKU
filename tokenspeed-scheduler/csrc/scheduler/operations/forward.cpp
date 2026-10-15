@@ -71,7 +71,7 @@ bool admitsLikeNewPrompt(const Request& request) {
 // chunk, and a later candidate could strand it by consuming the capacity it
 // needs to finish.
 bool holdsHeadOfLine(const Request& request) {
-    return request.Is<fsm::Prefilling>();
+    return request.IsAnyOf<fsm::Prefilling, fsm::SessionPending>();
 }
 
 bool prefixHashPrefetchesFromStorage(std::span<const BlockTransfer> load_pairs, const std::string& content_hash) {
@@ -176,7 +176,8 @@ RequestProgress advanceRequestProgress(Request& request, fsm::CacheProgress& cac
 }
 
 template <typename Event>
-    requires(std::same_as<Event, fsm::SchedulePrefillFirstChunkEvent> || std::same_as<Event, fsm::SchedulePrefillEvent>)
+    requires(std::same_as<Event, fsm::SchedulePrefillFirstChunkEvent> ||
+             std::same_as<Event, fsm::SchedulePrefillEvent> || std::same_as<Event, fsm::ScheduleSessionPrefillEvent>)
 PrefillOperation applyPrefillEvent(Request& request, Event& event, const CacheCoordinator& coordinator,
                                    std::span<const std::string> group_ids) {
     request.Apply(event);
@@ -475,6 +476,38 @@ std::optional<fsm::SchedulePrefillFirstChunkEvent> Scheduler::schedulePrefillFir
     };
 }
 
+std::optional<fsm::ScheduleSessionPrefillEvent> Scheduler::scheduleSessionPrefillFirstChunk(
+    ExecutionPlan& plan, AdmissionFeedback& feedback, Request* request, std::int32_t remaining,
+    std::int32_t decode_input_tokens) {
+    const std::int32_t first_pos = request->NumComputedTokens();
+    const std::int32_t unscheduled = request->PrefillSize() - first_pos;
+    const std::int32_t tokens_this_round =
+        PrefillChunkTokens(coordinator_, first_pos, /*resumes_hit=*/false, unscheduled, remaining,
+                           /*promotion_boundary_tokens=*/0);
+    if (tokens_this_round == 0) {
+        return std::nullopt;
+    }
+
+    const bool completes_prefill = tokens_this_round == unscheduled;
+    const std::int32_t decode_reserve = completes_prefill ? decode_input_tokens : 0;
+    const std::int32_t headroom = config_.role == Role::kP ? 0 : request->AdmissionHeadroom(kRetractionSafeSteps);
+    std::vector<BlockTable>& tables = request->BlockTablesRef();
+    std::vector<GroupDemand> demands = MakeGroupDemands(tables, GroupDemand{.extent = DenseGrowth{tokens_this_round}});
+    ReservePrefillDemands(demands, config_.cache_groups,
+                          PrefillReserve{
+                              .decode_input_tokens = decode_input_tokens,
+                              .completes_prefill = completes_prefill,
+                              .prompt_headroom_tokens = headroom > 0 ? unscheduled - tokens_this_round + headroom : 0,
+                              .reserve_snapshot_state_growth = config_.role != Role::kP && completes_prefill,
+                          });
+    const RequestProgress progress{.num_computed_tokens = first_pos};
+    if (!admit(plan, feedback, coordinator_.ProbePrefix({}), demands, progress, std::nullopt)) {
+        return std::nullopt;
+    }
+
+    return fsm::ScheduleSessionPrefillEvent{tokens_this_round, decode_reserve};
+}
+
 std::optional<fsm::SchedulePrefillEvent> Scheduler::schedulePrefill(
     ExecutionPlan& plan, AdmissionFeedback& feedback, Request* request, std::int32_t remaining,
     std::int32_t reserve_num_tokens_in_next_schedule_event) {
@@ -504,7 +537,9 @@ std::optional<fsm::SchedulePrefillEvent> Scheduler::schedulePrefill(
     std::vector<BlockTable>& tables = request->BlockTablesRef();
     std::vector<GroupDemand> demands = MakeGroupDemands(tables, GroupDemand{.extent = DenseGrowth{prefill_tokens}});
     ReservePrefillDemands(demands, config_.cache_groups, reserve);
-    MakeSnapshotStatePrefillSparse(demands, config_.cache_groups, coordinator_, first_pos, after_tokens);
+    if (!request->SessionTurnReusesStatePages()) {
+        MakeSnapshotStatePrefillSparse(demands, config_.cache_groups, coordinator_, first_pos, after_tokens);
+    }
     if (!admitWithKvEventTracking(plan, feedback, *request, cache_progress, demands, progress)) {
         return std::nullopt;
     }
@@ -557,6 +592,10 @@ PrefillOperation Scheduler::applyEventAndBuildOperation(Request* request, fsm::S
     return applyPrefillEvent(*request, event, coordinator_, cache_group_ids_);
 }
 
+PrefillOperation Scheduler::applyEventAndBuildOperation(Request* request, fsm::ScheduleSessionPrefillEvent event) {
+    return applyPrefillEvent(*request, event, coordinator_, cache_group_ids_);
+}
+
 DecodeOperation Scheduler::applyEventAndBuildOperation(Request* request, fsm::ScheduleDecodeEvent event) {
     // A decode op carries its token when its executor cannot otherwise know
     // it: the D side's first decode (the token crossed the wire with
@@ -582,6 +621,12 @@ std::optional<PrefillOperation> Scheduler::schedulePrefillCandidate(ExecutionPla
                                                                     Request* request, std::int32_t token_budget,
                                                                     std::int32_t decode_reserve,
                                                                     std::vector<LoadBackOperation>& load_backs) {
+    if (request->Is<fsm::SessionPending>()) {
+        if (auto event = scheduleSessionPrefillFirstChunk(plan, feedback, request, token_budget, decode_reserve)) {
+            return applyEventAndBuildOperation(request, std::move(*event));
+        }
+        return std::nullopt;
+    }
     if (request->Is<fsm::Prefilling>()) {
         if (auto event = schedulePrefill(plan, feedback, request, token_budget, decode_reserve)) {
             return applyEventAndBuildOperation(request, std::move(*event));
@@ -853,8 +898,8 @@ void Scheduler::scheduleLocalPrefillWork(AdmissionFeedback& feedback, PlanBuild&
             if (build.Full(config_.max_batch_size)) {
                 return;
             }
-            if ((resident ? !request->Is<fsm::Prefilling>() : !admitsLikeNewPrompt(*request)) ||
-                build.Scheduled(*request)) {
+            const bool is_resident = request->IsAnyOf<fsm::Prefilling, fsm::SessionPending>();
+            if ((resident ? !is_resident : !admitsLikeNewPrompt(*request)) || build.Scheduled(*request)) {
                 continue;
             }
             feedback.admission_failed = false;
@@ -949,7 +994,8 @@ void Scheduler::buildDecodeWorkerPlan(AdmissionFeedback& feedback, PlanBuild& bu
     // load ticket. A readmission that fails admission simply waits -- it
     // never triggers retraction (swapping it with a victim is pure thrash)
     // and never stalls the decodes below.
-    const auto resident = std::ranges::find_if(candidates, &Request::Is<fsm::Prefilling>);
+    const auto resident = std::ranges::find_if(
+        candidates, [](const Request* request) { return request->IsAnyOf<fsm::Prefilling, fsm::SessionPending>(); });
     Request* recovery = resident != candidates.end() ? *resident : nextReadmission(candidates);
     if (recovery != nullptr) {
         feedback.admission_failed = false;
@@ -959,7 +1005,8 @@ void Scheduler::buildDecodeWorkerPlan(AdmissionFeedback& feedback, PlanBuild& bu
             recovery->TrackScheduledForward();
             return;  // recovery runs alone
         }
-        if (recovery->Is<fsm::Prefilling>() && feedback.admission_failed && feedback.capacity_blocker == nullptr) {
+        if (recovery->IsAnyOf<fsm::Prefilling, fsm::SessionPending>() && feedback.admission_failed &&
+            feedback.capacity_blocker == nullptr) {
             feedback.capacity_blocker = recovery;
         }
     }
@@ -1007,7 +1054,7 @@ void Scheduler::buildFusedPlan(AdmissionFeedback& feedback, PlanBuild& build, st
     if (config_.enable_mixed_prefill_decode) {
         const bool has_local_prefill =
             readmission != nullptr || std::ranges::any_of(candidates, [](const Request* request) {
-                return request->Is<fsm::Prefilling>() || admitsLikeNewPrompt(*request);
+                return request->IsAnyOf<fsm::Prefilling, fsm::SessionPending>() || admitsLikeNewPrompt(*request);
             });
         build.state_prefill_reserve = has_local_prefill ? MinPrefillChunkTokens(coordinator_) : 0;
         scheduleDecodeBatch(feedback, build, candidates);

@@ -134,6 +134,9 @@ def merge_16x16_to_32x32_inverse_kernel(
     p_Ai_11 = tl.make_block_ptr(
         Ai, (T, 32), (H * 32, 1), (i_t * 32, 0), (16, 16), (1, 0)
     )
+    p_Ai_12 = tl.make_block_ptr(
+        Ai, (T, 32), (H * 32, 1), (i_t * 32, 16), (16, 16), (1, 0)
+    )
     p_Ai_22 = tl.make_block_ptr(
         Ai, (T, 32), (H * 32, 1), (i_t * 32 + 16, 16), (16, 16), (1, 0)
     )
@@ -150,6 +153,11 @@ def merge_16x16_to_32x32_inverse_kernel(
     tl.store(
         p_Ai_11,
         Ai_11.to(p_Ai_11.dtype.element_ty, fp_downcast_rounding="rtne"),
+        boundary_check=(0, 1),
+    )
+    tl.store(
+        p_Ai_12,
+        (Ai_11 * 0.0).to(p_Ai_12.dtype.element_ty, fp_downcast_rounding="rtne"),
         boundary_check=(0, 1),
     )
     tl.store(

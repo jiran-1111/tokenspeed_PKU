@@ -111,6 +111,63 @@ Request* Scheduler::findRequest(const std::string& request_id) {
     return it == requests_by_id_.end() ? nullptr : it->second;
 }
 
+bool Scheduler::OpenSession(const std::string& session_id) {
+    if (session_id.empty() || config_.role != Role::kFused) {
+        return false;
+    }
+    return sessions_.emplace(session_id, nullptr).second;
+}
+
+bool Scheduler::CloseSession(const std::string& session_id) {
+    const auto it = sessions_.find(session_id);
+    if (it == sessions_.end()) {
+        return false;
+    }
+    if (it->second != nullptr) {
+        Request* request = it->second;
+        if (!request->Is<fsm::SessionIdle>() || request->ResultsInFlight() != 0) {
+            return false;
+        }
+        request->Apply(fsm::FinishEvent{&coordinator_});
+        requests_by_id_.erase(request->Id());
+    }
+    sessions_.erase(it);
+    return true;
+}
+
+bool Scheduler::HasSession(const std::string& session_id) const {
+    return sessions_.contains(session_id);
+}
+
+bool Scheduler::CanSubmitSessionTurn(const std::string& session_id) const {
+    const auto it = sessions_.find(session_id);
+    return it != sessions_.end() &&
+           (it->second == nullptr || (it->second->Is<fsm::SessionIdle>() && it->second->ResultsInFlight() == 0));
+}
+
+bool Scheduler::CanDeferSessionTurn(const std::string& session_id) const {
+    const auto it = sessions_.find(session_id);
+    return it != sessions_.end() && it->second != nullptr && it->second->Is<fsm::SessionIdle>() &&
+           it->second->ResultsInFlight() > 0;
+}
+
+std::optional<SessionInfo> Scheduler::SessionInfoForSession(const std::string& session_id) const {
+    const auto it = sessions_.find(session_id);
+    if (it == sessions_.end() || it->second == nullptr) {
+        return std::nullopt;
+    }
+    const Request& request = *it->second;
+    const std::int32_t total_context_tokens = request.PrefillSize();
+    const std::int32_t reused_context_tokens =
+        request.SessionTurnReusesStatePages() ? request.SessionTurnStartComputedTokens() : 0;
+    return SessionInfo{
+        .total_context_tokens = total_context_tokens,
+        .newly_prefilled_tokens = total_context_tokens - reused_context_tokens,
+        .reused_context_tokens = reused_context_tokens,
+        .turn_active = !request.Is<fsm::SessionIdle>() || request.ResultsInFlight() != 0,
+    };
+}
+
 bool Scheduler::pdTransferInFlight(const Request& request) const {
     switch (config_.role) {
         case Role::kD:
@@ -232,7 +289,7 @@ void Scheduler::registerKvEventPrefixPages(const Request& request, std::span<con
     const std::vector<std::span<const std::int32_t>> token_pages = request.FullPrefixPages(false);
     _assert(prefix_hashes.size() <= token_pages.size(), "KV event hashes exceed the request's complete pages");
 
-    KvEventHashProgress& progress = kv_event_hash_progress_[request.Id()];
+    KvEventHashProgress& progress = kv_event_hash_progress_[&request];
     for (std::size_t i = progress.block_hashes.size(); i < prefix_hashes.size(); ++i) {
         const std::optional<std::uint64_t> parent_hash =
             i == 0 ? std::nullopt : std::optional<std::uint64_t>{progress.block_hashes[i - 1]};
@@ -273,35 +330,89 @@ void Scheduler::markKvEventBoundaryForReconcile(const CacheKey& boundary) {
 void Scheduler::SubmitRequests(const std::vector<RequestSpec>& request_specs) {
     std::unordered_set<std::string> request_ids;
     request_ids.reserve(request_specs.size());
-    std::vector<std::unique_ptr<Request>> pending_requests;
-    pending_requests.reserve(request_specs.size());
-    for (const RequestSpec& spec : request_specs) {
+    std::unordered_set<std::string> session_ids;
+    session_ids.reserve(request_specs.size());
+    std::vector<std::unique_ptr<Request>> pending_requests(request_specs.size());
+    std::vector<Request*> session_turns(request_specs.size());
+    for (std::size_t i = 0; i < request_specs.size(); ++i) {
+        const RequestSpec& spec = request_specs[i];
         if (spec.tokens.empty()) {
             throw std::invalid_argument("Scheduler: request tokens must be non-empty");
         }
-        if (requests_by_id_.contains(spec.request_id) || !request_ids.insert(spec.request_id).second) {
+        if (!request_ids.insert(spec.request_id).second) {
             throw std::invalid_argument("Scheduler: duplicate request id '" + spec.request_id + "'");
         }
         if (spec.max_new_tokens < 0) {
             throw std::invalid_argument("Scheduler: max_new_tokens must be non-negative");
         }
+
+        Request* session_request = nullptr;
+        if (!spec.session_id.empty()) {
+            const auto session = sessions_.find(spec.session_id);
+            if (session == sessions_.end()) {
+                throw std::invalid_argument("Scheduler: unknown session id '" + spec.session_id + "'");
+            }
+            if (!session_ids.insert(spec.session_id).second) {
+                throw std::invalid_argument("Scheduler: duplicate session id in request batch '" + spec.session_id +
+                                            "'");
+            }
+            session_request = session->second;
+            if (session_request != nullptr &&
+                (!session_request->Is<fsm::SessionIdle>() || session_request->ResultsInFlight() != 0)) {
+                throw std::invalid_argument("Scheduler: session '" + spec.session_id + "' already has an active turn");
+            }
+        }
+        const auto request = requests_by_id_.find(spec.request_id);
+        if (request != requests_by_id_.end() && request->second != session_request) {
+            throw std::invalid_argument("Scheduler: duplicate request id '" + spec.request_id + "'");
+        }
+
         const std::int64_t generation_reserve =
             config_.role == Role::kP ? 0 : std::max<std::int64_t>(spec.max_new_tokens, config_.decode_input_tokens);
-        const std::int64_t token_limit = static_cast<std::int64_t>(spec.tokens.size()) + generation_reserve;
+        const std::int64_t token_limit =
+            static_cast<std::int64_t>(session_request == nullptr ? 0 : session_request->TokenSize()) +
+            static_cast<std::int64_t>(spec.tokens.size()) + generation_reserve;
         if (token_limit > std::numeric_limits<std::int32_t>::max()) {
             throw std::invalid_argument("Scheduler: request token limit exceeds int32 range");
         }
         if (token_limit > max_single_request_tokens_) {
             throw std::invalid_argument("Scheduler: request token limit exceeds cache capacity");
         }
-        pending_requests.push_back(std::make_unique<Request>(spec, config_.prefix_granularity, config_.role));
+        if (session_request != nullptr) {
+            session_turns[i] = session_request;
+        } else {
+            pending_requests[i] = std::make_unique<Request>(spec, config_.prefix_granularity, config_.role);
+        }
     }
 
-    requests_.reserve(requests_.size() + pending_requests.size());
+    requests_.reserve(requests_.size() + request_specs.size());
     for (std::size_t i = 0; i < request_specs.size(); ++i) {
-        const bool inserted = requests_by_id_.emplace(request_specs[i].request_id, pending_requests[i].get()).second;
-        FatalCheck(inserted, "validated request id became duplicate before insertion");
-        requests_.push_back(std::move(pending_requests[i]));
+        if (pending_requests[i]) {
+            Request* new_request = pending_requests[i].get();
+            const bool inserted = requests_by_id_.emplace(request_specs[i].request_id, new_request).second;
+            FatalCheck(inserted, "validated request id became duplicate before insertion");
+            requests_.push_back(std::move(pending_requests[i]));
+            if (!request_specs[i].session_id.empty()) {
+                sessions_.at(request_specs[i].session_id) = new_request;
+            }
+            continue;
+        }
+        Request* request = session_turns[i];
+        if (request == nullptr) {
+            continue;
+        }
+
+        const auto existing = std::find_if(requests_.begin(), requests_.end(),
+                                           [request](const auto& candidate) { return candidate.get() == request; });
+        FatalCheck(existing != requests_.end(), "validated session request is missing from FIFO");
+        std::unique_ptr<Request> resumed_request = std::move(*existing);
+        requests_.erase(existing);
+        requests_.push_back(std::move(resumed_request));
+
+        requests_by_id_.erase(request->Id());
+        request->AppendSessionTurn(request_specs[i]);
+        const bool inserted = requests_by_id_.emplace(request_specs[i].request_id, request).second;
+        FatalCheck(inserted, "validated session request id became duplicate before insertion");
     }
 }
 
@@ -323,7 +434,8 @@ std::size_t Scheduler::DecodingSize() const {
 
 std::size_t Scheduler::PrefillSize() const {
     return static_cast<std::size_t>(std::ranges::count_if(requests_, [](const std::unique_ptr<Request>& request) {
-        return request->IsAnyOf<fsm::Prefilling, fsm::RemotePrefilling, fsm::PrefillAwaitingResult, fsm::PrefillDone>();
+        return request->IsAnyOf<fsm::Prefilling, fsm::RemotePrefilling, fsm::PrefillAwaitingResult, fsm::PrefillDone,
+                                fsm::SessionPending>();
     }));
 }
 
@@ -373,7 +485,9 @@ std::vector<std::string> Scheduler::WaitingPrefixHashes() const {
     std::vector<Request*> candidates;
     candidates.reserve(requests_.size());
     for (const auto& request : requests_) {
-        candidates.push_back(request.get());
+        if (!aborting_requests_.contains(request.get())) {
+            candidates.push_back(request.get());
+        }
     }
     Request* readmission = nextReadmission(candidates);
 
@@ -446,16 +560,23 @@ ExecutionPlan Scheduler::NextExecutionPlan() {
         if (!request->template Is<fsm::Finished>()) {
             return false;
         }
-        kv_event_hash_progress_.erase(request->Id());
-        requests_by_id_.erase(request->Id());
+        aborting_requests_.erase(request.get());
+        kv_event_hash_progress_.erase(request.get());
+        const auto current = requests_by_id_.find(request->Id());
+        if (current != requests_by_id_.end() && current->second == request.get()) {
+            requests_by_id_.erase(current);
+        }
         return true;
     });
 
     std::vector<Request*> candidates;
     candidates.reserve(requests_.size());
     for (const auto& request : requests_) {
+        if (aborting_requests_.contains(request.get())) {
+            continue;
+        }
         if (request->IsAnyOf<fsm::Submitted, fsm::Prefilling, fsm::RemotePrefilling, fsm::PrefillDone, fsm::Decoding,
-                             fsm::Retracted>()) {
+                             fsm::SessionPending, fsm::Retracted>()) {
             candidates.push_back(request.get());
         }
     }

@@ -82,8 +82,23 @@ void Scheduler::handleEvent(const pd::RemotePrefillDoneEvent& event) {
 
 void Scheduler::handleEvent(const forward::Finish& event) {
     if (Request* request = findRequest(event.request_id)) {
+        if (aborting_requests_.contains(request)) {
+            return;
+        }
+        if (request->Is<fsm::SessionIdle>()) {
+            return;
+        }
         if (pdTransferInFlight(*request)) {
             throw std::logic_error("PD Finish received while transfer pages are pinned");
+        }
+        const auto session = sessions_.find(request->SessionId());
+        if (!request->SessionId().empty() && session != sessions_.end() && session->second == request &&
+            request->IsAnyOf<fsm::PrefillDone, fsm::PrefillAwaitingResult, fsm::Decoding>()) {
+            request->Apply(fsm::ParkSessionEvent{request->NumComputedTokens()});
+            return;
+        }
+        if (request->Is<fsm::Retracted>() && session != sessions_.end() && session->second == request) {
+            sessions_.erase(session);
         }
         if (request->Is<fsm::PrefillDone>() || request->Is<fsm::Decoding>()) {
             if (auto store = publishCompletedPages(*request)) {
@@ -146,6 +161,16 @@ void Scheduler::handleEvent(const forward::UpdateReserveNumTokens& event) {
 void Scheduler::handleEvent(const forward::ExtendResult& event) {
     if (Request* request = findRequest(event.request_id)) {
         request->NoteResultLanded();
+        if (aborting_requests_.contains(request)) {
+            if (request->ResultsInFlight() == 0) {
+                aborting_requests_.erase(request);
+                request->Apply(fsm::AbortEvent{&coordinator_});
+            }
+            return;
+        }
+        if (request->IsAnyOf<fsm::SessionIdle, fsm::Finished>()) {
+            return;
+        }
         request->Apply(fsm::ExtendResultEvent{event.tokens});
         if (!event.spec_candidate_ids.empty()) {
             request->StoreSpecCandidates(event.spec_candidate_ids);
@@ -155,6 +180,14 @@ void Scheduler::handleEvent(const forward::ExtendResult& event) {
 
 void Scheduler::handleEvent(const forward::Abort& event) {
     if (Request* request = findRequest(event.request_id)) {
+        const auto session = sessions_.find(request->SessionId());
+        if (!request->SessionId().empty() && session != sessions_.end() && session->second == request) {
+            sessions_.erase(session);
+        }
+        if (!request->SessionId().empty() && request->ResultsInFlight() > 0) {
+            aborting_requests_.insert(request);
+            return;
+        }
         request->Apply(fsm::AbortEvent{&coordinator_});
     }
 }

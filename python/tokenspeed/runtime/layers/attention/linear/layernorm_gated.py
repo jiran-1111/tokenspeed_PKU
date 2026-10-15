@@ -32,6 +32,8 @@ from tokenspeed_kernel.platform import pdl_enabled
 
 from tokenspeed.runtime.utils.triton import tl, triton
 
+_MAX_NPU_COREDIM = 65535
+
 
 @triton.heuristics({"HAS_Z": lambda args: args["Z"] is not None})
 @triton.jit
@@ -43,6 +45,7 @@ def _rms_norm_fwd_kernel(
     stride_x_row,  # how much to increase the pointer when moving by 1 row
     stride_y_row,
     stride_z_row,
+    M,  # number of rows
     N,  # number of columns in X
     eps,  # epsilon to avoid division by zero
     BLOCK_N: tl.constexpr,
@@ -52,13 +55,7 @@ def _rms_norm_fwd_kernel(
     ENABLE_PDL: tl.constexpr,
     WEIGHTS_INDEPENDENT: tl.constexpr,
 ):
-    # Map the program id to the row of X and Y it should compute.
-    row = tl.program_id(0)
     group = tl.program_id(1)
-    X += row * stride_x_row + group * N
-    Y += row * stride_y_row + group * N
-    if HAS_Z:
-        Z += row * stride_z_row + group * N
     W += group * N
     cols = tl.arange(0, BLOCK_N)
     mask = cols < N
@@ -69,18 +66,25 @@ def _rms_norm_fwd_kernel(
         tl.extra.cuda.gdc_launch_dependents()
     if not WEIGHTS_INDEPENDENT:
         w = tl.load(W + cols, mask=mask).to(tl.float32)
-    x = tl.load(X + cols, mask=mask, other=0.0).to(tl.float32)
-    if HAS_Z and not NORM_BEFORE_GATE:
-        z = tl.load(Z + cols, mask=mask).to(tl.float32)
-        x *= tl.sigmoid(z) if SIGMOID_GATE else z * tl.sigmoid(z)
-    xbar = tl.where(mask, x, 0.0)
-    var = tl.sum(xbar * xbar, axis=0) / N
-    rstd = 1 / tl.sqrt(var + eps)
-    y = x * rstd * w
-    if HAS_Z and NORM_BEFORE_GATE:
-        z = tl.load(Z + cols, mask=mask).to(tl.float32)
-        y *= tl.sigmoid(z) if SIGMOID_GATE else z * tl.sigmoid(z)
-    tl.store(Y + cols, y, mask=mask)
+    row = tl.program_id(0)
+    while row < M:
+        x_ptr = X + row * stride_x_row + group * N
+        y_ptr = Y + row * stride_y_row + group * N
+        if HAS_Z:
+            z_ptr = Z + row * stride_z_row + group * N
+        x = tl.load(x_ptr + cols, mask=mask, other=0.0).to(tl.float32)
+        if HAS_Z and not NORM_BEFORE_GATE:
+            z = tl.load(z_ptr + cols, mask=mask).to(tl.float32)
+            x *= tl.sigmoid(z) if SIGMOID_GATE else z * tl.sigmoid(z)
+        xbar = tl.where(mask, x, 0.0)
+        var = tl.sum(xbar * xbar, axis=0) / N
+        rstd = 1 / tl.sqrt(var + eps)
+        y = x * rstd * w
+        if HAS_Z and NORM_BEFORE_GATE:
+            z = tl.load(z_ptr + cols, mask=mask).to(tl.float32)
+            y *= tl.sigmoid(z) if SIGMOID_GATE else z * tl.sigmoid(z)
+        tl.store(y_ptr + cols, y, mask=mask)
+        row += tl.num_programs(0)
 
 
 def rmsnorm_fn(
@@ -130,8 +134,10 @@ def rmsnorm_fn(
         raise RuntimeError("This layer norm doesn't support feature dim >= 64KB.")
     # heuristics for number of warps
     num_warps = min(max(BLOCK_N // 256, 1), 8)
-    grid = (M, ngroups)
-    with torch.cuda.device(x.device.index):
+    max_grid_rows = min(M, _MAX_NPU_COREDIM // ngroups) if x.device.type == "npu" else M
+    grid = (max_grid_rows, ngroups)
+    device_context = torch.npu.device if x.device.type == "npu" else torch.cuda.device
+    with device_context(x.device.index):
         _rms_norm_fwd_kernel[grid](
             x,
             out,
@@ -140,6 +146,7 @@ def rmsnorm_fn(
             x.stride(0),
             out.stride(0),
             z.stride(0) if z is not None else 0,
+            M,
             group_size,
             eps,
             BLOCK_N=BLOCK_N,

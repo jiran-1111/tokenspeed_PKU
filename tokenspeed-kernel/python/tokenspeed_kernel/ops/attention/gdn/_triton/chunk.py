@@ -22,6 +22,7 @@
 
 import torch
 from tokenspeed_kernel.ops.attention.gdn._triton.chunk_delta_h import (
+    CHUNK_SIZE,
     chunk_gated_delta_rule_fwd_h,
 )
 from tokenspeed_kernel.ops.attention.gdn._triton.chunk_o import chunk_fwd_o
@@ -51,37 +52,53 @@ def chunk_gated_delta_rule_fwd(
     cu_seqlens: torch.LongTensor | None = None,
     return_h: bool = False,
 ):
-    g = chunk_local_cumsum(g, chunk_size=64, cu_seqlens=cu_seqlens)
+    chunk_size = 32 if k.device.type == "npu" else CHUNK_SIZE
+    q_compute, k_compute, v_compute = q, k, v
+    beta_compute, initial_state_compute = beta, initial_state
+    if k.device.type == "npu":
+        q_compute = q.float()
+        k_compute = k.float()
+        v_compute = v.float()
+        beta_compute = beta.float()
+        initial_state_compute = initial_state.float()
+    g = chunk_local_cumsum(g, chunk_size=chunk_size, cu_seqlens=cu_seqlens)
     # obtain WY representation. u is actually the new v.
     A = chunk_scaled_dot_kkt_fwd(
-        k=k, beta=beta, g_cumsum=g, cu_seqlens=cu_seqlens, output_dtype=torch.float32
+        k=k_compute,
+        beta=beta_compute,
+        g_cumsum=g,
+        cu_seqlens=cu_seqlens,
+        chunk_size=chunk_size,
+        output_dtype=torch.float32,
     )
-    A = solve_tril(A=A, cu_seqlens=cu_seqlens, output_dtype=k.dtype)
+    A = solve_tril(A=A, cu_seqlens=cu_seqlens, output_dtype=k_compute.dtype)
     w, u = recompute_w_u_fwd(
-        k=k,
-        v=v,
-        beta=beta,
+        k=k_compute,
+        v=v_compute,
+        beta=beta_compute,
         A=A,
         g_cumsum=g,
         cu_seqlens=cu_seqlens,
     )
     h, v_new, final_state = chunk_gated_delta_rule_fwd_h(
-        k=k,
+        k=k_compute,
         w=w,
         u=u,
         g=g,
-        initial_state=initial_state,
+        initial_state=initial_state_compute,
         output_final_state=output_final_state,
         cu_seqlens=cu_seqlens,
+        chunk_size=chunk_size,
     )
     o = chunk_fwd_o(
-        q=q,
-        k=k,
+        q=q_compute,
+        k=k_compute,
         v=v_new,
         h=h,
         g=g,
         scale=scale,
         cu_seqlens=cu_seqlens,
+        chunk_size=chunk_size,
     )
     if SUPPRESS_LEVEL < 3 and not return_h:
         return g, o, A, final_state, None, None, None
@@ -109,9 +126,13 @@ class ChunkGatedDeltaRuleFunction(torch.autograd.Function):
         cu_seqlens: torch.LongTensor | None = None,
         use_qk_l2norm_in_kernel: bool = False,
     ):
+        output_dtype = q.dtype
         if use_qk_l2norm_in_kernel:
-            q = l2norm_fwd(q)
-            k = l2norm_fwd(k)
+            norm_q, norm_k = q, k
+            if q.device.type == "npu":
+                norm_q, norm_k = q.float(), k.float()
+            q = l2norm_fwd(norm_q)
+            k = l2norm_fwd(norm_k)
 
         g, o, A, final_state, w, h, v_new = chunk_gated_delta_rule_fwd(
             q=q,
@@ -124,7 +145,7 @@ class ChunkGatedDeltaRuleFunction(torch.autograd.Function):
             output_final_state=output_final_state,
             cu_seqlens=cu_seqlens,
         )
-        return o.to(q.dtype), final_state
+        return o.to(output_dtype), final_state
 
 
 @torch.compiler.disable

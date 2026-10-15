@@ -459,6 +459,11 @@ class GenerateReqInput:
             logprob_format=self.logprob_format[i],
             stream=self.stream,
             log_metrics=self.log_metrics,
+            session_params=(
+                self.session_params
+                if isinstance(self.session_params, dict)
+                else self.session_params[i] if self.session_params is not None else None
+            ),
             custom_logit_processor=(
                 self.custom_logit_processor[i]
                 if self.custom_logit_processor is not None
@@ -1082,6 +1087,13 @@ class CloseSessionReqInput(BaseReq, kw_only=True):
 class OpenSessionReqOutput(BaseReq, kw_only=True):
     session_id: str | None
     success: bool
+    message: str = ""
+
+
+class CloseSessionReqOutput(BaseReq, kw_only=True):
+    session_id: str
+    success: bool
+    message: str = ""
 
 
 class HealthCheckOutput(BaseReq, kw_only=True):

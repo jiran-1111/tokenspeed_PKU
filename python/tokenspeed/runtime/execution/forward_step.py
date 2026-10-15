@@ -48,6 +48,7 @@ from tokenspeed.runtime.execution.graph_ptr_guard import (
 from tokenspeed.runtime.execution.memory_delta import (
     MemoryDeltaObserver,
 )
+from tokenspeed.runtime.execution.startup_trace import trace_startup_operation
 from tokenspeed.runtime.layers.attention.kv_cache.recipes.spec import (
     compute_max_logical_pages_for_capture,
 )
@@ -584,57 +585,156 @@ class ForwardStepRunner:
 
         global _is_cuda_graph_phase
         _is_cuda_graph_phase = True
+        capture_detail = f"batch_size={bs} variant={variant}"
 
         # Warm the same primary stream used by capture. Capture-only auxiliary
         # branches use this graph phase to warm their own streams serially.
         with self.device_module.stream(self.stream):
-            for _ in range(4):
-                self.device_module.synchronize()
-                dist.barrier()
-                self._prepare_sampling_capture(bs=bs, variant=variant)
+            for warmup_index in range(4):
+                warmup_detail = f"{capture_detail} phase=warmup-{warmup_index}"
+                trace_startup_operation(
+                    logger,
+                    rank=self.global_rank,
+                    stage="graph_capture_device_sync",
+                    detail=warmup_detail,
+                    operation=self.device_module.synchronize,
+                )
+                trace_startup_operation(
+                    logger,
+                    rank=self.global_rank,
+                    stage="graph_capture_distributed_barrier",
+                    detail=warmup_detail,
+                    operation=dist.barrier,
+                )
+                trace_startup_operation(
+                    logger,
+                    rank=self.global_rank,
+                    stage="graph_capture_sampling_prepare",
+                    detail=warmup_detail,
+                    operation=lambda: self._prepare_sampling_capture(
+                        bs=bs,
+                        variant=variant,
+                    ),
+                )
                 # Keep warmup seq_lens >= q_len_per_req so no query row gets an
                 # empty causal span; a stale seq_len of 1 overflows to non-finite KV.
                 self.input_buffers.seq_lens_buf[:bs].fill_(self.max_tokens_per_req)
-                self._init_capture_metadata(bs)
-                run_once()
+                trace_startup_operation(
+                    logger,
+                    rank=self.global_rank,
+                    stage="graph_capture_metadata_prepare",
+                    detail=warmup_detail,
+                    operation=lambda: self._init_capture_metadata(bs),
+                )
+                trace_startup_operation(
+                    logger,
+                    rank=self.global_rank,
+                    stage="graph_capture_warmup_forward",
+                    detail=warmup_detail,
+                    operation=run_once,
+                )
             # Order the reset below after the last warmup's stateful kernels.
-            self.device_module.synchronize()
+            trace_startup_operation(
+                logger,
+                rank=self.global_rank,
+                stage="graph_capture_device_sync",
+                detail=f"{capture_detail} phase=warmup_flush",
+                operation=self.device_module.synchronize,
+            )
 
         # Clear any per-pool state that warm-up dirtied at pool row 0,
         # so the graph captures reads against a clean baseline.
         if self.sampling_backend is not None:
             self.sampling_backend.reset_capture_state()
 
-        self.device_module.synchronize()
-        dist.barrier()
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_device_sync",
+            detail=f"{capture_detail} phase=pre_capture",
+            operation=self.device_module.synchronize,
+        )
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_distributed_barrier",
+            detail=f"{capture_detail} phase=pre_capture",
+            operation=dist.barrier,
+        )
 
         # Warmups can switch a backend back to eager metadata objects. Restore
         # the graph-backed metadata immediately before capture so replay-time
         # metadata refreshes update the same tensors recorded by the graph.
-        self._init_capture_metadata(bs)
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_metadata_prepare",
+            detail=f"{capture_detail} phase=pre_sampler",
+            operation=lambda: self._init_capture_metadata(bs),
+        )
 
         # Fill sampler buffers OUTSIDE the capture so RNG ops aren't recorded.
-        self._prepare_sampling_capture(bs=bs, variant=variant)
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_sampling_prepare",
+            detail=f"{capture_detail} phase=pre_capture",
+            operation=lambda: self._prepare_sampling_capture(bs=bs, variant=variant),
+        )
         # Warmup forwards can mutate aliased metadata buffers, so refresh
         # them again immediately before graph capture records the final views.
-        self._init_capture_metadata(bs)
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_metadata_prepare",
+            detail=f"{capture_detail} phase=pre_capture",
+            operation=lambda: self._init_capture_metadata(bs),
+        )
 
-        self.deepep_adapter.capture()
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_communication_prepare",
+            detail=capture_detail,
+            operation=self.deepep_adapter.capture,
+        )
 
         global _is_capture_mode
         _is_capture_mode = True
         global global_graph_memory_pool
         graph_kwargs = {"auto_dispatch_capture": True} if self.device == "npu" else {}
-        with observer, self.device_module.graph(
-            graph,
-            pool=global_graph_memory_pool,
-            stream=self.stream,
-            **graph_kwargs,
-        ):
-            out = run_once()
 
-        self.device_module.synchronize()
-        dist.barrier()
+        def capture_graph():
+            with observer, self.device_module.graph(
+                graph,
+                pool=global_graph_memory_pool,
+                stream=self.stream,
+                **graph_kwargs,
+            ):
+                return run_once()
+
+        out = trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_execute",
+            detail=capture_detail,
+            operation=capture_graph,
+        )
+
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_device_sync",
+            detail=f"{capture_detail} phase=post_capture",
+            operation=self.device_module.synchronize,
+        )
+        trace_startup_operation(
+            logger,
+            rank=self.global_rank,
+            stage="graph_capture_distributed_barrier",
+            detail=f"{capture_detail} phase=post_capture",
+            operation=dist.barrier,
+        )
         _is_capture_mode = False
         _is_cuda_graph_phase = False
 

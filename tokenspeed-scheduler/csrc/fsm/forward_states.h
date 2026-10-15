@@ -204,6 +204,16 @@ private:
     std::int32_t reserve_num_tokens_in_next_schedule_event_{-1};
 };
 
+struct SessionIdle {
+    ForwardResources resources;
+    std::int32_t computed_tokens{};
+};
+
+struct SessionPending {
+    ForwardResources resources;
+    std::int32_t computed_tokens{};
+};
+
 struct Retracted {
     TokenContainer* token_container{};
     std::int32_t prefix_granularity{};

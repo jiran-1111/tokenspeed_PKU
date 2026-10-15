@@ -82,6 +82,7 @@ from typing import TYPE_CHECKING, Any
 import torch
 from torch.utils._python_dispatch import TorchDispatchMode
 
+from tokenspeed.runtime.execution.startup_trace import trace_startup_operation
 from tokenspeed.runtime.execution.types import (
     DpForwardMetadata,
     PendingExecution,
@@ -1010,11 +1011,22 @@ def build_device_side(
     )
     from tokenspeed.runtime.utils import set_random_seed
 
-    target, draft = create_model_runner(
-        server_args, model_config, draft_model_config, gpu_id, global_rank
+    target, draft = trace_startup_operation(
+        logger,
+        rank=global_rank,
+        stage="model_runner_init",
+        detail=f"gpu_id={gpu_id}",
+        operation=lambda: create_model_runner(
+            server_args, model_config, draft_model_config, gpu_id, global_rank
+        ),
     )
     if server_args.disaggregation_mode in ("null", "prefill"):
-        target.prepare_multimodal_runtime()
+        trace_startup_operation(
+            logger,
+            rank=global_rank,
+            stage="multimodal_runtime_warmup",
+            operation=target.prepare_multimodal_runtime,
+        )
     max_forward_tokens = (
         server_args.chunked_prefill_size
         if server_args.chunked_prefill_size > 0
@@ -1024,9 +1036,21 @@ def build_device_side(
         max_forward_tokens,
         max_batch_size * decode_input_tokens,
     )
-    target.prepare_communication_runtime(max_forward_tokens)
+    trace_startup_operation(
+        logger,
+        rank=global_rank,
+        stage="communication_runtime_prepare",
+        detail="target",
+        operation=lambda: target.prepare_communication_runtime(max_forward_tokens),
+    )
     if draft is not None:
-        draft.prepare_communication_runtime(max_forward_tokens)
+        trace_startup_operation(
+            logger,
+            rank=global_rank,
+            stage="communication_runtime_prepare",
+            detail="draft",
+            operation=lambda: draft.prepare_communication_runtime(max_forward_tokens),
+        )
 
     def build_components(
         *,
@@ -1036,21 +1060,30 @@ def build_device_side(
         reuse_target_backend: AttentionBackend | None,
         reuse_draft_backend: AttentionBackend | None,
     ) -> AttentionBuild:
-        return create_attn_components(
-            server_args,
-            model_config,
-            gpu_id,
-            global_rank,
-            min_per_gpu_mem,
-            server_args.enable_memory_saver,
-            draft_model_config,
-            decode_input_tokens=decode_input_tokens,
-            overlap_schedule_depth=overlap_schedule_depth,
-            graph_reserve_bytes=graph_reserve_bytes,
-            probe_batch_rows=probe_batch_rows,
-            profiled_cache_bytes=profiled_cache_bytes,
-            reuse_target_backend=reuse_target_backend,
-            reuse_draft_backend=reuse_draft_backend,
+        return trace_startup_operation(
+            logger,
+            rank=global_rank,
+            stage="attention_kv_construction",
+            detail=(
+                f"graph_reserve_bytes={graph_reserve_bytes} "
+                f"probe_batch_rows={probe_batch_rows}"
+            ),
+            operation=lambda: create_attn_components(
+                server_args,
+                model_config,
+                gpu_id,
+                global_rank,
+                min_per_gpu_mem,
+                server_args.enable_memory_saver,
+                draft_model_config,
+                decode_input_tokens=decode_input_tokens,
+                overlap_schedule_depth=overlap_schedule_depth,
+                graph_reserve_bytes=graph_reserve_bytes,
+                probe_batch_rows=probe_batch_rows,
+                profiled_cache_bytes=profiled_cache_bytes,
+                reuse_target_backend=reuse_target_backend,
+                reuse_draft_backend=reuse_draft_backend,
+            ),
         )
 
     requested_backends = (
@@ -1090,26 +1123,37 @@ def build_device_side(
             )
             server_args.chunked_prefill_size = aligned
 
-    executor = create_model_executor(
-        server_args=server_args,
-        config=ModelExecutorConfig.from_server_args(
+    executor = trace_startup_operation(
+        logger,
+        rank=global_rank,
+        stage="model_executor_create",
+        detail=f"max_batch_size={max_batch_size}",
+        operation=lambda: create_model_executor(
             server_args=server_args,
-            model_config=model_config,
-            max_req_pool_size=max_batch_size + 1,
-            gpu_id=gpu_id,
-            global_rank=global_rank,
-            prefix_granularity=views.cache_geometry.prefix_granularity,
-            overlap_schedule_depth=overlap_schedule_depth,
+            config=ModelExecutorConfig.from_server_args(
+                server_args=server_args,
+                model_config=model_config,
+                max_req_pool_size=max_batch_size + 1,
+                gpu_id=gpu_id,
+                global_rank=global_rank,
+                prefix_granularity=views.cache_geometry.prefix_granularity,
+                overlap_schedule_depth=overlap_schedule_depth,
+            ),
+            model_runner=target,
+            draft_model_runner=draft,
+            attn_backend=attention.attn_backend,
+            token_to_kv_pool=views.token_to_kv_pool,
+            draft_attn_backend=attention.draft_attn_backend,
+            draft_token_to_kv_pool=views.draft_token_to_kv_pool,
         ),
-        model_runner=target,
-        draft_model_runner=draft,
-        attn_backend=attention.attn_backend,
-        token_to_kv_pool=views.token_to_kv_pool,
-        draft_attn_backend=attention.draft_attn_backend,
-        draft_token_to_kv_pool=views.draft_token_to_kv_pool,
     )
     # Once per process, before the probe: a graph keeps its capture-time tactic.
-    executor.autotune()
+    trace_startup_operation(
+        logger,
+        rank=global_rank,
+        stage="kernel_autotune",
+        operation=executor.autotune,
+    )
     if probing:
         # Consumers above keep the probe's: they read only block-count-invariant fields.
         attention, views = _rebind_under_reserve(
@@ -1121,7 +1165,14 @@ def build_device_side(
             requested_backends,
         )
 
-    executor.capture_graphs(entries=None, observer=NULL_MEMORY_DELTA_OBSERVER)
+    trace_startup_operation(
+        logger,
+        rank=global_rank,
+        stage="graph_capture",
+        operation=lambda: executor.capture_graphs(
+            entries=None, observer=NULL_MEMORY_DELTA_OBSERVER
+        ),
+    )
     # Tuning and capture draw from the generator; this is the state startup leaves.
     set_random_seed(48)
 

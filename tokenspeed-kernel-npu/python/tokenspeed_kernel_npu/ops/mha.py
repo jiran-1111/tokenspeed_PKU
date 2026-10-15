@@ -75,13 +75,61 @@ def mha_prefill(
     softmax_scale: float | None = None,
 ) -> torch.Tensor:
     """Run causal variable-length MHA over uncached K/V."""
-    del cu_seqlens, max_seqlen
+    del cu_seqlens
     _check_options(
         window_left=window_left,
         logit_cap=logit_cap,
         sinks=sinks,
         return_lse=return_lse,
     )
+    if q.shape[-1] == 256:
+        lengths = [
+            end - start for start, end in zip(cu_seqlens_cpu, cu_seqlens_cpu[1:])
+        ]
+        batch_size = len(lengths)
+        q_bnsd = torch.zeros(
+            (batch_size, q.shape[1], max_seqlen, q.shape[-1]),
+            dtype=q.dtype,
+            device=q.device,
+        )
+        k_bnsd = torch.zeros(
+            (batch_size, k.shape[1], max_seqlen, k.shape[-1]),
+            dtype=k.dtype,
+            device=k.device,
+        )
+        v_bnsd = torch.zeros_like(k_bnsd)
+        for batch, (start, end) in enumerate(zip(cu_seqlens_cpu, cu_seqlens_cpu[1:])):
+            q_bnsd[batch, :, : end - start] = q[start:end].transpose(0, 1)
+            k_bnsd[batch, :, : end - start] = k[start:end].transpose(0, 1)
+            v_bnsd[batch, :, : end - start] = v[start:end].transpose(0, 1)
+
+        if max_seqlen == 1:
+            atten_mask = None
+            sparse_mode = 0
+        else:
+            atten_mask = _causal_mask(q.device)
+            sparse_mode = 2
+
+        output, _ = torch_npu.npu_fused_infer_attention_score(
+            q_bnsd,
+            k_bnsd,
+            v_bnsd,
+            atten_mask=atten_mask,
+            actual_seq_lengths=lengths,
+            actual_seq_lengths_kv=lengths,
+            num_heads=q.shape[1],
+            num_key_value_heads=k.shape[1],
+            scale=_scale(q, softmax_scale),
+            input_layout="BNSD",
+            sparse_mode=sparse_mode,
+        )
+        return torch.cat(
+            [
+                output[batch, :, :length].transpose(0, 1)
+                for batch, length in enumerate(lengths)
+            ]
+        )
+
     output, _ = torch_npu.npu_fused_infer_attention_score(
         q,
         k,

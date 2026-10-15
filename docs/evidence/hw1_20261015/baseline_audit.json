@@ -1,0 +1,76 @@
+{
+  "scope": "final-source 2x2 baseline; physical NPU1/chip0; legacy per-round NPU0 snapshots excluded from resource conclusions",
+  "request_count": 96,
+  "summary_count": 12,
+  "rows": [
+    {
+      "target_input": 128,
+      "actual_input": 130,
+      "actual_output": 32,
+      "requests": 24,
+      "runs": 3,
+      "ttft_p50_ms": 206.13269668926173,
+      "tpot_p50_ms": 10.868281827643715,
+      "itl_mean_ms": 10.862091536163003,
+      "e2e_p50_ms": 543.2067066625071,
+      "output_token_throughput": 58.91897778386595
+    },
+    {
+      "target_input": 128,
+      "actual_input": 130,
+      "actual_output": 128,
+      "requests": 24,
+      "runs": 3,
+      "ttft_p50_ms": 206.2111216558454,
+      "tpot_p50_ms": 10.806277047187638,
+      "itl_mean_ms": 10.79349708682283,
+      "e2e_p50_ms": 1577.973020010783,
+      "output_token_throughput": 81.17871035527469
+    },
+    {
+      "target_input": 1024,
+      "actual_input": 940,
+      "actual_output": 32,
+      "requests": 24,
+      "runs": 3,
+      "ttft_p50_ms": 722.418255036852,
+      "tpot_p50_ms": 10.871913280308007,
+      "itl_mean_ms": 10.963419752736245,
+      "e2e_p50_ms": 1060.1911183524255,
+      "output_token_throughput": 30.100608834102385
+    },
+    {
+      "target_input": 1024,
+      "actual_input": 940,
+      "actual_output": 128,
+      "requests": 24,
+      "runs": 3,
+      "ttft_p50_ms": 719.266114969893,
+      "tpot_p50_ms": 10.892633674421843,
+      "itl_mean_ms": 10.88747343053342,
+      "e2e_p50_ms": 2103.29730665156,
+      "output_token_throughput": 60.89143601595902
+    }
+  ],
+  "hbm": {
+    "before_mb": 3112,
+    "loaded_mb": 8459,
+    "exit_mb": 3113,
+    "sample_count": 121,
+    "sampled_peak_by_phase_mb": {
+      "measurement-out128": 8461,
+      "measurement-out32": 8461,
+      "startup": 8459,
+      "teardown": 8461
+    },
+    "query_seconds_max": 1.14740823,
+    "start_interval_seconds_max": 2.14755167
+  },
+  "source_script_sha256": "73c7d5eded454a61d2ff151512c72277b8dc39104a6bc61b361a9dd2e641c5f6",
+  "limits": [
+    "Run-level P50 values are averaged, not pooled request percentiles.",
+    "HBM is driver device usage, not model tensor/KV-only bytes.",
+    "Sample peaks can miss short spikes and include condition warmup.",
+    "No profiler or diagnostic hooks; source snapshots retained."
+  ]
+}

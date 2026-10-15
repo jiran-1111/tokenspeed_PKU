@@ -1,0 +1,11 @@
+{
+  "task_duration_sum_us": 981676.6910000006,
+  "all_op_rows": 108331,
+  "attention_calls": 762,
+  "expected_full_attention_layers": 6,
+  "observed_decode_steps": 127,
+  "gdn_types": {
+    "_fused_gdn_decode_update_kernel_1": 2286
+  },
+  "aicore_note": "AICore-only counter excludes most vector kernels; use all-task duration separately; neither cumulative share is wall-clock fraction."
+}

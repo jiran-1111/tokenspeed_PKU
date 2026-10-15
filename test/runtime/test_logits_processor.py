@@ -56,6 +56,28 @@ def test_logits_processor_only_uses_fused_lm_head_for_kimi(monkeypatch):
     assert calls["fused"] == 1
 
 
+def test_npu_capture_probe_uses_torch_npu(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        torch,
+        "npu",
+        SimpleNamespace(
+            is_current_stream_capturing=lambda: calls.append("npu") or True
+        ),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        torch.cuda,
+        "is_current_stream_capturing",
+        lambda: pytest.fail("CUDA capture probe must not run for an NPU device"),
+    )
+
+    assert logits_processor_module._is_current_stream_capturing(
+        SimpleNamespace(type="npu")
+    )
+    assert calls == ["npu"]
+
+
 def test_tp_logits_all_gather_handles_zero_rows(monkeypatch):
     processor = LogitsProcessor(
         config=SimpleNamespace(model_type="test", vocab_size=6),
@@ -128,7 +150,6 @@ def test_tp_logits_gather_preserves_dtype(monkeypatch, dtype, cached):
         output.copy_(torch.cat((logits, logits), dim=0))
 
     monkeypatch.setattr(processor, "_init_all_gather_state", initialize)
-    monkeypatch.setattr(torch.cuda, "is_current_stream_capturing", lambda: False)
     monkeypatch.setattr(logits_processor_module, "all_gather_inner", multicast)
     monkeypatch.setattr(logits_processor_module, "all_gather_single", collective)
     hidden = torch.tensor([[1.0, 1 / 512]], dtype=dtype)
@@ -321,9 +342,9 @@ def test_dist_argmax_probe_failure_falls_back_and_latches(monkeypatch):
     )
     capturing = {"on": True}
     monkeypatch.setattr(
-        logits_processor_module.torch.cuda,
-        "is_current_stream_capturing",
-        lambda: capturing["on"],
+        logits_processor_module,
+        "_is_current_stream_capturing",
+        lambda device: capturing["on"],
     )
     monkeypatch.setattr(
         logits_processor_module.pg_manager,
@@ -370,11 +391,6 @@ def test_dist_argmax_state_cache_separates_logits_dtypes(monkeypatch):
         logits_processor_module,
         "current_platform",
         lambda: SimpleNamespace(is_nvidia=True),
-    )
-    monkeypatch.setattr(
-        logits_processor_module.torch.cuda,
-        "is_current_stream_capturing",
-        lambda: False,
     )
     monkeypatch.setattr(
         logits_processor_module.pg_manager,
@@ -539,15 +555,19 @@ def test_capture_takes_the_plain_gather_and_leaves_the_gate_for_later(monkeypatc
         "all_gather_inner",
         lambda *a, **k: pytest.fail("the sentinel must never reach the gather"),
     )
-    monkeypatch.setattr(torch.cuda, "is_current_stream_capturing", lambda: True)
+    monkeypatch.setattr(
+        logits_processor_module,
+        "_is_current_stream_capturing",
+        lambda device: True,
+    )
     monkeypatch.setattr(
         logits_processor_module,
         "all_gather_single",
         lambda out, inp, group: None,
     )
 
-    hidden = torch.randn(4, 2, dtype=torch.float32)
-    lm_head = SimpleNamespace(weight=torch.randn(4, 2, dtype=torch.float32))
+    hidden = torch.randn(4, 2, dtype=torch.bfloat16)
+    lm_head = SimpleNamespace(weight=torch.randn(4, 2, dtype=torch.bfloat16))
     md = LogitsMetadata(forward_mode=ForwardMode.DECODE)
     out = proc._get_logits(hidden, lm_head, md)
 

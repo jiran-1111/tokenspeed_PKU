@@ -63,12 +63,16 @@ class _OutputProcessor:
         self.rid_to_state = rid_to_state
         self.aborted: list[tuple[str, bool]] = []
         self.reaped: list[str] = []
+        self.published: list[str] = []
 
     def mark_abort(self, request_id: str, notify_client: bool = False) -> None:
         self.aborted.append((request_id, notify_client))
 
     def reap_finished_orphan(self, request_id: str, _state) -> None:
         self.reaped.append(request_id)
+
+    def publish_finished_at_admission(self, request_id: str, _state) -> None:
+        self.published.append(request_id)
 
 
 class _GrammarManager:
@@ -105,8 +109,15 @@ class _FakeLoop:
     # The real abort marker so the notify_client contract stays honest.
     _request_abort_or_mark = EventLoop._request_abort_or_mark
 
-    def __init__(self, rid_to_state: dict | None = None) -> None:
+    def __init__(
+        self,
+        rid_to_state: dict | None = None,
+        pending_session_turns: dict | None = None,
+    ) -> None:
         self.output_processor = _OutputProcessor(rid_to_state or {})
+        self.request_handler = SimpleNamespace(
+            pending_session_turns=pending_session_turns or {}
+        )
         self.scheduler = _Scheduler()
         self.has_dp = False
 
@@ -115,9 +126,11 @@ class _FakeLoop:
 
 
 def _hooks(
-    rid_to_state: dict | None = None, device=None
+    rid_to_state: dict | None = None,
+    device=None,
+    pending_session_turns: dict | None = None,
 ) -> tuple[PauseHooks, _FakeLoop]:
-    loop = _FakeLoop(rid_to_state)
+    loop = _FakeLoop(rid_to_state, pending_session_turns)
     hooks = PauseHooks(loop, PauseController(NullSender()), device)
     return hooks, loop
 
@@ -149,6 +162,22 @@ def test_abort_pause_edge_cancels_inflight_and_grammar_queue() -> None:
     hooks.apply_transitions(grammar_manager)
     assert loop.output_processor.aborted == [("r0", True), ("r1", True)]
     assert queued.finish_calls == [("Aborted by pause", True)]
+
+
+def test_abort_pause_cancels_deferred_session_turn() -> None:
+    state = _State()
+    pending = {"session-a": (_spec("deferred-rid"), state, None)}
+    hooks, loop = _hooks(pending_session_turns=pending)
+    hooks._pause.request_drain(
+        abort_inflight=True, on_drained=lambda: None, on_cancelled=lambda: None
+    )
+
+    hooks.apply_transitions(_GrammarManager())
+
+    assert pending == {}
+    assert state.finish_calls == [("Aborted by pause", True)]
+    assert loop.output_processor.published == ["deferred-rid"]
+    assert loop.scheduler.submitted == []
 
 
 def test_wait_pause_edge_cancels_grammar_queue_but_not_inflight() -> None:

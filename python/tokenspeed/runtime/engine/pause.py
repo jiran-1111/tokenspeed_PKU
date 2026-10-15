@@ -385,6 +385,15 @@ class PauseHooks:
                     rid, "request aborted by pause", notify_client=True
                 )
                 grammar_manager.mark_abort(rid)
+            pending_turns = getattr(
+                getattr(loop, "request_handler", None), "pending_session_turns", {}
+            )
+            for session_id, (spec, state, _) in list(pending_turns.items()):
+                pending_turns.pop(session_id)
+                state.set_finish_with_abort("Aborted by pause", notify_client=True)
+                loop.output_processor.publish_finished_at_admission(
+                    spec.request_id, state
+                )
 
         if self._pause.consume_cancel_grammar():
             for _, state, _ in grammar_manager.grammar_queue:

@@ -59,6 +59,9 @@ def _torch_allreduce_residual_rmsnorm(
     **_,
 ) -> tuple[torch.Tensor, torch.Tensor, None]:
     torch.distributed.all_reduce(input_tensor, group=group)
+    if _platform.is_npu and weight.dtype != input_tensor.dtype:
+        residual.add_(input_tensor)
+        return rmsnorm(residual, weight, eps), residual, None
     output, updated_residual = rmsnorm(
         input_tensor,
         weight,
@@ -234,7 +237,10 @@ class GemmaRMSNorm(torch.nn.Module):
         super().__init__()
         self.weight = nn.Parameter(torch.zeros(hidden_size))
         self.variance_epsilon = eps
-        self.register_buffer("gemma_weight", self.weight.data + 1.0, persistent=False)
+        gamma_weight = (
+            self.weight.data.float() if _platform.is_npu else self.weight.data
+        )
+        self.register_buffer("gemma_weight", gamma_weight + 1.0, persistent=False)
         # (Chen-0210) Gemma weight = standard_weight + 1. Precompute once.
         self.weight.weight_loader = self._weight_loader
 
@@ -244,7 +250,8 @@ class GemmaRMSNorm(torch.nn.Module):
                 f"Shape mismatch: {param.size()} != {loaded_weight.size()}."
             )
         param.data.copy_(loaded_weight)
-        self.gemma_weight = param.data + 1.0
+        gamma_weight = param.data.float() if _platform.is_npu else param.data
+        self.gemma_weight = gamma_weight + 1.0
 
     def forward(
         self,
@@ -256,6 +263,14 @@ class GemmaRMSNorm(torch.nn.Module):
                 return x, residual
             else:
                 return x
+
+        if _platform.is_npu:
+            gemma_weight = self.gemma_weight
+            if residual is not None:
+                # Preserve BF16 residual storage, but never round effective gamma.
+                residual.add_(x)
+                return rmsnorm(residual, gemma_weight, self.variance_epsilon), residual
+            return rmsnorm(x, gemma_weight, self.variance_epsilon)
 
         if _is_amd:
             if x.shape[0] == 0:

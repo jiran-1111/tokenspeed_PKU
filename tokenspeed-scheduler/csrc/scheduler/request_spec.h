@@ -31,6 +31,7 @@ struct RequestSpec {
     std::string request_id;
     std::vector<std::int32_t> tokens;
     std::int32_t max_new_tokens{0};
+    std::string session_id;
 };
 
 // One prefill chunk's model inputs. The input covers `extend_len` tokens

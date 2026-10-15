@@ -1,0 +1,74 @@
+{
+  "input_root": "results/raw/homework1_decode_profile_final_20261015_r2/profile/cann",
+  "capture_count": 1,
+  "captures": [
+    {
+      "capture_id": "PROF_000001_20261015075757903_MDMHLPQBPRPHLNNB",
+      "aicore": {
+        "source": "op_summary_20261015075814.csv",
+        "row_count": 13081,
+        "total_recorded_aicore_us": 198662.731,
+        "top_ops_by_cumulative_aicore_time": [
+          {
+            "op_name": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98513",
+            "op_type": "MatMulV2",
+            "task_count": 9144,
+            "total_us": 92443.109
+          },
+          {
+            "op_name": "MatMulV2_ND_ND_FP16_FP16_false_true_all_98499",
+            "op_type": "MatMulV2",
+            "task_count": 3175,
+            "total_us": 90627.155
+          },
+          {
+            "op_name": "FusedInferAttentionScore_3b093497fc536d61a77a7a3293a524da_12000000000222221",
+            "op_type": "FusedInferAttentionScore",
+            "task_count": 762,
+            "total_us": 15592.467
+          }
+        ]
+      },
+      "task_timeline": {
+        "source": "task_time_20261015075814.csv",
+        "positive_interval_count": 114231,
+        "envelope_us": 1531812.0,
+        "recorded_union_us": 996448.75,
+        "uncovered_within_envelope_us": 535363.25,
+        "largest_uncovered_interval_us": 1405.75
+      },
+      "hbm_raw_bandwidth": {
+        "source": "device_2/sqlite/hbm.db",
+        "unit": "raw profiler bandwidth value; unit not independently validated",
+        "timestamp_unit": "raw profiler timestamp unit",
+        "median_timestamp_step_raw": 20000000.0,
+        "event_types": {
+          "read": {
+            "timestamp_sample_count": 81,
+            "mean_sum_across_channels": 115911.118945,
+            "max_sum_across_channels": 147915.465985,
+            "min_channel_count_per_sample": 4,
+            "max_channel_count_per_sample": 4
+          },
+          "write": {
+            "timestamp_sample_count": 81,
+            "mean_sum_across_channels": 1644.923076,
+            "max_sum_across_channels": 2092.250241,
+            "min_channel_count_per_sample": 4,
+            "max_channel_count_per_sample": 4
+          }
+        }
+      },
+      "memory_usage": {
+        "status": "not reported",
+        "reason": "The capture README says DDR/HBM usage fields are unsupported on this product."
+      }
+    }
+  ],
+  "interpretation_limits": [
+    "AICore values are cumulative task counters, not wall time or per-request latency.",
+    "Task interval gaps are time not covered by recorded task intervals; they do not prove NPU idleness.",
+    "HBM values are aggregated across channel IDs but retain the profiler's raw unit.",
+    "These captures do not correlate profiler records to individual requests."
+  ]
+}

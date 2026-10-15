@@ -184,7 +184,8 @@ NB_MODULE(tokenspeed_scheduler_ext, m) {
         .def(nb::init<>())
         .def_rw("request_id", &tokenspeed::RequestSpec::request_id)
         .def_rw("tokens", &tokenspeed::RequestSpec::tokens)
-        .def_rw("max_new_tokens", &tokenspeed::RequestSpec::max_new_tokens);
+        .def_rw("max_new_tokens", &tokenspeed::RequestSpec::max_new_tokens)
+        .def_rw("session_id", &tokenspeed::RequestSpec::session_id);
 
     nb::module_ forward_event = m.def_submodule("ForwardEvent");
     nb::class_<tokenspeed::forward::ExtendResult>(forward_event, "ExtendResult")
@@ -347,11 +348,23 @@ NB_MODULE(tokenspeed_scheduler_ext, m) {
                      })
         .def_ro("pages_to_zero", &tokenspeed::ExecutionPlan::pages_to_zero);
 
+    nb::class_<tokenspeed::SessionInfo>(m, "SessionInfo")
+        .def_ro("total_context_tokens", &tokenspeed::SessionInfo::total_context_tokens)
+        .def_ro("newly_prefilled_tokens", &tokenspeed::SessionInfo::newly_prefilled_tokens)
+        .def_ro("reused_context_tokens", &tokenspeed::SessionInfo::reused_context_tokens)
+        .def_ro("turn_active", &tokenspeed::SessionInfo::turn_active);
+
     nb::class_<tokenspeed::Scheduler>(m, "Scheduler")
         .def(nb::init<tokenspeed::SchedulerConfig>(), nb::arg("config"))
         .def("submit_requests",
              nb::overload_cast<const std::vector<tokenspeed::RequestSpec>&>(&tokenspeed::Scheduler::SubmitRequests),
              nb::arg("request_specs"))
+        .def("open_session", &tokenspeed::Scheduler::OpenSession, nb::arg("session_id"))
+        .def("close_session", &tokenspeed::Scheduler::CloseSession, nb::arg("session_id"))
+        .def("has_session", &tokenspeed::Scheduler::HasSession, nb::arg("session_id"))
+        .def("can_submit_session_turn", &tokenspeed::Scheduler::CanSubmitSessionTurn, nb::arg("session_id"))
+        .def("can_defer_session_turn", &tokenspeed::Scheduler::CanDeferSessionTurn, nb::arg("session_id"))
+        .def("session_info_for_session", &tokenspeed::Scheduler::SessionInfoForSession, nb::arg("session_id"))
         .def(
             "next_execution_plan", [](tokenspeed::Scheduler& s) { return s.NextExecutionPlan(); },
             nb::call_guard<nb::gil_scoped_release>())

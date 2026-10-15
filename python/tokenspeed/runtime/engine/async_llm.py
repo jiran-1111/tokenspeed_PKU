@@ -59,6 +59,7 @@ from tokenspeed.runtime.engine.io_struct import (
     BatchStrOut,
     BatchTokenIDOut,
     CloseSessionReqInput,
+    CloseSessionReqOutput,
     ConfigureLoggingReq,
     EmbeddingReqInput,
     GenerateReqInput,
@@ -198,7 +199,8 @@ class AsyncLLM(SchedulerControlClient, EngineClient):
         self._rl_control_task = None
 
         # For session info
-        self.session_futures = {}  # session_id -> asyncio event
+        self.session_futures = {}  # session_id -> open acknowledgement future
+        self.close_session_futures = {}  # session_id -> close acknowledgement future
 
         # Set after scheduler is initialized
         self.max_req_input_len = None
@@ -228,6 +230,7 @@ class AsyncLLM(SchedulerControlClient, EngineClient):
                     self.output_processor.handle_batch_output,
                 ),
                 (OpenSessionReqOutput, self._handle_open_session_req_output),
+                (CloseSessionReqOutput, self._handle_close_session_req_output),
                 (
                     UpdateWeightFromDiskReqOutput,
                     self._handle_update_weights_from_disk_req_output,
@@ -270,6 +273,31 @@ class AsyncLLM(SchedulerControlClient, EngineClient):
         self.input_processor.validate_request(obj)
 
         obj.normalize_batch_and_arguments()
+
+        if obj.session_params is not None:
+            if not obj.is_single:
+                raise ValueError(
+                    "Session generation supports one text request at a time"
+                )
+            if (
+                obj.input_embeds is not None
+                or obj.input_multi_ids is not None
+                or obj.precomputed_multimodal_inputs is not None
+            ):
+                raise ValueError("Session generation supports text-only requests")
+            if not isinstance(obj.session_params, dict) or not obj.session_params.get(
+                "id"
+            ):
+                raise ValueError("Session generation requires session_params.id")
+            if set(obj.session_params) - {"id"}:
+                raise ValueError("Only session_params.id is supported")
+            if isinstance(obj.sampling_params, dict) and any(
+                obj.sampling_params.get(name) is not None
+                for name in ("json_schema", "regex", "ebnf", "structural_tag")
+            ):
+                raise ValueError(
+                    "Session generation does not support grammar constraints"
+                )
 
         if self.log_requests:
             max_length, skip_names, _ = self.log_request_metadata
@@ -560,23 +588,56 @@ class AsyncLLM(SchedulerControlClient, EngineClient):
             all_paused_requests = [r.num_paused_requests for r in result]
             return all_success, all_message, all_paused_requests
 
-    async def open_session(self, obj: OpenSessionReqInput) -> str | None:
+    async def open_session(self, obj: OpenSessionReqInput) -> str:
         self.auto_create_handle_loop()
 
         if obj.session_id is None:
             obj.session_id = uuid.uuid4().hex
-        elif obj.session_id in self.session_futures:
-            return None
+        obj.capacity_of_str_len = max(obj.capacity_of_str_len, len(obj.session_id))
+        session_id = obj.session_id
+        if (
+            session_id in self.session_futures
+            or session_id in self.close_session_futures
+        ):
+            raise ValueError(f"Session {session_id!r} already has a pending operation")
 
-        self.engine_core_client.send_to_scheduler.send_pyobj(obj)
+        future = asyncio.get_running_loop().create_future()
+        self.session_futures[session_id] = future
+        try:
+            self.engine_core_client.send_to_scheduler.send_pyobj(obj)
+        except BaseException:
+            self.session_futures.pop(session_id, None)
+            future.cancel()
+            raise
 
-        self.session_futures[obj.session_id] = asyncio.Future()
-        session_id = await self.session_futures[obj.session_id]
-        del self.session_futures[obj.session_id]
-        return session_id
+        result = await future
+        if not result.success:
+            raise ValueError(result.message or f"Could not open session {session_id!r}")
+        return result.session_id
 
     async def close_session(self, obj: CloseSessionReqInput) -> None:
-        await self.engine_core_client.send_to_scheduler.send_pyobj(obj)
+        self.auto_create_handle_loop()
+        session_id = obj.session_id
+        if (
+            session_id in self.session_futures
+            or session_id in self.close_session_futures
+        ):
+            raise ValueError(f"Session {session_id!r} already has a pending operation")
+
+        future = asyncio.get_running_loop().create_future()
+        self.close_session_futures[session_id] = future
+        try:
+            self.engine_core_client.send_to_scheduler.send_pyobj(obj)
+        except BaseException:
+            self.close_session_futures.pop(session_id, None)
+            future.cancel()
+            raise
+
+        result = await asyncio.shield(future)
+        if not result.success:
+            raise ValueError(
+                result.message or f"Could not close session {session_id!r}"
+            )
 
     def get_log_request_metadata(self):
         max_length = None
@@ -735,9 +796,14 @@ class AsyncLLM(SchedulerControlClient, EngineClient):
             self.last_receive_tstamp = time.time()
 
     def _handle_open_session_req_output(self, recv_obj):
-        self.session_futures[recv_obj.session_id].set_result(
-            recv_obj.session_id if recv_obj.success else None
-        )
+        future = self.session_futures.pop(recv_obj.session_id, None)
+        if future is not None and not future.done():
+            future.set_result(recv_obj)
+
+    def _handle_close_session_req_output(self, recv_obj: CloseSessionReqOutput):
+        future = self.close_session_futures.pop(recv_obj.session_id, None)
+        if future is not None and not future.done():
+            future.set_result(recv_obj)
 
     def _handle_update_weights_from_disk_req_output(self, recv_obj):
         if not self.server_args.mapping.attn.has_dp:

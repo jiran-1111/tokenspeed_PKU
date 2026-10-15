@@ -99,6 +99,47 @@ private:
     bool awaits_result_{false};
 };
 
+struct QueueSessionTurnEvent : InvalidTransitionHandler<QueueSessionTurnEvent> {
+    using InvalidTransitionHandler<QueueSessionTurnEvent>::operator();
+
+    explicit QueueSessionTurnEvent(std::int32_t computed_tokens) : computed_tokens_{computed_tokens} {}
+
+    SessionPending operator()(SessionIdle&& state);
+
+private:
+    std::int32_t computed_tokens_{};
+};
+
+struct ScheduleSessionPrefillEvent : InvalidTransitionHandler<ScheduleSessionPrefillEvent> {
+    using InvalidTransitionHandler<ScheduleSessionPrefillEvent>::operator();
+
+    ScheduleSessionPrefillEvent(std::int32_t tokens_this_round, std::int32_t reserve_num_tokens_in_next_schedule_event)
+        : tokens_this_round_{tokens_this_round},
+          reserve_num_tokens_in_next_schedule_event_{reserve_num_tokens_in_next_schedule_event} {}
+
+    std::variant<PrefillDone, Prefilling> operator()(SessionPending&& state);
+
+private:
+    std::int32_t tokens_this_round_{};
+    std::int32_t reserve_num_tokens_in_next_schedule_event_{};
+};
+
+struct ParkSessionEvent : InvalidTransitionHandler<ParkSessionEvent> {
+    using InvalidTransitionHandler<ParkSessionEvent>::operator();
+
+    explicit ParkSessionEvent(std::int32_t computed_tokens) : computed_tokens_{computed_tokens} {}
+
+    SessionIdle operator()(PrefillDone&& state);
+    SessionIdle operator()(PrefillAwaitingResult&& state);
+    SessionIdle operator()(Decoding&& state);
+
+private:
+    template <typename State>
+    SessionIdle park(State&& state);
+
+    std::int32_t computed_tokens_{};
+};
+
 struct ScheduleDecodeEvent : InvalidTransitionHandler<ScheduleDecodeEvent> {
     using InvalidTransitionHandler<ScheduleDecodeEvent>::operator();
 
@@ -123,6 +164,7 @@ struct FinishEvent : InvalidTransitionHandler<FinishEvent> {
     Finished operator()(PrefillDone&& state);
     Finished operator()(PrefillAwaitingResult&& state);
     Finished operator()(Decoding&& state);
+    Finished operator()(SessionIdle&& state);
     Finished operator()(Retracted&& state);
     Finished operator()(Finished&& state) { return std::move(state); }
 
@@ -145,6 +187,8 @@ struct AbortEvent : InvalidTransitionHandler<AbortEvent> {
     Finished operator()(PrefillDone&& state);
     Finished operator()(PrefillAwaitingResult&& state);
     Finished operator()(Decoding&& state);
+    Finished operator()(SessionIdle&& state);
+    Finished operator()(SessionPending&& state);
     Finished operator()(Retracted&& state);
     Finished operator()(Finished&& state) { return std::move(state); }
 
@@ -247,6 +291,11 @@ struct ExtendResultEvent : InvalidTransitionHandler<ExtendResultEvent> {
         return std::move(state);
     }
     RemotePrefilling operator()(RemotePrefilling&& state) { return std::move(state); }
+
+    // A finished session may still own pages for a forward that was already
+    // scheduled when the client stopped consuming output. Its result lands
+    // against those pages but must not extend the completed turn.
+    SessionIdle operator()(SessionIdle&& state) { return std::move(state); }
 
     Finished operator()(Finished&& state) { return std::move(state); }
 

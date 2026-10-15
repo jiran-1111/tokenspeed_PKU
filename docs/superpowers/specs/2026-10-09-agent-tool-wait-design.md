@@ -1,12 +1,12 @@
 # Workload F：单会话客户端 Tool-Wait 设计
 
-状态：设计稿待用户复核。用户已批准“客户端 mock tool：一个 session 等待并带固定结果续跑，其他 session 同时请求；不改推理服务状态”的方向。
+状态：已获用户批准并实施；Workload F 客户端 mock tool 采集已完成。实测范围与指标解释见 `docs/project/final_results.md` 和 `docs/report/optimization_analysis.md`。
 
 ## 目标
 
 让 Agent 基准能够模拟一个会话等待工具返回时，其他会话仍继续请求推理服务；等待和工具结果均在客户端模拟，不改变 TokenSpeed 服务端状态。
 
-## 当前行为
+## 实现前行为
 
 `run_agent_benchmark.py` 在第一轮之后为每个 session 设置相同的 `tool_wait_ms`。请求 worker 在调用推理服务前分别休眠，因此所有 session 都会等待；下一轮也没有注入 mock 工具结果。
 

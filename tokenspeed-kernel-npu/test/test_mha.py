@@ -80,6 +80,37 @@ def test_mha_prefill() -> None:
     torch.testing.assert_close(output, expected, atol=2e-2, rtol=2e-2)
 
 
+def test_mha_prefill_single_token() -> None:
+    cumulative = torch.tensor([0, 1], dtype=torch.int32, device="npu")
+    q = torch.randn(1, 8, 256, dtype=torch.bfloat16, device="npu")
+    k = torch.randn(1, 2, 256, dtype=torch.bfloat16, device="npu")
+    v = torch.randn_like(k)
+
+    output = mha_prefill(q, k, v, cumulative, [0, 1], 1)
+    expected = _attention(q, k, v, causal=True)
+
+    torch.testing.assert_close(output, expected, atol=2e-2, rtol=2e-2)
+
+
+def test_mha_prefill_head_dim_256_matches_reference() -> None:
+    lengths = [2, 3]
+    cumulative = torch.tensor([0, 2, 5], dtype=torch.int32, device="npu")
+    torch.manual_seed(31)
+    q = torch.randn(5, 8, 256, dtype=torch.bfloat16, device="npu")
+    k = torch.randn(5, 2, 256, dtype=torch.bfloat16, device="npu")
+    v = torch.randn_like(k)
+
+    output = mha_prefill(q, k, v, cumulative, [0, 2, 5], max(lengths))
+    expected = torch.cat(
+        [
+            _attention(q[:2], k[:2], v[:2], causal=True),
+            _attention(q[2:], k[2:], v[2:], causal=True),
+        ]
+    )
+
+    torch.testing.assert_close(output, expected, atol=2e-2, rtol=2e-2)
+
+
 def test_mha_extend_with_paged_cache() -> None:
     page_size = 128
     q_lengths = [2, 3]

@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING
 
 import torch
 import zmq
+from tokenspeed_kernel.platform import current_platform
 from tokenspeed_kernel.profiling import (
     ProfilingState,
     profile_config_from_env,
@@ -47,6 +48,8 @@ from tokenspeed.runtime.distributed.process_group_manager import (
 from tokenspeed.runtime.engine.generation_output_processor import RequestState
 from tokenspeed.runtime.engine.io_struct import (
     AbortReq,
+    CloseSessionReqInput,
+    CloseSessionReqOutput,
     DestroyWeightsUpdateGroupReqInput,
     DestroyWeightsUpdateGroupReqOutput,
     FlushCacheReqInput,
@@ -57,6 +60,8 @@ from tokenspeed.runtime.engine.io_struct import (
     InitWeightsUpdateGroupReqOutput,
     IsSchedulerPausedReqInput,
     IsSleepingReqInput,
+    OpenSessionReqInput,
+    OpenSessionReqOutput,
     PauseSchedulerReqInput,
     ProfileReq,
     ProfileReqOutput,
@@ -69,6 +74,12 @@ from tokenspeed.runtime.engine.io_struct import (
     TokenizedGenerateReqInput,
     UpdateWeightsFromDistributedReqInput,
     UpdateWeightsFromDistributedReqOutput,
+)
+from tokenspeed.runtime.engine.profiler_adapter import (
+    create_profiler,
+    default_profiler_activities,
+    resolve_profiler_backend,
+    trace_file_name,
 )
 from tokenspeed.runtime.engine.request_types import FINISH_ABORT
 from tokenspeed.runtime.engine.scheduler_utils import make_spec
@@ -120,6 +131,7 @@ class RequestHandler:
         pause_controller=None,
         memory_controller=None,
         device=None,
+        session_scheduler=None,
     ) -> None:
 
         self.forward_ct = 0
@@ -133,6 +145,8 @@ class RequestHandler:
         # data plane so it is ordered against forwards. The scheduler worker
         # passes the handle in; None elsewhere (e.g. unit tests).
         self._device = device
+        self.session_scheduler = session_scheduler
+        self.pending_session_turns = {}
 
         mapping = server_args.mapping
         self.attn_tp_size = mapping.attn.tp_size
@@ -277,14 +291,52 @@ class RequestHandler:
     def process_requests(self, recv_reqs: list):
         """Dispatch control requests and return new generate request specs and states."""
         new_req_specs, req_states, bootstrap_infos, abort_rids = [], [], [], []
+        pending_session_ids = {
+            spec.session_id
+            for spec in getattr(self.pause_controller, "buffered_specs", ())
+            if getattr(spec, "session_id", "")
+        }
+        pending_session_ids.update(self.pending_session_turns)
+        batch_abort_rids = {
+            recv_req.rid for recv_req in recv_reqs if isinstance(recv_req, AbortReq)
+        }
+        suppressed_abort_rids = {
+            recv_req.rid
+            for recv_req in recv_reqs
+            if isinstance(recv_req, TokenizedGenerateReqInput)
+            and recv_req.rid in batch_abort_rids
+            and getattr(recv_req, "session_params", None) is not None
+        }
+        for session_id, pending in list(self.pending_session_turns.items()):
+            spec, _, _ = pending
+            if spec.request_id in batch_abort_rids:
+                self.pending_session_turns.pop(session_id)
+                pending_session_ids.discard(session_id)
+                suppressed_abort_rids.add(spec.request_id)
+        ready_session_specs, ready_session_states, ready_session_bootstraps = [], [], []
         pending_flush_outputs = 0
         pending_weight_updates = []
         for recv_req in recv_reqs:
             if isinstance(recv_req, TokenizedGenerateReqInput):
+                if recv_req.rid in suppressed_abort_rids:
+                    continue
                 req_spec, req_state, bootstrap_info = self.handle_generate_request(
-                    recv_req
+                    recv_req, pending_session_ids=pending_session_ids
                 )
-
+                if (
+                    req_state.session_id is not None
+                    and self.session_scheduler is not None
+                ):
+                    if not self.session_scheduler.can_submit_session_turn(
+                        req_state.session_id
+                    ):
+                        self.pending_session_turns[req_state.session_id] = (
+                            req_spec,
+                            req_state,
+                            bootstrap_info,
+                        )
+                        pending_session_ids.add(req_state.session_id)
+                        continue
                 new_req_specs.append(req_spec)
                 req_states.append(req_state)
                 bootstrap_infos.append(bootstrap_info)
@@ -292,9 +344,16 @@ class RequestHandler:
                 output = self.control_request_dispatcher(recv_req)
                 if output is not None:
                     self.send_func.send_pyobj(output)
+            elif isinstance(recv_req, OpenSessionReqInput):
+                self._handle_open_session_req(recv_req)
+            elif isinstance(recv_req, CloseSessionReqInput):
+                self._handle_close_session_req(
+                    recv_req, pending_session_ids=pending_session_ids
+                )
             elif isinstance(recv_req, AbortReq):
                 logger.debug(f"AbortReq for rid={recv_req.rid!s}")
-                abort_rids.append(recv_req.rid)
+                if recv_req.rid not in suppressed_abort_rids:
+                    abort_rids.append(recv_req.rid)
             elif isinstance(recv_req, FlushCacheReqInput):
                 pending_flush_outputs += 1
             elif isinstance(recv_req, PauseSchedulerReqInput):
@@ -342,6 +401,19 @@ class RequestHandler:
                 )
             else:
                 raise NotImplementedError(f"Unsupported request type: {type(recv_req)}")
+        if self.session_scheduler is not None and not getattr(
+            self.pause_controller, "admit_blocked", False
+        ):
+            for session_id, pending in list(self.pending_session_turns.items()):
+                if self.session_scheduler.can_submit_session_turn(session_id):
+                    self.pending_session_turns.pop(session_id)
+                    spec, state, bootstrap_info = pending
+                    ready_session_specs.append(spec)
+                    ready_session_states.append(state)
+                    ready_session_bootstraps.append(bootstrap_info)
+        new_req_specs = ready_session_specs + new_req_specs
+        req_states = ready_session_states + req_states
+        bootstrap_infos = ready_session_bootstraps + bootstrap_infos
         flush_success = self._rendezvous_replica_flush(
             pending_flush_outputs=pending_flush_outputs,
             weight_updates=pending_weight_updates,
@@ -537,53 +609,84 @@ class RequestHandler:
     def handle_generate_request(
         self,
         recv_req: TokenizedGenerateReqInput,
+        pending_session_ids: set[str] | None = None,
     ):
         if recv_req.bootstrap_port is None:
             recv_req.bootstrap_port = self.server_args.disaggregation_bootstrap_port
 
+        session_params = recv_req.session_params
+        session_id = session_params.id if session_params is not None else None
         req_spec = make_spec(
             rid=recv_req.rid,
-            tokens=recv_req.input_ids,
+            tokens=recv_req.input_ids or [],
+            session_id=session_id,
         )
         req_state = RequestState.from_recv_req(
             recv_req,
             tokenizer=self.tokenizer,
             eos_token_ids=self.hf_eos_token_id,
         )
+        bootstrap_info = BootstrapInfo(
+            recv_req.bootstrap_host,
+            recv_req.bootstrap_port,
+            recv_req.bootstrap_room,
+        )
 
         # A transport that validates requests itself (msgpack ZMQ) marks
         # rejected ones instead of dropping them; admit pre-finished so the
         # client gets a terminal abort rather than a hung stream.
         if getattr(recv_req, "validation_error", None):
+            req_state.session_id = None
             req_state.finished_reason = FINISH_ABORT(
                 f"Invalid request: {recv_req.validation_error}"
             )
-            return (
-                req_spec,
-                req_state,
-                BootstrapInfo(
-                    recv_req.bootstrap_host,
-                    recv_req.bootstrap_port,
-                    recv_req.bootstrap_room,
-                ),
-            )
+            return req_spec, req_state, bootstrap_info
 
-        if (
-            recv_req.session_params is not None
-            and recv_req.session_params.id is not None
-        ):
-            req_state.finished_reason = FINISH_ABORT(
-                f"Invalid request: session id {recv_req.session_params.id} does not exist"
-            )
-            return (
-                req_spec,
-                req_state,
-                BootstrapInfo(
-                    recv_req.bootstrap_host,
-                    recv_req.bootstrap_port,
-                    recv_req.bootstrap_room,
-                ),
-            )
+        if session_id is not None:
+
+            def reject_session(message: str):
+                req_state.session_id = None
+                req_state.finished_reason = FINISH_ABORT(
+                    f"Invalid session request: {message}"
+                )
+                return req_spec, req_state, bootstrap_info
+
+            if (
+                recv_req.input_ids is None
+                or recv_req.input_embeds is not None
+                or recv_req.input_multi_ids is not None
+                or recv_req.multimodal_inputs is not None
+            ):
+                return reject_session("only text token IDs are supported")
+
+            if any(
+                getattr(req_state.sampling_params, name, None) is not None
+                for name in ("json_schema", "regex", "ebnf", "structural_tag")
+            ):
+                return reject_session("grammar-constrained generation is unsupported")
+
+            if any(
+                getattr(session_params, name, None) is not None
+                for name in ("rid", "offset", "replace")
+            ):
+                return reject_session("only session_params.id is supported")
+
+            scheduler = self.session_scheduler
+            if scheduler is None or not scheduler.has_session(session_id):
+                return reject_session(f"unknown or closed session id {session_id!r}")
+            if pending_session_ids is not None and session_id in pending_session_ids:
+                return reject_session(
+                    f"session {session_id!r} already has an active turn"
+                )
+            if not scheduler.can_submit_session_turn(session_id) and not getattr(
+                scheduler, "can_defer_session_turn", lambda _: False
+            )(session_id):
+                return reject_session(
+                    f"session {session_id!r} already has an active turn"
+                )
+            if pending_session_ids is not None:
+                pending_session_ids.add(session_id)
+            req_state.session_id = session_id
 
         req_state.sampling_params.max_new_tokens = min(
             (
@@ -591,17 +694,52 @@ class RequestHandler:
                 if req_state.sampling_params.max_new_tokens is not None
                 else 1 << 30
             ),
-            self.max_req_len - len(req_state.prompt_input_ids) - 1,
+            self.max_req_len - len(req_state.prompt_input_ids),
         )
         req_spec.max_new_tokens = req_state.sampling_params.max_new_tokens
-        return (
-            req_spec,
-            req_state,
-            BootstrapInfo(
-                recv_req.bootstrap_host,
-                recv_req.bootstrap_port,
-                recv_req.bootstrap_room,
-            ),
+        return req_spec, req_state, bootstrap_info
+
+    def _handle_open_session_req(self, recv_req: OpenSessionReqInput) -> None:
+        session_id = recv_req.session_id
+        success = bool(
+            session_id
+            and self.session_scheduler is not None
+            and self.session_scheduler.open_session(session_id)
+        )
+        message = "" if success else "Session ID is empty, duplicated, or unsupported"
+        self.send_func.send_pyobj(
+            OpenSessionReqOutput(
+                session_id=session_id,
+                success=success,
+                message=message,
+            )
+        )
+
+    def _handle_close_session_req(
+        self,
+        recv_req: CloseSessionReqInput,
+        pending_session_ids: set[str] | None = None,
+    ) -> None:
+        pending_turn = (
+            pending_session_ids is not None
+            and recv_req.session_id in pending_session_ids
+        )
+        success = bool(
+            not pending_turn
+            and self.session_scheduler is not None
+            and self.session_scheduler.close_session(recv_req.session_id)
+        )
+        message = (
+            ""
+            if success
+            else "Session is unknown, active, or awaiting an in-flight result"
+        )
+        self.send_func.send_pyobj(
+            CloseSessionReqOutput(
+                session_id=recv_req.session_id,
+                success=success,
+                message=message,
+            )
         )
 
     # ------------------------------------------------------------------
@@ -614,6 +752,7 @@ class RequestHandler:
 
     def init_profiler(self):
         self.torch_profiler = None
+        self.torch_profiler_is_npu = False
         self.profiler_output_dir: str | None = None
         self.profiler_activities: list[str] | None = None
         self.profile_id: str | None = None
@@ -647,7 +786,7 @@ class RequestHandler:
         if output_dir is None:
             output_dir = envs.TOKENSPEED_PROFILER_DIR.get()
         if activities is None:
-            activities = ["CPU", "GPU"]
+            activities = default_profiler_activities(is_npu=current_platform().is_npu)
 
         # All validation must precede any state mutation: the event loop runs
         # _profile_batch_predicate on every batch, so a rejected request that
@@ -719,23 +858,36 @@ class RequestHandler:
         with_stack = self.torch_profiler_with_stack
         record_shapes = self.torch_profiler_record_shapes
 
-        activity_map = {
-            "CPU": torch.profiler.ProfilerActivity.CPU,
-            "GPU": torch.profiler.ProfilerActivity.CUDA,
-        }
-        torchprof_activities = [
-            activity_map[a] for a in activities if a in activity_map
-        ]
+        try:
+            backend = resolve_profiler_backend(
+                is_npu=current_platform().is_npu,
+                torch_module=torch,
+            )
+        except (AttributeError, ImportError) as exc:
+            return ProfileReqOutput(
+                success=False,
+                message=f"Profiler backend is unavailable: {exc}",
+            )
 
-        if torchprof_activities:
-            self.torch_profiler = torch.profiler.profile(
-                activities=torchprof_activities,
+        self.torch_profiler_is_npu = backend.is_npu
+        try:
+            self.torch_profiler = create_profiler(
+                backend,
+                activities=activities,
                 with_stack=with_stack if with_stack is not None else True,
                 record_shapes=record_shapes if record_shapes is not None else False,
             )
-            self.torch_profiler.start()
+            if self.torch_profiler is not None:
+                self.torch_profiler.start()
+        except Exception as exc:
+            self.torch_profiler = None
+            self.torch_profiler_is_npu = False
+            return ProfileReqOutput(
+                success=False,
+                message=f"Failed to start profiler: {exc}",
+            )
 
-        if "MEM" in activities:
+        if "MEM" in activities and not backend.is_npu:
             torch.cuda.memory._record_memory_history(max_entries=100000)
 
         if "CUDA_PROFILER" in activities:
@@ -755,7 +907,7 @@ class RequestHandler:
                 if self.torch_profiler is not None:
                     self.torch_profiler.stop()
                     self.torch_profiler = None
-                if "MEM" in activities:
+                if "MEM" in activities and not backend.is_npu:
                     torch.cuda.memory._record_memory_history(enabled=None)
                 return ProfileReqOutput(
                     success=False,
@@ -827,12 +979,19 @@ class RequestHandler:
             self.torch_profiler.export_chrome_trace(
                 os.path.join(
                     self.profiler_output_dir,
-                    f"{self.profile_id}-{self.profile_rank_tag}{stage_suffix}.trace.json.gz",
+                    trace_file_name(
+                        f"{self.profile_id}-{self.profile_rank_tag}{stage_suffix}",
+                        is_npu=self.torch_profiler_is_npu,
+                    ),
                 )
             )
             self._profile_sync()
 
-        if self.profiler_activities is not None and "MEM" in self.profiler_activities:
+        if (
+            self.profiler_activities is not None
+            and "MEM" in self.profiler_activities
+            and not self.torch_profiler_is_npu
+        ):
             memory_profile_path = os.path.join(
                 self.profiler_output_dir,
                 f"{self.profile_id}-{self.profile_rank_tag}-memory{stage_suffix}.pickle",
@@ -867,6 +1026,7 @@ class RequestHandler:
             )
 
         self.torch_profiler = None
+        self.torch_profiler_is_npu = False
         self.profile_in_progress = False
         self.profiler_start_forward_ct = None
 

@@ -28,12 +28,30 @@ namespace tokenspeed {
 
 Request::Request(const RequestSpec& spec, std::int32_t prefix_granularity, Role role)
     : id_{spec.request_id},
+      session_id_{spec.session_id},
       token_container_{spec.tokens},
       submitted_prompt_size_{static_cast<std::int32_t>(spec.tokens.size())},
       max_new_tokens_{spec.max_new_tokens},
       prefix_granularity_{prefix_granularity},
       state_{role == Role::kFused ? fsm::State{fsm::Submitted{&token_container_, prefix_granularity}}
                                   : fsm::State{fsm::Bootstrapping{&token_container_, prefix_granularity}}} {}
+
+void Request::AppendSessionTurn(const RequestSpec& spec) {
+    if (session_id_.empty() || spec.session_id != session_id_ || !Is<fsm::SessionIdle>() || ResultsInFlight() != 0) {
+        throw std::logic_error("Request::AppendSessionTurn: expected an idle session request");
+    }
+    const std::int32_t computed_tokens = NumComputedTokens();
+    session_turn_start_computed_tokens_ = computed_tokens;
+    session_turn_reuses_state_pages_ = computed_tokens > 0;
+    token_container_.Extend(spec.tokens);
+    token_container_.SetPrefillSize(token_container_.Size());
+    submitted_prompt_size_ = token_container_.Size();
+    max_new_tokens_ = spec.max_new_tokens;
+    retraction_count_ = 0;
+    spec_candidate_ids_.clear();
+    id_ = spec.request_id;
+    Apply(fsm::QueueSessionTurnEvent{computed_tokens});
+}
 
 PrefillInfo Request::CurrentPrefillInfo() const {
     return std::visit(
@@ -57,6 +75,8 @@ std::int32_t Request::NumComputedTokens() const {
             [](const fsm::Prefilling& state) { return state.window.begin + state.window.size; },
             [](const fsm::PrefillDone& state) { return state.window.begin + state.window.size; },
             [this](const fsm::Decoding&) { return TokenSize() - 1; },
+            [](const fsm::SessionIdle& state) { return state.computed_tokens; },
+            [](const fsm::SessionPending& state) { return state.computed_tokens; },
             [this](const auto&) -> std::int32_t {
                 throw std::logic_error(
                     "Request::NumComputedTokens: expected Prefilling, PrefillDone or Decoding; got " + StateName());

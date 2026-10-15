@@ -59,6 +59,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _attach_session_metadata(meta_info: dict, output_extra_info: dict | None):
+    if output_extra_info is None:
+        return None
+    output_extra_info = dict(output_extra_info)
+    session_info = output_extra_info.pop("session", None)
+    if session_info is not None:
+        meta_info["session"] = session_info
+    return output_extra_info
+
+
 @dataclasses.dataclass
 class ReqState:
     """Store the state a request."""
@@ -73,8 +83,6 @@ class ReqState:
     tokenized_time: float = 0.0
     finished_time: float = 0.0
     first_token_time: float = 0.0
-    first_completion_tokens: int = 1
-    last_time: float = 0.0
     last_pure_time: float = 0.0
     last_completion_tokens: int = 1
 
@@ -167,6 +175,12 @@ class OutputProcessor:
             if getattr(recv_obj, "output_hidden_states", None):
                 meta_info["hidden_states"] = recv_obj.output_hidden_states[i]
 
+            output_extra_infos = getattr(recv_obj, "output_extra_infos", None)
+            output_extra_info = _attach_session_metadata(
+                meta_info,
+                output_extra_infos[i] if output_extra_infos else None,
+            )
+
             if isinstance(recv_obj, BatchStrOut):
                 if len(recv_obj.batch_accept_draft_tokens) > 0:
                     meta_info.update(
@@ -188,8 +202,8 @@ class OutputProcessor:
                     "output_ids": output_token_ids,
                     "meta_info": meta_info,
                 }
-                if len(recv_obj.output_extra_infos):
-                    out_dict["output_extra_info"] = recv_obj.output_extra_infos[i]
+                if output_extra_info:
+                    out_dict["output_extra_info"] = output_extra_info
             elif isinstance(recv_obj, BatchTokenIDOut):
                 if (
                     self.engine.server_args.enable_inline_detokenizer
@@ -238,8 +252,8 @@ class OutputProcessor:
                         "output_ids": output_token_ids,
                         "meta_info": meta_info,
                     }
-                    if len(recv_obj.output_extra_infos):
-                        out_dict["output_extra_info"] = recv_obj.output_extra_infos[i]
+                    if output_extra_info:
+                        out_dict["output_extra_info"] = output_extra_info
                 else:
                     # Raw-token path: skip_tokenizer_init, or
                     # ``enable_inline_detokenizer`` is on but
@@ -288,8 +302,8 @@ class OutputProcessor:
                         "output_ids": output_token_ids,
                         "meta_info": meta_info,
                     }
-                    if len(recv_obj.output_extra_infos):
-                        out_dict["output_extra_info"] = recv_obj.output_extra_infos[i]
+                    if output_extra_info:
+                        out_dict["output_extra_info"] = output_extra_info
                     if output_multi_ids is not None:
                         out_dict["output_multi_ids"] = output_multi_ids
             else:
@@ -339,28 +353,20 @@ class OutputProcessor:
         )
 
         if state.first_token_time == 0.0:
-            state.first_token_time = state.last_time = time.time()
+            state.first_token_time = time.time()
             state.last_pure_time = recv_obj.generated_time
             state.last_completion_tokens = completion_tokens
-            state.first_completion_tokens = completion_tokens
             self.engine.metrics.observe_time_to_first_token(
                 state.first_token_time - state.created_time
             )
         else:
             num_new_tokens = completion_tokens - state.last_completion_tokens
             if num_new_tokens:
-                new_time = time.time()
-                interval = new_time - state.last_time
                 pure_interval = recv_obj.generated_time - state.last_pure_time
-                self.engine.metrics.observe_inter_token_latency(
-                    interval,
-                    num_new_tokens,
-                )
                 self.engine.metrics.observe_inter_token_latency(
                     pure_interval, num_new_tokens
                 )
                 state.last_pure_time = recv_obj.generated_time
-                state.last_time = new_time
                 state.last_completion_tokens = completion_tokens
 
         if state.finished:
@@ -385,11 +391,6 @@ class OutputProcessor:
                     finished_ok=finished_ok,
                 )
             )
-            if (completion_tokens - state.first_completion_tokens) > 0:
-                self.engine.metrics.observe_inter_token_latency(
-                    state.finished_time - state.first_token_time,
-                    completion_tokens - state.first_completion_tokens,
-                )
 
     def dump_requests(self, state: ReqState, out_dict: dict):
         import pickle as _pickle

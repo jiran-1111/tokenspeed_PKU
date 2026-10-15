@@ -470,7 +470,7 @@ class EventLoop:
         self.request_handler = RequestHandler(
             server_args=self.server_args,
             hf_eos_token_id=self.model_config.hf_eos_token_id,
-            max_req_len=self.max_model_len - 1,
+            max_req_len=self.max_model_len,
             vocab_size=self.model_config.vocab_size,
             recv_func=self.recv_from_tokenizer,
             send_func=self.send_to_tokenizer,
@@ -481,6 +481,7 @@ class EventLoop:
             pause_controller=self._pause,
             memory_controller=self._memory,
             device=self._device,
+            session_scheduler=self.scheduler,
         )
 
         self.output_processor = OutputProcesser(
@@ -498,6 +499,7 @@ class EventLoop:
                 self.model_config.context_len + self.server_args.spec_context_pad
             ),
             metrics=self.metrics,
+            session_info_fn=self.scheduler.session_info_for_session,
             defer_to_device=self._device.run_multimodal_work,
         )
         # The peer's control face only — bootstrap register/abort, event
@@ -937,6 +939,7 @@ class EventLoop:
             running=self._num_running(),
             waiting=stats["num_queue_reqs"],
             num_active_pages=stats["num_active_pages"],
+            num_cached_pages=stats["num_cached_pages"],
             num_total_pages=self._scheduler_cache_geometry.num_usable_pages,
             num_iteration_tokens=num_iteration_tokens,
         )

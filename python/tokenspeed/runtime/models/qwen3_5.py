@@ -28,9 +28,9 @@ from collections.abc import Iterable
 import torch
 import torch.nn as nn
 from tokenspeed_kernel.ops.activation.triton import sigmoid_mul
+from tokenspeed_kernel.ops.layernorm import qk_rmsnorm
 from tokenspeed_kernel.ops.layernorm.triton import (
     fused_qk_rmsnorm_rope_gate,
-    qk_rmsnorm,
 )
 from tokenspeed_kernel.platform import pdl_enabled
 
@@ -677,6 +677,14 @@ class Qwen3_5LinearDecoderLayer(nn.Module):
         return hidden_states
 
 
+def _split_q_gate_by_head(
+    q_gate: torch.Tensor, num_heads: int, head_dim: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    q_gate = q_gate.reshape(*q_gate.shape[:-1], num_heads, 2, head_dim)
+    q, gate = q_gate.unbind(dim=-2)
+    return q.flatten(-2), gate.flatten(-2)
+
+
 class Qwen3_5AttentionDecoderLayer(nn.Module):
     """Qwen3.5 Decoder Layer with Full Attention."""
 
@@ -838,19 +846,24 @@ class Qwen3_5AttentionDecoderLayer(nn.Module):
             q_gate, k, v = qkv.split(
                 [self.q_size * 2, self.kv_size, self.kv_size], dim=-1
             )
-            q, k, gate = fused_qk_rmsnorm_rope_gate(
-                q_gate,
-                k,
-                self.q_norm.gemma_weight,
-                self.k_norm.gemma_weight,
-                self.rotary_emb.cos_sin_cache,
-                positions,
-                self.q_norm.variance_epsilon,
-                self.num_heads,
-                self.num_kv_heads,
-                self.head_dim,
-                self.rotary_emb.rotary_dim,
-            )
+            if q_gate.device.type == "npu":
+                q, gate = _split_q_gate_by_head(q_gate, self.num_heads, self.head_dim)
+                q, k = self._apply_qk_norm(q, k)
+                q, k = self.rotary_emb(positions, q, k)
+            else:
+                q, k, gate = fused_qk_rmsnorm_rope_gate(
+                    q_gate,
+                    k,
+                    self.q_norm.gemma_weight,
+                    self.k_norm.gemma_weight,
+                    self.rotary_emb.cos_sin_cache,
+                    positions,
+                    self.q_norm.variance_epsilon,
+                    self.num_heads,
+                    self.num_kv_heads,
+                    self.head_dim,
+                    self.rotary_emb.rotary_dim,
+                )
             return q, k, v, gate
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self._apply_qk_norm(q, k)
@@ -968,7 +981,7 @@ class Qwen3_5ForCausalLM(nn.Module):
         self.mapping = mapping
         self.hidden_size = config.hidden_size
 
-        alt_stream = torch.cuda.Stream()
+        alt_stream = torch.cuda.Stream() if torch.cuda.is_available() else None
 
         # Embedding layer
         self.embed_tokens = VocabParallelEmbedding(

@@ -2522,7 +2522,7 @@ class MambaAttnBackend(AttentionBackend):
             ``(core_attn_out, last_recurrent_state)``.
         """
         head_k_dim = query.shape[3]
-        beta = b.sigmoid()
+        beta = b.float().sigmoid() if query.device.type == "npu" else b.sigmoid()
         g = fused_gdn_gating(A_log, a, dt_bias)
         g = g.unsqueeze(0)
         beta = beta.unsqueeze(0)

@@ -42,6 +42,10 @@ public:
     Request(const RequestSpec& spec, std::int32_t prefix_granularity, Role role);
 
     const std::string& Id() const { return id_; }
+    const std::string& SessionId() const { return session_id_; }
+    void AppendSessionTurn(const RequestSpec& spec);
+    std::int32_t SessionTurnStartComputedTokens() const { return session_turn_start_computed_tokens_; }
+    bool SessionTurnReusesStatePages() const { return session_turn_reuses_state_pages_; }
 
     // Decode headroom an admission must secure before the prefill starts:
     // one safe-step window up front, plus one more per retraction suffered
@@ -63,7 +67,10 @@ public:
     std::int32_t AdmissionHeadroom(std::int32_t safe_steps) const {
         return std::min(RemainingNewTokens(), safe_steps * (1 + retraction_count_));
     }
-    void NoteRetracted() { ++retraction_count_; }
+    void NoteRetracted() {
+        ++retraction_count_;
+        session_turn_reuses_state_pages_ = false;
+    }
 
     // True when the last admission's headroom already covers every token
     // this request could still generate. Retracting such a request is pure
@@ -183,6 +190,9 @@ public:
                               [this](const fsm::Prefilling& state) -> std::int32_t {
                                   return PrefillSize() - (state.window.begin + state.window.size);
                               },
+                              [this](const fsm::SessionPending& state) -> std::int32_t {
+                                  return PrefillSize() - state.computed_tokens;
+                              },
                               [](const auto&) -> std::int32_t { return 0; },
                           },
                           state_);
@@ -224,6 +234,8 @@ public:
                               [](const fsm::PrefillAwaitingResult&) -> std::string { return "PrefillAwaitingResult"; },
                               [](const fsm::PrefillDone&) -> std::string { return "PrefillDone"; },
                               [](const fsm::Decoding&) -> std::string { return "Decoding"; },
+                              [](const fsm::SessionIdle&) -> std::string { return "SessionIdle"; },
+                              [](const fsm::SessionPending&) -> std::string { return "SessionPending"; },
                               [](const fsm::Retracted&) -> std::string { return "Retracted"; },
                               [](const fsm::Finished&) -> std::string { return "Finished"; },
                           },
@@ -235,8 +247,11 @@ private:
     const fsm::ForwardResources& forwardResources(const char* operation) const;
 
     std::string id_;
+    std::string session_id_;
     TokenContainer token_container_;
     std::int32_t submitted_prompt_size_{0};
+    std::int32_t session_turn_start_computed_tokens_{0};
+    bool session_turn_reuses_state_pages_{false};
     std::int32_t max_new_tokens_{0};
     std::int32_t retraction_count_{0};
     std::vector<std::int32_t> spec_candidate_ids_;

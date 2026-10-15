@@ -51,6 +51,7 @@ public:
     // Retraction folds generated tokens into the prefill window so the
     // requeued request prefills prompt + generated as one fresh extend.
     void RebasePrefill() { num_prefill_tokens_ = static_cast<std::int32_t>(tokens_.size()); }
+    void SetPrefillSize(std::int32_t size) { num_prefill_tokens_ = size; }
 
     std::vector<std::span<const std::int32_t>> FullPrefixPages(std::int32_t prefix_granularity, bool except_last) const;
     std::int32_t Size() const { return static_cast<std::int32_t>(tokens_.size()); }

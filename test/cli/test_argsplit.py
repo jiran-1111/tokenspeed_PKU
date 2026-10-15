@@ -110,6 +110,12 @@ def test_engine_only_flag_routes_to_engine():
     assert r.gateway == []
 
 
+def test_metrics_port_routes_to_engine():
+    r = _split(["--metrics-port", "39142"])
+    assert r.engine == ["--metrics-port", "39142"]
+    assert r.gateway == []
+
+
 def test_dp_sampling_routes_to_engine():
     r = _split(["--dp-sampling"])
     assert r.engine == ["--dp-sampling"]

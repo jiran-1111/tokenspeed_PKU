@@ -41,6 +41,27 @@ class QwenGDNRecipe(CacheRecipe):
     family = "qwen_gdn"
     uses_paged_state_verify = True
 
+    @override
+    def num_lcm_blocks(self, layout) -> int:
+        budgeted = self._budgeted_parents(
+            self.cache_budget_bytes - self.workspace_bytes(), layout.lcm_block_bytes
+        )
+        return self.parents_needed(layout, self.token_capacity(layout, budgeted))
+
+    @override
+    def token_capacity(self, layout, num_lcm_blocks: int) -> int:
+        return self._capacity_from_parents(
+            layout,
+            num_lcm_blocks,
+            upper_bound=(
+                self.token_limit
+                if self.token_limit is not None
+                else num_lcm_blocks
+                * self._max_packing(layout)
+                * layout.prefix_granularity
+            ),
+        )
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         if self.attn_config.kv_cache_mxfp8:

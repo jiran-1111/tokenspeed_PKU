@@ -58,11 +58,11 @@ def build_agent_turn_request(
         raise ValueError(f"Unsupported tool wait policy: {tool_wait_policy}")
 
     inject_mock_result = (
-        turn_index > 1 and tool_wait_policy == "one-session" and session_id == "session-0"
+        turn_index > 1
+        and tool_wait_policy == "one-session"
+        and session_id == "session-0"
     )
-    waits = turn_index > 1 and (
-        tool_wait_policy == "all" or session_id == "session-0"
-    )
+    waits = turn_index > 1 and (tool_wait_policy == "all" or session_id == "session-0")
     content = user_message
     if inject_mock_result:
         content = f"{content}\n\n{MOCK_TOOL_RESULT}"
@@ -127,17 +127,35 @@ def run_concurrent_requests(
     concurrency: int,
     model: str,
     max_tokens: int,
+    before_request: Callable[[BenchmarkRequest], None] | None = None,
+    on_first_chunk: Callable[[BenchmarkRequest, str, int, int], None] | None = None,
 ) -> list[dict]:
+    if (before_request is not None or on_first_chunk is not None) and (
+        concurrency != 1 or len(requests) != 1
+    ):
+        raise ValueError(
+            "single-request profile callbacks require concurrency=1 and one request"
+        )
+
     def execute(request: BenchmarkRequest) -> dict:
         if request.tool_wait_ms:
             time.sleep(request.tool_wait_ms / 1000)
-        result = client.chat(
-            model=model,
-            messages=request.messages,
-            max_tokens=max_tokens,
-        )
+        if before_request is not None:
+            before_request(request)
+        chat_kwargs = {
+            "model": model,
+            "messages": request.messages,
+            "max_tokens": max_tokens,
+        }
+        if on_first_chunk is not None:
+            chat_kwargs["on_first_chunk"] = (
+                lambda field, epoch_ns, monotonic_ns: on_first_chunk(
+                    request, field, epoch_ns, monotonic_ns
+                )
+            )
+        result = client.chat(**chat_kwargs)
         chunk_values = list(result.inter_chunk_latencies_ms)
-        return {
+        record = {
             "request_id": request.request_id,
             "workload": request.workload,
             "session_id": request.session_id,
@@ -150,12 +168,29 @@ def run_concurrent_requests(
             "ttft_ms": result.ttft_ms,
             "tpot_ms": result.tpot_ms,
             "itl_p95_ms": None,
-            "chunk_latency_p95_ms": _percentile(chunk_values, 0.95) if chunk_values else None,
+            "itl_observation": "server_prometheus_histogram_run_summary_only",
+            "chunk_latency_p95_ms": (
+                _percentile(chunk_values, 0.95) if chunk_values else None
+            ),
             "inter_chunk_latencies_ms": chunk_values,
             "latency_observation": "nonempty_text_chunk_arrival",
             "e2e_ms": result.e2e_ms,
             "output_text": result.text,
         }
+        if before_request is not None or on_first_chunk is not None:
+            record.update(
+                {
+                    "request_send_epoch_ns": result.request_send_epoch_ns,
+                    "request_send_monotonic_ns": result.request_send_monotonic_ns,
+                    "first_chunk_epoch_ns": result.first_chunk_epoch_ns,
+                    "first_chunk_monotonic_ns": result.first_chunk_monotonic_ns,
+                    "stream_drain_epoch_ns": result.stream_drain_epoch_ns,
+                    "stream_drain_monotonic_ns": result.stream_drain_monotonic_ns,
+                    "first_chunk_field": result.first_chunk_field,
+                    "stream_completed": result.stream_completed,
+                }
+            )
+        return record
 
     with ThreadPoolExecutor(max_workers=concurrency) as executor:
         return list(executor.map(execute, requests))
@@ -189,10 +224,17 @@ def summarize_records(records: list[dict], *, wall_time_seconds: float) -> dict:
         "tpot_mean_ms": fmean(record["tpot_ms"] for record in records),
         "tpot_p50_ms": _percentile([record["tpot_ms"] for record in records], 0.50),
         "tpot_p95_ms": _percentile([record["tpot_ms"] for record in records], 0.95),
+        "itl_mean_ms": None,
         "itl_p50_ms": None,
         "itl_p95_ms": None,
-        "chunk_latency_p50_ms": _percentile(chunk_values, 0.50) if chunk_values else None,
-        "chunk_latency_p95_ms": _percentile(chunk_values, 0.95) if chunk_values else None,
+        "itl_observation_count": None,
+        "itl_observation": "server_prometheus_histogram_unavailable",
+        "chunk_latency_p50_ms": (
+            _percentile(chunk_values, 0.50) if chunk_values else None
+        ),
+        "chunk_latency_p95_ms": (
+            _percentile(chunk_values, 0.95) if chunk_values else None
+        ),
         "latency_observation": "nonempty_text_chunk_arrival",
         "e2e_mean_ms": fmean(record["e2e_ms"] for record in records),
         "e2e_p50_ms": _percentile([record["e2e_ms"] for record in records], 0.50),

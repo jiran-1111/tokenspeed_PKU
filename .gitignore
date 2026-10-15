@@ -200,3 +200,11 @@ Testing/
 AGENTS.local.md
 AGENTS.override.md
 outputs/
+
+# Course-project local environments, caches, and downloaded assets
+.conda-env/
+.conda-envs/
+.conda-pkgs/
+.tmp/
+models/
+data/

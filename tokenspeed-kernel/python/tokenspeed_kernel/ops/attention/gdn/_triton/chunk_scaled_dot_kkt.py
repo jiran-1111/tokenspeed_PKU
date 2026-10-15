@@ -144,6 +144,8 @@ def chunk_scaled_dot_kkt_fwd(
 
     H = beta.shape[-1]
     BT = chunk_size
+    is_npu = k.device.type == "npu"
+    BK = 32 if is_npu else 64
     chunk_indices = (
         prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
     )
@@ -161,10 +163,11 @@ def chunk_scaled_dot_kkt_fwd(
         Hg=Hg,
         K=K,
         BT=BT,
-        BK=64,
-        num_warps=8,
-        num_stages=3,
+        BK=BK,
+        num_warps=4 if is_npu else 8,
+        num_stages=1 if is_npu else 3,
         ENABLE_PDL=enable_pdl,
+        **({"multibuffer": False} if is_npu else {}),
         **({"launch_pdl": True} if enable_pdl else {}),
     )
     return A

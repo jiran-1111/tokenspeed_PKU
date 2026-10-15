@@ -47,11 +47,24 @@
 
 namespace tokenspeed {
 
+struct SessionInfo {
+    std::int32_t total_context_tokens{};
+    std::int32_t newly_prefilled_tokens{};
+    std::int32_t reused_context_tokens{};
+    bool turn_active{false};
+};
+
 class Scheduler {
 public:
     explicit Scheduler(SchedulerConfig config);
 
     void SubmitRequests(const std::vector<RequestSpec>& request_specs);
+    bool OpenSession(const std::string& session_id);
+    bool CloseSession(const std::string& session_id);
+    bool HasSession(const std::string& session_id) const;
+    bool CanSubmitSessionTurn(const std::string& session_id) const;
+    bool CanDeferSessionTurn(const std::string& session_id) const;
+    std::optional<SessionInfo> SessionInfoForSession(const std::string& session_id) const;
 
     ExecutionPlan NextExecutionPlan();
     void Advance(const ExecutionEvent& event);
@@ -156,6 +169,11 @@ private:
                                                                                  Request* request,
                                                                                  std::int32_t remaining,
                                                                                  std::int32_t decode_input_tokens);
+    std::optional<fsm::ScheduleSessionPrefillEvent> scheduleSessionPrefillFirstChunk(ExecutionPlan& plan,
+                                                                                     AdmissionFeedback& feedback,
+                                                                                     Request* request,
+                                                                                     std::int32_t remaining,
+                                                                                     std::int32_t decode_input_tokens);
     std::optional<fsm::SchedulePrefillEvent> schedulePrefill(ExecutionPlan& plan, AdmissionFeedback& feedback,
                                                              Request* request, std::int32_t remaining,
                                                              std::int32_t reserve_num_tokens_in_next_schedule_event);
@@ -165,6 +183,7 @@ private:
     PrefillOperation applyEventAndBuildOperation(Request* request, fsm::SchedulePrefillFirstChunkEvent event,
                                                  std::vector<LoadBackOperation>& load_back_operations);
     PrefillOperation applyEventAndBuildOperation(Request* request, fsm::SchedulePrefillEvent event);
+    PrefillOperation applyEventAndBuildOperation(Request* request, fsm::ScheduleSessionPrefillEvent event);
     DecodeOperation applyEventAndBuildOperation(Request* request, fsm::ScheduleDecodeEvent event);
 
     AdmissionMatch matchPrefixAtAdmission(Request* request);
@@ -327,7 +346,10 @@ private:
     // vector reshuffles, so the id index below never dangles.
     std::vector<std::unique_ptr<Request>> requests_;
     std::unordered_map<std::string, Request*> requests_by_id_;
-    std::unordered_map<std::string, KvEventHashProgress> kv_event_hash_progress_;
+    // A null value represents an opened session that has not submitted a turn.
+    std::unordered_map<std::string, Request*> sessions_;
+    std::unordered_set<Request*> aborting_requests_;
+    std::unordered_map<const Request*, KvEventHashProgress> kv_event_hash_progress_;
     // What the prefix index cannot tell us about a boundary: the token
     // descriptor the external event carries, and whether that event is
     // currently out (a BlockStored not yet followed by its BlockRemoved).

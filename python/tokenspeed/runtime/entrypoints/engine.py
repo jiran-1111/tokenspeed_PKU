@@ -170,6 +170,7 @@ class Engine(EngineBase):
         bootstrap_port: list[int] | int | None = None,
         bootstrap_room: list[int] | int | None = None,
         data_parallel_rank: int | None = None,
+        session_id: str | None = None,
     ) -> dict | Iterator[dict]:
         """
         The arguments of this function match
@@ -193,6 +194,7 @@ class Engine(EngineBase):
             bootstrap_port=bootstrap_port,
             bootstrap_room=bootstrap_room,
             data_parallel_rank=data_parallel_rank,
+            session_params={"id": session_id} if session_id is not None else None,
         )
         if stream:
             return self.llm.generate_stream(obj)
@@ -224,6 +226,7 @@ class Engine(EngineBase):
         bootstrap_room: list[int] | int | None = None,
         user_rid: list[str] | str | None = None,
         data_parallel_rank: list[int] | int | None = None,
+        session_id: str | None = None,
     ) -> dict | AsyncIterator[dict]:
         """
         The arguments of this function match
@@ -252,6 +255,7 @@ class Engine(EngineBase):
             bootstrap_room=bootstrap_room,
             user_rid=user_rid,
             data_parallel_rank=data_parallel_rank,
+            session_params={"id": session_id} if session_id is not None else None,
         )
         generator = self.tokenizer_manager.generate_request(obj)
 
@@ -297,6 +301,14 @@ class Engine(EngineBase):
 
     def flush_cache(self):
         return self.llm.run(self.tokenizer_manager.flush_cache())
+
+    def open_session(self, session_id: str | None = None) -> str:
+        """Open a text-only native Engine session and return its stable ID."""
+        return self.llm.open_session(session_id)
+
+    def close_session(self, session_id: str) -> None:
+        """Close a session and wait until the scheduler releases its KV pages."""
+        return self.llm.close_session(session_id)
 
     def pause_scheduler(self, mode: str = "abort"):
         """Pause generation (e.g. to swap weights). See AsyncLLM.pause_scheduler."""
@@ -570,6 +582,14 @@ def _launch_subprocesses(
     # Configure global environment
     configure_logger(server_args)
     _set_envs_and_config(server_args)
+
+    if server_args.enable_metrics and server_args.metrics_port is not None:
+        threading.Thread(
+            target=launch_dummy_health_check_server,
+            args=(server_args.host, server_args.metrics_port, True),
+            name="tokenspeed-metrics-server",
+            daemon=True,
+        ).start()
 
     # Allocate ports for inter-process communications
     if port_args is None:

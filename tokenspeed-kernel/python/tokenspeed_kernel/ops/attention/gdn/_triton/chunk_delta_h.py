@@ -309,11 +309,12 @@ def chunk_gated_delta_rule_fwd_h(
     output_final_state: bool = False,
     save_new_value: bool = True,
     cu_seqlens: torch.LongTensor | None = None,
+    chunk_size: int = CHUNK_SIZE,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     enable_pdl = pdl_enabled()
     B, T, Hg, K, V = *k.shape, u.shape[-1]
     H = u.shape[-2]
-    BT = CHUNK_SIZE
+    BT = chunk_size
 
     chunk_indices = (
         prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
