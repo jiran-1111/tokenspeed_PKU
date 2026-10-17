@@ -22,6 +22,7 @@ import asyncio
 import json
 import threading
 import time
+from pathlib import Path
 
 import pytest
 
@@ -140,6 +141,7 @@ class Engine:
         self.next_session = 0
         self.closed = []
         self.failure = failure
+        self.stateless_open_session_counts = []
 
     def open_session(self):
         session_id = f"native-{self.next_session}"
@@ -170,8 +172,10 @@ class Engine:
             }
             if self.failure == "context":
                 meta["session"]["newly_prefilled_tokens"] += 1
-        elif self.failure == "output":
-            outputs[0] += 1
+        else:
+            self.stateless_open_session_counts.append(len(self.histories))
+            if self.failure == "output":
+                outputs[0] += 1
         time.sleep(0.01)
         for token in outputs:
             yield {"output_ids": [token], "meta_info": meta}
@@ -216,7 +220,10 @@ def metric_reader(engine):
     return read
 
 
-def test_native_runner_pairs_outputs_reuse_and_tool_progress_then_releases(monkeypatch):
+@pytest.mark.parametrize("control_schedule", ["concurrent", "after-run-serial"])
+def test_native_runner_pairs_outputs_reuse_and_tool_progress_then_releases(
+    monkeypatch, control_schedule
+):
     import scripts.run_native_agent_validation as runner
 
     record = {"turns": [], "tools": [], "metric_snapshots": []}
@@ -271,6 +278,8 @@ def test_native_runner_pairs_outputs_reuse_and_tool_progress_then_releases(monke
             engine,
             Tokenizer("<|im_start|>assistant\n<think>\n", "list"),
             workload=workload(),
+            control_schedule=control_schedule,
+            tool_metrics_interval_seconds=0.005,
             max_model_len=4096,
             metrics_url="http://unused-local-test",
             record=record,
@@ -284,11 +293,19 @@ def test_native_runner_pairs_outputs_reuse_and_tool_progress_then_releases(monke
     assert record["other_session_progress_during_tool"]
     assert record["metric_snapshots"][-1]["metrics"]["kv_lcm_blocks_active"] == 0
     assert len(engine.closed) == 2 and engine.histories == {}
+    if control_schedule == "after-run-serial":
+        assert engine.stateless_open_session_counts == [0] * 6
+        assert record["controls_phase_started_ns"] >= record["native_phase_finished_ns"]
+    else:
+        assert engine.stateless_open_session_counts == [2] * 6
     json.dumps(record)
 
 
 @pytest.mark.parametrize("failure", ["output", "context"])
-def test_native_runner_retains_failed_pair_and_closes_sessions(monkeypatch, failure):
+@pytest.mark.parametrize("control_schedule", ["concurrent", "after-run-serial"])
+def test_native_runner_retains_failed_pair_and_closes_sessions(
+    monkeypatch, failure, control_schedule
+):
     import scripts.run_native_agent_validation as runner
 
     engine = Engine(failure=failure)
@@ -300,6 +317,8 @@ def test_native_runner_retains_failed_pair_and_closes_sessions(monkeypatch, fail
                 engine,
                 Tokenizer("<|im_start|>assistant\n<think>\n", "list"),
                 workload=workload(),
+                control_schedule=control_schedule,
+                tool_metrics_interval_seconds=0.005,
                 max_model_len=4096,
                 metrics_url="http://unused-local-test",
                 record=record,
@@ -323,6 +342,8 @@ def test_missing_device_metrics_fail_instead_of_becoming_zero(monkeypatch):
                 engine,
                 Tokenizer("<|im_start|>assistant\n<think>\n", "list"),
                 workload=workload(),
+                control_schedule="concurrent",
+                tool_metrics_interval_seconds=0.005,
                 max_model_len=4096,
                 metrics_url="http://unused-local-test",
                 record=record,
@@ -368,3 +389,98 @@ def test_output_guards_run_before_config_dependency_or_hardware_access(
         runner.main()
     if invalid_output == "existing":
         assert (output / "marker").read_text() == "preserve"
+
+
+@pytest.mark.parametrize(
+    ("schedule", "interval"), [("unsupported", 0.1), ("concurrent", 0)]
+)
+def test_control_policy_and_interval_are_explicit_and_validated(schedule, interval):
+    import scripts.run_native_agent_validation as runner
+
+    engine = Engine(failure=None)
+    with pytest.raises(ValueError, match="control|interval"):
+        asyncio.run(
+            runner.run_native_validation(
+                engine,
+                Tokenizer("<|im_start|>assistant\n<think>\n", "list"),
+                workload=workload(),
+                control_schedule=schedule,
+                tool_metrics_interval_seconds=interval,
+                max_model_len=4096,
+                metrics_url="http://unused-local-test",
+                record={"turns": [], "tools": [], "metric_snapshots": []},
+            )
+        )
+    assert engine.next_session == 0
+
+
+def test_new_protocols_preserve_original_workload_inputs_and_tool_duration():
+    root = Path(__file__).resolve().parents[2]
+    original = json.loads(
+        (root / "configs/validation/native_agent_16turn_20261017.json").read_text()
+    )
+    for suffix, schedule in [
+        ("afterrun", "after-run-serial"),
+        ("concurrent_observed", "concurrent"),
+    ]:
+        protocol = json.loads(
+            (
+                root / f"configs/validation/native_agent_16turn_{suffix}_20261017.json"
+            ).read_text()
+        )
+        assert protocol.pop("control_schedule") == schedule
+        assert protocol.pop("tool_metrics_interval_seconds") == 0.1
+        assert {k: v for k, v in protocol.items() if k != "scope"} == {
+            k: v for k, v in original.items() if k != "scope"
+        }
+
+
+def test_tool_metrics_do_not_depend_on_another_session_completing(monkeypatch):
+    import scripts.run_native_agent_validation as runner
+
+    done = threading.Event()
+
+    class BlockedEngine(Engine):
+        def __init__(self, tool_done):
+            super().__init__(failure=None)
+            self.tool_done = tool_done
+
+        def generate(self, **kwargs):
+            if kwargs["session_id"] == "native-1":
+                assert self.tool_done.wait(timeout=5)
+            yield from super().generate(**kwargs)
+
+    original_tool = runner._scripted_tool
+
+    def tool(**kwargs):
+        try:
+            original_tool(**kwargs)
+        finally:
+            done.set()
+
+    engine = BlockedEngine(done)
+    monkeypatch.setattr(runner, "fetch_server_metrics", metric_reader(engine))
+    monkeypatch.setattr(runner, "_scripted_tool", tool)
+    record = {"turns": [], "tools": [], "metric_snapshots": []}
+    with pytest.raises(ValueError, match="progress"):
+        asyncio.run(
+            runner.run_native_validation(
+                engine,
+                Tokenizer("<|im_start|>assistant\n<think>\n", "list"),
+                workload=workload(),
+                control_schedule="after-run-serial",
+                tool_metrics_interval_seconds=0.005,
+                max_model_len=4096,
+                metrics_url="http://unused-local-test",
+                record=record,
+            )
+        )
+    event = record["tools"][0]
+    assert any(
+        event["started_ns"] < s["monotonic_ns"] < event["ended_ns"]
+        for s in record["metric_snapshots"]
+    )
+    assert all(
+        r["output_ids_match"] and r["context_validated"] for r in record["turns"]
+    )
+    assert record["metric_snapshots"][-1]["metrics"]["kv_lcm_blocks_active"] == 0

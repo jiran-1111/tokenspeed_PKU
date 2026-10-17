@@ -1,0 +1,196 @@
+{
+  "source_manifest_sha256": "e4a19a33a96322a19617273ce43e84695c68813c6e984953bfd4e119dfa852aa",
+  "source_files": 1405,
+  "server_course": {
+    "passed": 616,
+    "skipped": 0
+  },
+  "local_course": {
+    "passed": 582,
+    "skipped": 34
+  },
+  "models": {
+    "0.8b": {
+      "original_run_sha256": "30c3a8324dcdf5bc343b4242b913a187c259c07b9737c7298de64bbc5bbf16b4",
+      "published_trace_sha256": "e720b2fe3022784746dc8228b0b306e031172f40783588f7fa4cda3bff0df5a7",
+      "output_pairs": 32,
+      "context_pairs": 32,
+      "max_actual_context_tokens": 1000,
+      "other_session_completions_inside_tool_window": 9,
+      "positive_block_samples_inside_tool_window": 19,
+      "resumed_reused_context_tokens": 729,
+      "idle_before_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 210.0,
+        "kv_lcm_blocks_active": 14.0,
+        "kv_lcm_blocks_cached": 3.0,
+        "kv_lcm_blocks_empty": 193.0,
+        "kv_lcm_blocks_allocated": 17.0
+      },
+      "after_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 210.0,
+        "kv_lcm_blocks_active": 0.0,
+        "kv_lcm_blocks_cached": 5.0,
+        "kv_lcm_blocks_empty": 205.0,
+        "kv_lcm_blocks_allocated": 5.0
+      },
+      "source_after": {
+        "source_files": 1405,
+        "mismatches": []
+      },
+      "exit": {
+        "exit_code": 0,
+        "timed_out": false,
+        "timeout_seconds": 900
+      },
+      "tp_size": 1,
+      "fp32_head_candidate": false,
+      "all_inputs_suffixes_and_outputs_preserved": true,
+      "opaque_engine_session_request_ids_omitted": true
+    },
+    "4b": {
+      "original_run_sha256": "49b07e0f6c84716e052472cc88d8b285b3f5ad151c947fc18a425aa28135be4c",
+      "published_trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "output_pairs": 32,
+      "context_pairs": 32,
+      "max_actual_context_tokens": 968,
+      "other_session_completions_inside_tool_window": 7,
+      "positive_block_samples_inside_tool_window": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_before_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 105.0,
+        "kv_lcm_blocks_active": 14.0,
+        "kv_lcm_blocks_cached": 3.0,
+        "kv_lcm_blocks_empty": 88.0,
+        "kv_lcm_blocks_allocated": 17.0
+      },
+      "after_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 105.0,
+        "kv_lcm_blocks_active": 0.0,
+        "kv_lcm_blocks_cached": 5.0,
+        "kv_lcm_blocks_empty": 100.0,
+        "kv_lcm_blocks_allocated": 5.0
+      },
+      "source_after": {
+        "source_files": 1405,
+        "mismatches": []
+      },
+      "exit": {
+        "exit_code": 0,
+        "timed_out": false,
+        "timeout_seconds": 900
+      },
+      "tp_size": 1,
+      "fp32_head_candidate": false,
+      "all_inputs_suffixes_and_outputs_preserved": true,
+      "opaque_engine_session_request_ids_omitted": true
+    },
+    "9b": {
+      "original_run_sha256": "71a3c494d3003226689aee9d52dfaa58ac062b07e41824ecd7877988403f27e6",
+      "published_trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "output_pairs": 32,
+      "context_pairs": 32,
+      "max_actual_context_tokens": 968,
+      "other_session_completions_inside_tool_window": 6,
+      "positive_block_samples_inside_tool_window": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_before_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 105.0,
+        "kv_lcm_blocks_active": 14.0,
+        "kv_lcm_blocks_cached": 3.0,
+        "kv_lcm_blocks_empty": 88.0,
+        "kv_lcm_blocks_allocated": 17.0
+      },
+      "after_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 105.0,
+        "kv_lcm_blocks_active": 0.0,
+        "kv_lcm_blocks_cached": 5.0,
+        "kv_lcm_blocks_empty": 100.0,
+        "kv_lcm_blocks_allocated": 5.0
+      },
+      "source_after": {
+        "source_files": 1405,
+        "mismatches": []
+      },
+      "exit": {
+        "exit_code": 0,
+        "timed_out": false,
+        "timeout_seconds": 900
+      },
+      "tp_size": 1,
+      "fp32_head_candidate": true,
+      "all_inputs_suffixes_and_outputs_preserved": true,
+      "opaque_engine_session_request_ids_omitted": true
+    },
+    "27b": {
+      "original_run_sha256": "4cd1d3ac18cee84e584db5e7d7dae65698cce28c99f9425a1d4cb469f2708cc2",
+      "published_trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "output_pairs": 32,
+      "context_pairs": 32,
+      "max_actual_context_tokens": 968,
+      "other_session_completions_inside_tool_window": 3,
+      "positive_block_samples_inside_tool_window": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_before_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 47.0,
+        "kv_lcm_blocks_active": 13.0,
+        "kv_lcm_blocks_cached": 3.0,
+        "kv_lcm_blocks_empty": 31.0,
+        "kv_lcm_blocks_allocated": 16.0
+      },
+      "after_close": {
+        "requests_running": 0.0,
+        "kv_lcm_blocks_total": 47.0,
+        "kv_lcm_blocks_active": 0.0,
+        "kv_lcm_blocks_cached": 4.0,
+        "kv_lcm_blocks_empty": 43.0,
+        "kv_lcm_blocks_allocated": 4.0
+      },
+      "source_after": {
+        "source_files": 1405,
+        "mismatches": []
+      },
+      "exit": {
+        "exit_code": 0,
+        "timed_out": false,
+        "timeout_seconds": 900
+      },
+      "tp_size": 2,
+      "fp32_head_candidate": false,
+      "all_inputs_suffixes_and_outputs_preserved": true,
+      "opaque_engine_session_request_ids_omitted": true
+    }
+  },
+  "scope": "finite scripted-tool native Session validation; not general semantic correctness or independent OFF/ON performance",
+  "complete_evidence_archive": {
+    "files": 90,
+    "sha256": "8687e69c5456459b5c82e1c6cd68f19fd2e405f3b34e15a9b91b517c134f2b2d",
+    "all_downloaded_sha_verified": true
+  },
+  "concurrent_observed": {
+    "reported_status": "passed",
+    "original_run_sha256": "403e11f8ecfa92a9cdc97bb46520923866f49ed7660a156df719b559f8177287",
+    "output_pairs": 32,
+    "context_pairs": 32,
+    "other_session_completions_inside_tool_window": 1,
+    "other_session_requests_both_started_and_completed_inside_tool_window": 0,
+    "positive_block_samples_inside_tool_window": 19,
+    "all_inputs_and_outputs_equal_to_published_4b_trace": true,
+    "source_after": {
+      "source_files": 1405,
+      "mismatches": []
+    },
+    "exit": {
+      "exit_code": 0,
+      "timed_out": false,
+      "timeout_seconds": 900
+    },
+    "scope": "one observed concurrent-control run; neither a controlled performance comparison nor proof of the sole cause of the R7 negative result; no selected retry"
+  }
+}

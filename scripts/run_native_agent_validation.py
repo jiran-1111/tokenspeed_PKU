@@ -70,10 +70,21 @@ async def run_native_validation(
     tokenizer: Any,
     *,
     workload: dict,
+    control_schedule: str,
+    tool_metrics_interval_seconds: float,
     max_model_len: int,
     metrics_url: str,
     record: dict,
 ) -> None:
+    if control_schedule not in {"concurrent", "after-run-serial"}:
+        raise ValueError("unsupported control schedule")
+    if (
+        not math.isfinite(tool_metrics_interval_seconds)
+        or tool_metrics_interval_seconds <= 0
+    ):
+        raise ValueError("tool metrics interval must be positive and finite")
+    record["control_schedule"] = control_schedule
+    record["tool_metrics_interval_seconds"] = tool_metrics_interval_seconds
     count, turns = workload["sessions"], workload["turns"]
     tool_index, tool_turn = workload["tool_session_index"], workload["tool_before_turn"]
     if (
@@ -158,12 +169,31 @@ async def run_native_validation(
                     "result": None,
                 }
                 record["tools"].append(tool)
-                await asyncio.to_thread(
-                    _scripted_tool,
-                    delay_seconds=workload["tool_delay_seconds"],
-                    range_stop=workload["tool_range_stop"],
-                    event=tool,
-                )
+                stop_sampling = asyncio.Event()
+
+                async def sample_tool():
+                    while not stop_sampling.is_set():
+                        if tool["started_ns"] is not None:
+                            await snapshot("during_tool")
+                        try:
+                            await asyncio.wait_for(
+                                stop_sampling.wait(),
+                                timeout=tool_metrics_interval_seconds,
+                            )
+                        except TimeoutError:
+                            pass
+
+                sampler = asyncio.create_task(sample_tool())
+                try:
+                    await asyncio.to_thread(
+                        _scripted_tool,
+                        delay_seconds=workload["tool_delay_seconds"],
+                        range_stop=workload["tool_range_stop"],
+                        event=tool,
+                    )
+                finally:
+                    stop_sampling.set()
+                    await sampler
                 text += "\n" + workload["tool_result_prefix"] + str(tool["result"])
                 if failed.is_set():
                     return
@@ -180,23 +210,27 @@ async def run_native_validation(
             full_input = history + suffix
             if len(full_input) + workload["max_new_tokens"] > max_model_len:
                 raise ValueError("native Agent context exceeds model limit")
-            pair = await asyncio.gather(
+            requests = [
                 asyncio.to_thread(
                     _stream_request,
                     engine,
                     suffix,
                     params,
                     session_id=session_ids[index],
-                ),
-                asyncio.to_thread(
-                    _stream_request, engine, full_input, params, session_id=None
-                ),
-                return_exceptions=True,
-            )
+                )
+            ]
+            if control_schedule == "concurrent":
+                requests.append(
+                    asyncio.to_thread(
+                        _stream_request, engine, full_input, params, session_id=None
+                    )
+                )
+            pair = await asyncio.gather(*requests, return_exceptions=True)
             for result in pair:
                 if isinstance(result, BaseException):
                     raise result
-            session, control = pair
+            session = pair[0]
+            control = pair[1] if control_schedule == "concurrent" else None
             item = {
                 "session_index": index,
                 "turn_index": turn,
@@ -205,7 +239,11 @@ async def run_native_validation(
                 "full_input_ids": full_input,
                 "session_result": session,
                 "stateless_result": control,
-                "output_ids_match": session["output_ids"] == control["output_ids"],
+                "output_ids_match": (
+                    session["output_ids"] == control["output_ids"]
+                    if control is not None
+                    else None
+                ),
                 "context_validated": False,
             }
             record["turns"].append(item)
@@ -216,7 +254,7 @@ async def run_native_validation(
                 suffix_tokens=len(suffix),
             )
             item["context_validated"] = True
-            if not item["output_ids_match"]:
+            if item["output_ids_match"] is False:
                 raise ValueError(
                     f"native Session/stateless output mismatch at session {index} turn {turn}"
                 )
@@ -228,11 +266,6 @@ async def run_native_validation(
                 ]
             previous = session["output_ids"]
             history = full_input + previous
-            if any(
-                e["started_ns"] is not None and e["ended_ns"] is None
-                for e in record["tools"]
-            ):
-                await snapshot("during_tool")
 
     async def guarded_conversation(index):
         try:
@@ -243,8 +276,10 @@ async def run_native_validation(
         return None
 
     try:
+        record["native_phase_started_ns"] = time.monotonic_ns()
         # Drain already-submitted native/control streams before closing a failed run.
         errors = await asyncio.gather(*(guarded_conversation(i) for i in range(count)))
+        record["native_phase_finished_ns"] = time.monotonic_ns()
         for error in errors:
             if error is not None:
                 raise error
@@ -252,26 +287,6 @@ async def run_native_validation(
             raise ValueError("native Agent pair count mismatch")
         if len(record["tools"]) != 1:
             raise ValueError("native Agent tool count mismatch")
-        tool = record["tools"][0]
-        progress = [
-            r
-            for r in record["turns"]
-            if r["session_index"] != tool_index
-            and tool["started_ns"] < r["session_result"]["ended_ns"] < tool["ended_ns"]
-        ]
-        record["other_session_progress_during_tool"] = bool(progress)
-        during_tool = [
-            s
-            for s in record["metric_snapshots"]
-            if tool["started_ns"] < s["monotonic_ns"] < tool["ended_ns"]
-            and s["metrics"]["kv_lcm_blocks_active"] > 0
-        ]
-        if (
-            not progress
-            or not during_tool
-            or tool["resumed_reused_context_tokens"] <= 0
-        ):
-            raise ValueError("native tool wait retention/progress mismatch")
         await idle_snapshot("all_sessions_idle_before_close", held=True)
     finally:
         for session_id in session_ids:
@@ -285,6 +300,37 @@ async def run_native_validation(
     if record["close_errors"]:
         raise ValueError("native Session close mismatch")
     await idle_snapshot("all_sessions_closed", held=False)
+    if control_schedule == "after-run-serial":
+        record["controls_phase_started_ns"] = time.monotonic_ns()
+        for item in record["turns"]:
+            control = await asyncio.to_thread(
+                _stream_request, engine, item["full_input_ids"], params, session_id=None
+            )
+            item["stateless_result"] = control
+            item["output_ids_match"] = (
+                item["session_result"]["output_ids"] == control["output_ids"]
+            )
+            if not item["output_ids_match"]:
+                raise ValueError(
+                    f"native Session/stateless output mismatch at session {item['session_index']} turn {item['turn_index']}"
+                )
+        record["controls_phase_finished_ns"] = time.monotonic_ns()
+    tool = record["tools"][0]
+    progress = [
+        r
+        for r in record["turns"]
+        if r["session_index"] != tool_index
+        and tool["started_ns"] < r["session_result"]["ended_ns"] < tool["ended_ns"]
+    ]
+    record["other_session_progress_during_tool"] = bool(progress)
+    during_tool = [
+        s
+        for s in record["metric_snapshots"]
+        if tool["started_ns"] < s["monotonic_ns"] < tool["ended_ns"]
+        and s["metrics"]["kv_lcm_blocks_active"] > 0
+    ]
+    if not progress or not during_tool or tool["resumed_reused_context_tokens"] <= 0:
+        raise ValueError("native tool wait retention/progress mismatch")
 
 
 def main() -> None:
@@ -379,6 +425,10 @@ def main() -> None:
                     engine,
                     tokenizer,
                     workload=workload,
+                    control_schedule=workload["control_schedule"],
+                    tool_metrics_interval_seconds=workload[
+                        "tool_metrics_interval_seconds"
+                    ],
                     max_model_len=config["max_model_len"],
                     metrics_url=f"http://127.0.0.1:{args.metrics_port}",
                     record=record,

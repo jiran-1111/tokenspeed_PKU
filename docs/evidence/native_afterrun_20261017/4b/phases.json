@@ -1,0 +1,15 @@
+{
+  "run_sha256": "49b07e0f6c84716e052472cc88d8b285b3f5ad151c947fc18a425aa28135be4c",
+  "phase_and_close_checks_passed": true,
+  "violations": [],
+  "controls_collected": 32,
+  "native_phase_seconds": 25.22439719,
+  "control_phase_seconds": 112.33154436,
+  "prior_trace_comparison": {
+    "prior_run_sha256": "23f806371e140c8ac831f1c914b0c7842991537563d847982f2d6916d04f1218",
+    "pairs_compared": 32,
+    "different_input_pairs": [],
+    "different_output_pairs": []
+  },
+  "scope": "quality and phase audit; phase durations are not an OFF/ON performance estimate"
+}

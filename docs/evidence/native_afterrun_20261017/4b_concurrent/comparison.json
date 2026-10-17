@@ -1,0 +1,255 @@
+{
+  "run_sha256": "403e11f8ecfa92a9cdc97bb46520923866f49ed7660a156df719b559f8177287",
+  "reported_status": "passed",
+  "control_schedule": "concurrent",
+  "quality_audit": {
+    "run_file_sha256": "403e11f8ecfa92a9cdc97bb46520923866f49ed7660a156df719b559f8177287",
+    "reported_status": "passed",
+    "reported_error": null,
+    "source_manifest_sha256": "e4a19a33a96322a19617273ce43e84695c68813c6e984953bfd4e119dfa852aa",
+    "workload_sha256": "7d750399d3e36d3f2322dc8ceb9b3a1e4b6c1b9009ec560933708898cd6628af",
+    "pairs_recorded": 32,
+    "pairs_expected": 32,
+    "output_pairs_matched": 32,
+    "context_pairs_validated": 32,
+    "independent_history_and_pair_checks_passed": true,
+    "violations": [],
+    "max_actual_context_tokens": 968,
+    "tool_observations": [
+      {
+        "actual_delay_seconds": 2.00006536,
+        "tool_result": 465,
+        "expected_tool_result": 465,
+        "resumed_reused_context_tokens": 715,
+        "other_session_requests_completed_inside_window": [
+          [
+            1,
+            8
+          ]
+        ],
+        "other_session_requests_started_inside_window": [
+          [
+            1,
+            9
+          ]
+        ],
+        "other_session_requests_both_started_and_completed_inside_window": [],
+        "kv_samples_inside_window": [
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 20.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 76.0,
+            "kv_lcm_blocks_allocated": 29.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 20.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 76.0,
+            "kv_lcm_blocks_allocated": 29.0
+          },
+          {
+            "requests_running": 1.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 14.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 82.0,
+            "kv_lcm_blocks_allocated": 23.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          },
+          {
+            "requests_running": 2.0,
+            "kv_lcm_blocks_total": 105.0,
+            "kv_lcm_blocks_active": 23.0,
+            "kv_lcm_blocks_cached": 9.0,
+            "kv_lcm_blocks_empty": 73.0,
+            "kv_lcm_blocks_allocated": 32.0
+          }
+        ],
+        "positive_held_block_samples_inside_window": 19
+      }
+    ],
+    "idle_before_close_last_metrics": {
+      "requests_running": 0.0,
+      "kv_lcm_blocks_total": 105.0,
+      "kv_lcm_blocks_active": 14.0,
+      "kv_lcm_blocks_cached": 21.0,
+      "kv_lcm_blocks_empty": 70.0,
+      "kv_lcm_blocks_allocated": 35.0
+    },
+    "after_close_last_metrics": {
+      "requests_running": 0.0,
+      "kv_lcm_blocks_total": 105.0,
+      "kv_lcm_blocks_active": 0.0,
+      "kv_lcm_blocks_cached": 23.0,
+      "kv_lcm_blocks_empty": 82.0,
+      "kv_lcm_blocks_allocated": 23.0
+    },
+    "closed_session_count": 2,
+    "close_errors": [],
+    "target_chip0_idle_after_process_exit": true,
+    "scope": "finite native correctness/retention observations; explicit control schedule; no independent performance claim"
+  },
+  "trajectory_comparisons": {
+    "r7": {
+      "run_sha256": "23f806371e140c8ac831f1c914b0c7842991537563d847982f2d6916d04f1218",
+      "different_input_pairs": [],
+      "different_output_pairs": []
+    },
+    "r8_afterrun": {
+      "run_sha256": "49b07e0f6c84716e052472cc88d8b285b3f5ad151c947fc18a425aa28135be4c",
+      "different_input_pairs": [],
+      "different_output_pairs": []
+    }
+  },
+  "other_session_requests_overlapping_tool": [
+    {
+      "session_index": 1,
+      "turn_index": 8,
+      "native_start_relative_seconds": -0.0070112,
+      "native_end_relative_seconds": 1.45433644,
+      "control_start_relative_seconds": -0.00680057,
+      "control_end_relative_seconds": 1.45425876
+    },
+    {
+      "session_index": 1,
+      "turn_index": 9,
+      "native_start_relative_seconds": 1.45489591,
+      "native_end_relative_seconds": 4.34903697,
+      "control_start_relative_seconds": 1.4550904,
+      "control_end_relative_seconds": 4.34886726
+    }
+  ],
+  "source_after": {
+    "source_files": 1405,
+    "mismatches": []
+  },
+  "exit": {
+    "exit_code": 0,
+    "timed_out": false,
+    "timeout_seconds": 900
+  },
+  "scope": "one observed concurrent-control run; neither a controlled performance comparison nor proof of the sole cause of the R7 negative result; no selected retry"
+}
