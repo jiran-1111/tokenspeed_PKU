@@ -119,22 +119,31 @@ def measure_stream_ttft(
     output_ids: list[int] = []
     ttft_ms: float | None = None
     final_meta_info: dict[str, Any] | None = None
-    for chunk in iterator:
-        if not isinstance(chunk, Mapping):
-            raise ValueError("stream chunk must be a mapping")
-        chunk_ids = chunk.get("output_ids")
-        if not isinstance(chunk_ids, list) or any(
-            not isinstance(token_id, int) or isinstance(token_id, bool)
-            for token_id in chunk_ids
-        ):
-            raise ValueError("stream chunk has invalid output_ids")
-        chunk_meta_info = chunk.get("meta_info")
-        if not isinstance(chunk_meta_info, Mapping):
-            raise ValueError("stream chunk has invalid meta_info")
-        if chunk_ids and ttft_ms is None:
-            ttft_ms = (time.perf_counter() - started_at) * 1000
-        output_ids.extend(chunk_ids)
-        final_meta_info = dict(chunk_meta_info)
+    try:
+        for chunk in iterator:
+            if not isinstance(chunk, Mapping):
+                raise ValueError("stream chunk must be a mapping")
+            chunk_ids = chunk.get("output_ids")
+            if not isinstance(chunk_ids, list) or any(
+                not isinstance(token_id, int) or isinstance(token_id, bool)
+                for token_id in chunk_ids
+            ):
+                raise ValueError("stream chunk has invalid output_ids")
+            chunk_meta_info = chunk.get("meta_info")
+            if not isinstance(chunk_meta_info, Mapping):
+                raise ValueError("stream chunk has invalid meta_info")
+            if chunk_ids and ttft_ms is None:
+                ttft_ms = (time.perf_counter() - started_at) * 1000
+            output_ids.extend(chunk_ids)
+            final_meta_info = dict(chunk_meta_info)
+    except ValueError as validation_error:
+        # The synchronous bridge keeps its request alive until the stream ends.
+        try:
+            for _ in iterator:
+                pass
+        except Exception as drain_error:
+            raise validation_error from drain_error
+        raise
 
     if ttft_ms is None or not output_ids:
         raise ValueError("stream ended without a non-empty output_ids chunk")

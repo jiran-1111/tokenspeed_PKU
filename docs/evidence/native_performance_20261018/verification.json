@@ -1,0 +1,117 @@
+{
+  "primary_snapshot": "R9r2",
+  "source_manifest_sha256": "2c9e47616eb3c460a740e2542e776ab655934a9ad7ed0ac0c1401a008a97d712",
+  "source_files": 1409,
+  "protocol_sha256": "c9bdb5b7e6f5d766a1f862b499410c97ba6019e51a5d46139b0186525d0259af",
+  "formal_requests": 768,
+  "warmup_requests": 256,
+  "server_course": {
+    "passed": 637,
+    "skipped": 0
+  },
+  "local_course": {
+    "passed": 603,
+    "skipped": 34
+  },
+  "models": {
+    "0.8b": {
+      "run_sha256": "f01dbc04494123b9922acfae3b27d17d47b20ad4dff7dece256e5a0d1cb9575f",
+      "trace_sha256": "e720b2fe3022784746dc8228b0b306e031172f40783588f7fa4cda3bff0df5a7",
+      "source_after_files": 1409,
+      "source_after_mismatches": 0,
+      "formal_requests": 192,
+      "warmup_requests": 64,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "target_idle_after_exit": true,
+      "hbm_samples": 54,
+      "metric_samples": 434,
+      "scope": "three alternating-order repetitions within one engine; descriptive only, not independent-run inference; TTFT/E2E/client TPOT, throughput includes scripted tool wait; per-arm HBM only wholly-contained observations, null stays missing; model peak includes warmup/between phases, not instantaneous or KV-only"
+    },
+    "4b": {
+      "run_sha256": "1489830e45a50c732d95c4f14eae5d583e734d287d56b366358ee044058ae768",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "source_after_files": 1409,
+      "source_after_mismatches": 0,
+      "formal_requests": 192,
+      "warmup_requests": 64,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "target_idle_after_exit": true,
+      "hbm_samples": 98,
+      "metric_samples": 797,
+      "scope": "three alternating-order repetitions within one engine; descriptive only, not independent-run inference; TTFT/E2E/client TPOT, throughput includes scripted tool wait; per-arm HBM only wholly-contained observations, null stays missing; model peak includes warmup/between phases, not instantaneous or KV-only"
+    },
+    "9b": {
+      "run_sha256": "98a20e0cf45d3581f131e661478aca0ddc9bbcdf721a46b67d441aaf951227b5",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "source_after_files": 1409,
+      "source_after_mismatches": 0,
+      "formal_requests": 192,
+      "warmup_requests": 64,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "target_idle_after_exit": true,
+      "hbm_samples": 105,
+      "metric_samples": 851,
+      "scope": "three alternating-order repetitions within one engine; descriptive only, not independent-run inference; TTFT/E2E/client TPOT, throughput includes scripted tool wait; per-arm HBM only wholly-contained observations, null stays missing; model peak includes warmup/between phases, not instantaneous or KV-only"
+    },
+    "27b": {
+      "run_sha256": "f08498d3461fc85c1519bb7d6ce1381be5d38cee027bc63fab92f85fa96376b1",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb",
+      "source_after_files": 1409,
+      "source_after_mismatches": 0,
+      "formal_requests": 192,
+      "warmup_requests": 64,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "target_idle_after_exit": true,
+      "hbm_samples": 182,
+      "metric_samples": 1486,
+      "scope": "three alternating-order repetitions within one engine; descriptive only, not independent-run inference; TTFT/E2E/client TPOT, throughput includes scripted tool wait; per-arm HBM only wholly-contained observations, null stays missing; model peak includes warmup/between phases, not instantaneous or KV-only"
+    }
+  },
+  "archives": {
+    "0.8b": {
+      "files": 70,
+      "sha256": "588520f5f2d38edf0e6b76182f8d0ae95fe7bc518474c026c3a2812981dd9876",
+      "all_downloaded_sha_verified": true
+    },
+    "4b": {
+      "files": 114,
+      "sha256": "784b3af88accfdb5aaca3a0f100d510eafe4d627c820d747b4c5061ab6cd378b",
+      "all_downloaded_sha_verified": true
+    },
+    "9b": {
+      "files": 121,
+      "sha256": "8cc65b347338402725e952679aafef5faa8bc1762cc82563a35bde49e6edd0dc",
+      "all_downloaded_sha_verified": true
+    },
+    "27b": {
+      "files": 198,
+      "sha256": "16cb6dadfec3559f74a6aaf0b4f96ee673bb13ff591e3a2212cbd9bcf04c9518",
+      "all_downloaded_sha_verified": true
+    }
+  },
+  "history_r1": {
+    "source_manifest_sha256": "8c0914167f44d2142c01df6d83ec961b6d7f8e5706ce7a37e8b0aa31c10b888a",
+    "formal_requests": 576,
+    "included_in_primary_results": false,
+    "archives": {
+      "0.8b": {
+        "files": 98,
+        "archive_sha256": "3d9a7e20a47081e10abe5f4c5c363ebaf5e7084980e13e01cd62e6651f5686a7"
+      },
+      "4b": {
+        "files": 143,
+        "archive_sha256": "1e9d9445dfcf592d7ecc9483dd7b65aedb8747ab24257a68957dee453bead55b"
+      },
+      "9b": {
+        "files": 120,
+        "archive_sha256": "8e0d1a2c99fdbc0fa2a93fbb9dfeea581842d3c5cf3a8ddcabf5d8594c9d3129"
+      }
+    },
+    "reason_for_new_snapshot": "independent failure-path review, not metric-based retry; protocol and all trajectories unchanged"
+  },
+  "scope": "fixed actual-trajectory replay with model-generated outputs checked; scripted tool; three alternating-order repeats within one engine; descriptive finite workload, not significance or universal optimum"
+}

@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-18",
+  "review_type": "independent read-only AI subagent",
+  "initial_findings": [
+    {
+      "priority": "P2",
+      "finding": "malformed streaming chunk exits validation before consuming remaining active request stream"
+    },
+    {
+      "priority": "P2",
+      "finding": "second Session open failure leaves first Session outside cleanup protection"
+    }
+  ],
+  "new_regression_red": {
+    "failed": 3,
+    "passed": 18
+  },
+  "targeted_green": {
+    "passed": 21
+  },
+  "reviewer_followup": "both P2 fixed; no new blocking issue found within repair scope",
+  "reviewer_additional_pure_cpu_checks": 3,
+  "hardware_actions_by_reviewer": 0,
+  "source_mutations_by_reviewer": 0,
+  "scope": "failure-path review; no claim that review alone validates final hardware measurements",
+  "r1_data_retained": true,
+  "r2_all_four_models_required_for_primary_results": true,
+  "frozen_r2_source_manifest_sha256": "2c9e47616eb3c460a740e2542e776ab655934a9ad7ed0ac0c1401a008a97d712",
+  "software_log_sha256": {
+    "native_perf_review_red_20261018.log": "7016ce3a711666d30c655f26189efff53b80bc1a7b97c1ef6ffe076d8e4daf5b",
+    "native_perf_review_green_20261018.log": "d6439fcd2247618468d883fc1715867d924abc546fb989271cf178434d548718",
+    "native_perf_r2_full_20261018.log": "d41f74eb15db60be1c8db2b24d2c82e8b83ea4b2049c9af06fe75507159e9ac4",
+    "precommit_native_perf_round4.log": "dc73913d9a1174df6d1ac1c35032ba1ad792aee97ad976742992c7500aa81200"
+  }
+}

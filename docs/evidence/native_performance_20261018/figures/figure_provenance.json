@@ -1,0 +1,31 @@
+{
+  "source_manifest_sha256": "2c9e47616eb3c460a740e2542e776ab655934a9ad7ed0ac0c1401a008a97d712",
+  "protocol_sha256": "c9bdb5b7e6f5d766a1f862b499410c97ba6019e51a5d46139b0186525d0259af",
+  "inputs": {
+    "0.8b": {
+      "audit_sha256": "90c1089c33696e29327efeec66058f11d22773b215b9bccda35271ca509dfad9",
+      "requests_csv_sha256": "ae28c08e17d9ed7b32f0b509992ea4af11ceae3873af129ec28b6a7e8c2d22af",
+      "run_sha256": "f01dbc04494123b9922acfae3b27d17d47b20ad4dff7dece256e5a0d1cb9575f",
+      "trace_sha256": "e720b2fe3022784746dc8228b0b306e031172f40783588f7fa4cda3bff0df5a7"
+    },
+    "4b": {
+      "audit_sha256": "dd0e7e8086b064eba082d42891e2778ff11b50e033a8a688295128de8ff3ed08",
+      "requests_csv_sha256": "67ed41178d737e08a1f7e87dd2770028cf2f7dc6b9be9fd94f4f907b5b0275a3",
+      "run_sha256": "1489830e45a50c732d95c4f14eae5d583e734d287d56b366358ee044058ae768",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb"
+    },
+    "9b": {
+      "audit_sha256": "657c9660e0752a206c47c69c2173d2f7b3a9b87bc0dd121cb365dcf35b322daa",
+      "requests_csv_sha256": "b6fe61a650110fa88055681079d3a4fcf949dc7430bc54a9618502533aa00d1b",
+      "run_sha256": "98a20e0cf45d3581f131e661478aca0ddc9bbcdf721a46b67d441aaf951227b5",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb"
+    },
+    "27b": {
+      "audit_sha256": "1f4bbb2ae0b76f7b0a73050f04aac14f114d22bb415794818a32cd935d298bf1",
+      "requests_csv_sha256": "92dd24d69dc6aba956bd4d387579e5897408d86bcbdd2c4bdd2b001d343bebf7",
+      "run_sha256": "f08498d3461fc85c1519bb7d6ce1381be5d38cee027bc63fab92f85fa96376b1",
+      "trace_sha256": "3615010621a0fb3059d5a21133b95f519f7dd5bb778092b6d1e4416854b1a2cb"
+    }
+  },
+  "interpretation": "fixed real-trajectory conditional replay, 3 alternating-order repetitions within one engine; warmups excluded; bands descriptive, not CIs"
+}
