@@ -1,0 +1,39 @@
+{
+  "source_files": 1399,
+  "source_manifest_sha256": "8cd3fd2bde06ff94d10e7d4f862d8e8121e0232559a2c1b2d804aaae2c17d729",
+  "server_course": {
+    "passed": 588,
+    "skipped": 0,
+    "xml_sha256": "2dafc65f720f83422b88d7829eb15d004f753d53380017483984c694f45a064f"
+  },
+  "local_course": {
+    "passed": 554,
+    "skipped": 34,
+    "limitation": "No Torch in local Windows environment; server tests include numeric dependencies"
+  },
+  "unit_red": {
+    "failed": 2,
+    "reason": "TimeoutError without reply-consumer startup"
+  },
+  "unit_green": {
+    "passed": 2
+  },
+  "npu": {
+    "queries_before_first_generate": 2,
+    "query_after_first_generate": 1,
+    "generated_tokens": 16,
+    "graph_enabled": true,
+    "exit_code": 0,
+    "timeout_triggered": false,
+    "target_chip_idle_after_process_exit": true,
+    "scope": "control liveness, not HF correctness or performance"
+  },
+  "archive": {
+    "sha256": "963c010338bb3ac010def598785662b61837d4f24597c8de156924bbf06d629e",
+    "files": 14,
+    "all_downloaded_sha_verified": true
+  },
+  "getter_payload_remains_empty": true,
+  "setter_updated_false_semantics_unchanged": true,
+  "ai_tools_used": true
+}

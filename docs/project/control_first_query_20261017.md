@@ -1,0 +1,13 @@
+# 首次控制查询挂起修复
+
+R5实际采集在首次generate前调用Engine.get_server_info曾挂起。控制客户端getter及setter直接等待communicator，漏掉其他控制方法在发送前调用的auto_create_handle_loop，因而没有消费者处理回复。修复仅为两个入口各补一行现有启动调用；没有改计算、缓存或调度算法，也没有新增生产超时或另一套回复循环。
+
+专项测试直接抽取实际入口方法，用受控异步回复队列覆盖首次和重复调用、多rank返回聚合、setter请求对象保留及任务清理。修复前两项均TimeoutError，修复后两项通过。本机完整course 554 passed/34 skipped（缺Torch等环境），服务器588 passed/零skip。第一次本机完整运行遗漏新工作树.tmp父目录导致143个fixture准备错误，创建父目录后重跑通过，失败记录保留；没有修改业务代码来掩盖环境错误。
+
+完整pre-commit通过后固定R6清单1399项，SHA-256 `8cd3fd2bde06ff94d10e7d4f862d8e8121e0232559a2c1b2d804aaae2c17d729`。相对已发布R5只改一份runtime源并新增一份测试源，部署前备份、前后逐项匹配。
+
+在Ascend目标chip空闲并核对映射后串行运行0.8B/TP1/BF16/图模式原baseline，首次公开generate之前连续两次get_server_info均返回，再生成16个token，之后查询也返回。驱动外置240s超时未触发，退出0；独立进程结束后目标chip确认空闲，源未变。退出警告保留，不宣称无警告。此为控制接口存活性验证，不是新HF正确性、Session或性能基线。
+
+服务器当前GetInternalStateReq仍回复空字典，SetInternalStateReq仍回复updated=False；修复使既有回复被收到，没有新增KV状态观测或动态配置修改能力。单元测试的多rank示例只验证客户端聚合，不冒称硬件进行了多rank状态修改。
+
+原始数据14项已同步逐项SHA，归档SHA `963c010338bb3ac010def598785662b61837d4f24597c8de156924bbf06d629e`；公开证据见[本轮清单](../evidence/control_first_query_20261017/README.md)。R5的四模型Session及9B成本仍固定于已发布提交c7f7694a，不把这些旧测量改称R6结果。HW1分支保持不变。实际实现、实验和材料由AI工具辅助完成。

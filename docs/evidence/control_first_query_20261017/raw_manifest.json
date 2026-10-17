@@ -1,0 +1,16 @@
+{
+  "results/raw/control_first_query_20261017/before_sources.tar": "836bab17e6d2de685fc6170433bb69a45523b337b53a9a0b9d23ba93aa548e3e",
+  "results/raw/control_first_query_20261017/course.log": "b2eb83521b7c4f6f147abac5107f4ad42c58e98e436e57a791b3701e4d4a2731",
+  "results/raw/control_first_query_20261017/course.xml": "2dafc65f720f83422b88d7829eb15d004f753d53380017483984c694f45a064f",
+  "results/raw/control_first_query_20261017/npu/before_processes.txt": "e755d242d165b9ff961c5419ed3cf0c67a6d76732ab378fd9398bb8f042c3729",
+  "results/raw/control_first_query_20261017/npu/mapping.txt": "b136fca78c12ff74cc018363522abbeae3b0a30738444d1618265f763609497f",
+  "results/raw/control_first_query_20261017/npu/result.json": "9b7b067f7c0cd8fc85e21c22de81664aa038953a26cb6acfa200c9c495a9ed05",
+  "results/raw/control_first_query_20261017/npu/runner_source.py": "b9f600cbc2fa243ef2d404949ff05b8427ac7c02cda14366fa872eec5426b729",
+  "results/raw/control_first_query_20261017/npu_driver.log": "313b5c34019502401e6d0b3bef55560df31d767123e76c4e77b3f476271c7bd5",
+  "results/raw/control_first_query_20261017/npu_exit.json": "4df5b21f7bdea866a4a39236e8bbfcd33bff5437c3386b63c910aee7ae9fc78c",
+  "results/raw/control_first_query_20261017/patch.tar": "8ea4efcbed4a6c99a94c30d153fa71e05e2eceb8cfc780f166633f57f3e47328",
+  "results/raw/control_first_query_20261017/patch_sha256.json": "d93b3837e39c780bb692037316535dd56bd1df4c4fdf82dead02d8cb6cde2712",
+  "results/raw/control_first_query_20261017/post_exit_processes.txt": "e755d242d165b9ff961c5419ed3cf0c67a6d76732ab378fd9398bb8f042c3729",
+  "results/raw/control_first_query_20261017/source_manifest.json": "8cd3fd2bde06ff94d10e7d4f862d8e8121e0232559a2c1b2d804aaae2c17d729",
+  "results/raw/control_first_query_driver_20261017.log": "760c6671cce40487a2298ad2500183ed74c07b2859c9f5dff812e5ac49324a90"
+}
