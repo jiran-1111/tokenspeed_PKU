@@ -141,6 +141,8 @@ def _validate_model_config(config: dict) -> None:
     for field in _REQUIRED_MODEL_FIELDS:
         if field not in config:
             raise ValueError(f"Missing required model config field: {field}")
+    if "hf_overrides" in config and not isinstance(config["hf_overrides"], dict):
+        raise ValueError("hf_overrides must be a dictionary")
 
 
 def build_serve_command(config: dict, *, host: str, port: int) -> list[str]:
@@ -208,6 +210,8 @@ def build_serve_command(config: dict, *, host: str, port: int) -> list[str]:
     command.extend(["--host", host, "--port", str(port)])
     command.extend(["--prometheus-port", str(config["prometheus_port"])])
     command.extend(["--metrics-port", str(config["tokenspeed_metrics_port"])])
+    if "hf_overrides" in config:
+        command.extend(["--hf-overrides", json.dumps(config["hf_overrides"])])
     return command
 
 

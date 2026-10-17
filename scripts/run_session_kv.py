@@ -256,12 +256,12 @@ def _next_suffix(
         add_generation_prompt=True,
     )
     if full_context_ids[: len(history_ids)] != history_ids:
-        # Qwen non-thinking templates remove old closed reasoning on re-render.
-        # A cached Session cannot delete those tokens: append a new ChatML turn.
+        # Qwen templates strip trailing whitespace and old closed reasoning.
+        # Preserve the original generated IDs by appending a new ChatML turn.
         if (
-            "</think>" in generation_prefix
-            and history_ids == initial_ids + previous_output_ids
-        ):
+            "</think>" in assistant_content
+            or assistant_content != assistant_content.rstrip()
+        ) and history_ids == initial_ids + previous_output_ids:
             boundary = (
                 "\n"
                 if output_ids_for_content != previous_output_ids

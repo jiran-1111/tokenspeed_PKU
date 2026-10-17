@@ -1,0 +1,37 @@
+{
+  "rows": [
+    {
+      "engine_mode": "continuous",
+      "cpu_reference": "cached",
+      "relative_l2": 0.006732899602657895,
+      "max_abs": 0.12357759475708008,
+      "engine_argmax": 264,
+      "reference_argmax": 6278
+    },
+    {
+      "engine_mode": "continuous",
+      "cpu_reference": "recomputed",
+      "relative_l2": 0.006733078454833418,
+      "max_abs": 0.12359428405761719,
+      "engine_argmax": 264,
+      "reference_argmax": 6278
+    },
+    {
+      "engine_mode": "full_recompute",
+      "cpu_reference": "cached",
+      "relative_l2": 0.007782748142413713,
+      "max_abs": 0.129144549369812,
+      "engine_argmax": 264,
+      "reference_argmax": 6278
+    },
+    {
+      "engine_mode": "full_recompute",
+      "cpu_reference": "recomputed",
+      "relative_l2": 0.007783074924919431,
+      "max_abs": 0.12915587425231934,
+      "engine_argmax": 264,
+      "reference_argmax": 6278
+    }
+  ],
+  "scope": "one original 9B frontier, no acceptance thresholds or general claim"
+}

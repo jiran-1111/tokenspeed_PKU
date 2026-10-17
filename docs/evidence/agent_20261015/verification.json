@@ -1,0 +1,46 @@
+{
+  "source_file_count": 1398,
+  "source_manifest_sha256": "ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27",
+  "server_course": {
+    "passed": 586,
+    "skipped": 0,
+    "xml_sha256": "dc7b0fdeb7fccf0c48b5fe568668c33468ec80fc2216b2e728f3b94557ee5e5a"
+  },
+  "local_course": {
+    "passed": 552,
+    "skipped": 34,
+    "limitation": "Windows environment lacks Torch; server numeric tests are authoritative"
+  },
+  "input_identity": {
+    "original_capture_sha256": "0be4d813b9475113ca8caa66ddd10e1c835b89cb7999678e2b085f7f49415448",
+    "published_inputs_sha256": "dccb9df33b3d340b2515a3629ef83d1707bbeb3161b8d4dcb2c6179dd974669a",
+    "all_8_native_input_ids_and_sampling_preserved": true
+  },
+  "reference_identity": {
+    "original_sha256": "76f4f1a2f89aa6bca4242d30cc57e65a6f50388540e8efbb8e36d5871c79a241",
+    "published_selected_reference_sha256": "54596e428e3972b07db8411ba0a3c0b7da5c6600ab559ba69d476e6d768df832",
+    "reference_token_ids_and_stop_ids_preserved": true
+  },
+  "formal_archive": {
+    "sha256": "adbdae9083a0cf666a4f7166cbabcf65316d0a273b4b98a2bed65a9eb13c6d59",
+    "file_count": 121,
+    "all_files_downloaded_sha_verified": true
+  },
+  "head_logical_extra_bytes": 2034237440,
+  "independent_review_completed": false,
+  "uniform_archive": {
+    "sha256": "b9faa5d199f7ab3439c749e9d64bab6bc5e2b99dfefae3eedbaf3f7555d7c7f8",
+    "file_count": 41,
+    "all_files_downloaded_sha_verified": true,
+    "retrieved_on": "2026-10-17",
+    "server_source_files_reverified": 1398
+  },
+  "cost_archive": {
+    "sha256": "42b2192f3f7c9f94fd25902033aae63f0a63a67ffb60d801a6668e17162f79da",
+    "file_count": 92,
+    "all_files_downloaded_sha_verified": true,
+    "valid_formal_requests": 96,
+    "valid_hbm_samples": 252,
+    "failed_attempts_retained": true
+  }
+}

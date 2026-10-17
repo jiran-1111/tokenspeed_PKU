@@ -1,0 +1,105 @@
+{
+  "record_count": 8,
+  "exact_match_count": 8,
+  "stop_aligned_exact_match_count": 8,
+  "source_unchanged": true,
+  "comparisons": [
+    {
+      "case": "chinese_beijing",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "english_capital",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "math_arithmetic",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "code_python",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "long_context_recall",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "multi_turn_memory",
+      "turn_index": 1,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "multi_turn_memory",
+      "turn_index": 2,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    },
+    {
+      "case": "multi_turn_memory",
+      "turn_index": 3,
+      "exact_match": true,
+      "engine_token_count": 64,
+      "reference_token_count": 64,
+      "first_mismatch_index": null,
+      "stop_aligned_exact_match": true,
+      "stop_aligned_engine_token_count": 64,
+      "stop_aligned_reference_token_count": 64,
+      "stop_aligned_first_mismatch_index": null
+    }
+  ],
+  "reference_sha256": "76f4f1a2f89aa6bca4242d30cc57e65a6f50388540e8efbb8e36d5871c79a241"
+}

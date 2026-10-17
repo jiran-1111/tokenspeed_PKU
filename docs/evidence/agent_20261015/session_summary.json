@@ -1,0 +1,46 @@
+{
+  "9b_candidate": {
+    "status": "passed",
+    "rounds": 2,
+    "paired_outputs_and_contexts": 8,
+    "closed_rejections": 4,
+    "reopen_input_and_output_repeat": true,
+    "source_manifest_sha256": "ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27",
+    "raw_directory": "results/raw/session_9b_fp32_head_formal_20261015",
+    "immediate_exit_target_released_flag": false,
+    "post_process_exit_target_idle_verified": true
+  },
+  "0.8b_baseline": {
+    "status": "passed",
+    "rounds": 2,
+    "paired_outputs_and_contexts": 8,
+    "closed_rejections": 4,
+    "reopen_input_and_output_repeat": true,
+    "source_manifest_sha256": "ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27",
+    "raw_directory": "results/raw/session_08b_formal_source_20261015",
+    "immediate_exit_target_released_flag": false,
+    "post_process_exit_target_idle_verified": true
+  },
+  "4b_baseline": {
+    "status": "passed",
+    "rounds": 2,
+    "paired_outputs_and_contexts": 8,
+    "closed_rejections": 4,
+    "reopen_input_and_output_repeat": true,
+    "source_manifest_sha256": "ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27",
+    "raw_directory": "results/raw/session_4b_r5_uniform_20261015",
+    "immediate_exit_target_released_flag": false,
+    "post_process_exit_target_idle_verified": true
+  },
+  "27b_baseline": {
+    "status": "passed",
+    "rounds": 2,
+    "paired_outputs_and_contexts": 8,
+    "closed_rejections": 4,
+    "reopen_input_and_output_repeat": true,
+    "source_manifest_sha256": "ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27",
+    "raw_directory": "results/raw/session_27b_r5_uniform_20261015",
+    "immediate_exit_target_released_flag": false,
+    "post_process_exit_target_idle_verified": true
+  }
+}

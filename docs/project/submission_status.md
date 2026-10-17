@@ -2,7 +2,15 @@
 
 依据任务书第 54 节验收清单及第 41 节重点实验核对。项目整体尚未通过验收；文件存在与软件测试通过均不能替代设备实验。这里列出当前证据和继续完成所需工作。
 
-## 第一次作业与当前待确认事项
+## 当前交付与后续项目
+
+HW1已完成原四项任务、报告、同源服务器复验及GitHub发布：分支 `course/hw1-20261015`，提交 `1d113e54f789a22b14cbbdccbc6230c3f4d0e574`。教学网由用户本人提交；四模型总项目继续执行。后续分支 `course/agent-20261015` 尚未提交/推送。
+
+后续R5源码1398项清单SHA `ef7b3e028233517746147f36da92efea679a29ba50471df4574e3cac9c103a27`，服务器586通过/零skip。新[9B FP32输出头候选](9b_lm_head_precision_20261015.md)在正式图模式原八条raw/stop-aligned均8/8；默认BF16的旧7/8和Session失败保留。四模型同R5原生Session均通过两轮8配对/4次关闭拒绝及重开；4B/27B同R5原八条也各8/8。2026-10-17取回后逐项核对新增41项证据和服务器1398源文件，零差异；这是有限原生回归，尚非完整四模型最终Agent验收。
+
+候选成本已审计：96请求/252 HBM样本，48配对输出ID相同；Decode耗时约+7.5%–9.3%、目标chip观察HBM峰值25874→27814 MB。首轮解析失败、第二轮末臂退出采样失败均保留，末臂只按协议失败补跑，92项成本证据逐项SHA核对通过。跨模型并发Agent、实际工具等待/KV留存、TP匹配性能、完整消融和最终配置/总报告仍欠。下文日期表格中的旧9B“仍7/8”、HW1“未闭环”及旧软件计数是历史状态，以上述分配置/分源码证据为准。
+
+## 第一次作业终态
 
 2026-10-15最终源证据：Stage B R3的272向量冻结门槛全过，旧1%68失败/条件argmax13差异保留；1396相关源码跨端一致、course569passed/0skip；关键模块与Session108passed/0skip、203属性；最终Decode Profiler及96正式请求/12摘要/121个HBM样本已完成。最终原始/分析809文件本机逐项SHA核对零差异。报告已按这些证据定稿，见[HW1报告](../report/homework1_compute_subsystem.md)与[公开证据](../evidence/hw1_20261015/README.md)。本交付采用独立分支`course/hw1-20261015`，目标为`jiran-1111/tokenspeed_PKU`；279项明确交付文件与服务器一致，Git暂存源码与服务器验证的1396文件逐项一致，不覆盖目标main。四模型Agent总项目未完成。
 
@@ -29,9 +37,9 @@
 
 | 要求 | 当前证据 | 缺项 |
 |---|---|---|
-| 0.8B 运行与正确性 | TP1 服务、多长度连续推理、模块/state与Session验收已有；[历史官方固定样例](../../results/raw/correctness/gdn_fp32_candidate_0.8b_20261011_bringup_max64_reference_compare.json) raw 1/8、stop-aligned 7/8 | 完整模型数值未闭环；最终版本回归及验收方向待确认 |
+| 0.8B 运行与正确性 | HW1同源16输入/272完整向量冻结双门槛全过，旧1%失败保留；模块/state及Session通过；项目R5 Session通过 | 原历史greedy分叉不取消；项目最终统一版本性能/Agent仍欠 |
 | 4B 运行与正确性 | [当前生产源码TP1复验](current_4b_correctness_20261014.md) max64八样例raw/stop-aligned 8/8、20文件cross-SHA；此前Session KV配对通过 | 固定样例不是任意长度/语义普遍正确；TP2、最终同版本Session/性能仍需复验 |
-| 9B 运行与正确性 | [当前生产源码TP1复验](current_9b_correctness_20261014.md) max64八样例raw/stop-aligned均7/8、20文件cross-SHA；8组输入/引擎输出IDs与旧固定运行相同 | long_context_recall index59仍分叉，不是全通过；其他配置/Session/优化及最终版本验证仍欠 |
+| 9B 运行与正确性 | 原BF16八条7/8保留；[显式FP32 head候选](9b_lm_head_precision_20261015.md)在R5正式graph八条8/8、原生Session通过 | 成本完整验收、更多负载/最终配置与发布仍欠；有限样例不外推质量 |
 | 27B 运行与双 chip 策略 | [当前TP2八样例复验](current_27b_correctness_20261014.md)raw/stop-aligned 8/8、23文件cross-SHA；此前4095+1边界及[E0 Workload A](27b_e0_workload_a_20261013.md)480请求/15 summaries已有 | 当前8例不替代任意长度/Session/语义普遍正确；旧E0性能不冒充新源码，匹配TP/通信性能及最终发布复验仍欠 |
 | 910C / Kunpeng 规定资源 | [只读身份核实](hardware_identity_20261014.md)SoC为Ascend910_9362、短系列Ascend910_93，映射A3/910C；DMI产品名Atlas800I A3，CPU0x48/0xd02及一手来源支持Kunpeng920系列 | 不凭V1字段认定非910C；完整采购配置、CPU具体子型号及教师single chip/device口径仍待核实 |
 | HBM 与 NPU Profiler | 当前0.8B采样与加载/退出快照齐全；[单请求时间窗实采](profiler_single_request_capture_20261013.md)确认Level1/PipeUtilization、clock最大误差800ns、145文件跨端一致 | 瞬时峰值不由周期采样保证；双chip完整证据、当前Decode与系统因果瓶颈归属仍欠 |

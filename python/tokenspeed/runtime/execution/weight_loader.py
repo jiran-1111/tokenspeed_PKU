@@ -23,6 +23,7 @@ import torch
 from tokenspeed.runtime.configs.device_config import DeviceConfig
 from tokenspeed.runtime.configs.load_config import LoadConfig
 from tokenspeed.runtime.configs.model_config import ModelConfig
+from tokenspeed.runtime.layers.logits_processor import should_apply_lm_head_quant_method
 from tokenspeed.runtime.model_loader import get_model
 from tokenspeed.runtime.utils import (
     get_available_gpu_memory,
@@ -34,6 +35,29 @@ from tokenspeed.runtime.utils.server_args import ServerArgs
 from tokenspeed.runtime.utils.torch_memory_saver_adapter import TorchMemorySaverAdapter
 
 logger = get_colorful_logger(__name__)
+
+
+def _configure_npu_lm_head(model, *, requested_dtype: str | None, device: str) -> None:
+    """Expand an explicitly selected dense BF16 head before cache planning."""
+    if requested_dtype is None:
+        return
+    if requested_dtype != "float32":
+        raise ValueError("NPU LM head override supports only float32")
+    if device != "npu":
+        raise ValueError("LM head precision override requires NPU")
+    if type(model).__name__ != "Qwen3_5ForConditionalGeneration":
+        raise ValueError("LM head precision override requires dense Qwen3.5")
+    if model.encoder_only or model.lm_head is None:
+        raise ValueError("LM head precision override requires a text LM head")
+    if model.config.tie_word_embeddings:
+        raise ValueError("LM head precision override requires untied embeddings")
+    head = model.lm_head
+    if should_apply_lm_head_quant_method(head, head.quant_method):
+        raise ValueError("LM head precision override requires unquantized weights")
+    if head.weight.dtype != torch.bfloat16:
+        raise ValueError("LM head precision override requires BF16 projected weights")
+    # FP32 exactly represents every loaded BF16 value; retain Parameter metadata.
+    head.weight.data = head.weight.data.float()
 
 
 class WeightLoader:
@@ -90,6 +114,13 @@ class WeightLoader:
                 model_config=model_config,
                 load_config=load_config,
                 device_config=DeviceConfig(device),
+            )
+            _configure_npu_lm_head(
+                model,
+                requested_dtype=model_config.model_override_args.get(
+                    "npu_lm_head_dtype"
+                ),
+                device=device,
             )
             initialize_engram = getattr(model, "initialize_engram", None)
             if callable(initialize_engram):

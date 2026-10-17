@@ -40,8 +40,17 @@ def test_next_suffix_preserves_model_generation_prefix(prefix):
 
 
 @pytest.mark.parametrize("eos", [False, True])
-def test_closed_think_history_remains_append_only_when_template_removes_reasoning(eos):
-    prefix = "<think>\n\n</think>\n\n"
+@pytest.mark.parametrize(
+    ("prefix", "output_text"),
+    [
+        ("<think>\n\n</think>\n\n", "42"),
+        ("<think>\n", "Thinking Process:\n   "),
+        ("<think>\n", "reasoning\n</think>\n42"),
+    ],
+)
+def test_qwen_history_remains_append_only_when_template_rewrites_assistant_content(
+    eos, prefix, output_text
+):
 
     class Tokenizer:
         eos_token_id = 0
@@ -78,8 +87,9 @@ def test_closed_think_history_remains_append_only_when_template_removes_reasonin
             add_generation_prompt=True,
         )
 
-    output = tokenizer.encode("42") + ([0] if eos else [])
+    output = tokenizer.encode(output_text) + ([0] if eos else [])
     history = initial(tokenizer, "previous") + output
+    original_history = history.copy()
     next_suffix = _load_method(
         "scripts/run_session_kv.py",
         None,
@@ -100,4 +110,12 @@ def test_closed_think_history_remains_append_only_when_template_removes_reasonin
         boundary + "<|im_start|>user\nnext<|im_end|>\n<|im_start|>assistant\n" + prefix
     )
     assert suffix == tokenizer.encode(expected)
-    assert (history + suffix)[: len(history)] == history
+    assert history == original_history
+    with pytest.raises(ValueError, match="does not preserve the cached Qwen"):
+        next_suffix(
+            tokenizer,
+            "next",
+            prior_user_text="previous",
+            previous_output_ids=output,
+            history_ids=history + [999],
+        )
