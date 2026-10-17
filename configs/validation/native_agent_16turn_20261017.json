@@ -1,0 +1,17 @@
+{
+  "system_prompt": "You are a concise assistant. Keep each reply short.",
+  "initial_user_prefix": "Benchmark context: ",
+  "initial_filler": "x ",
+  "initial_filler_repetitions": 512,
+  "sessions": 2,
+  "turns": 16,
+  "max_new_tokens": 8,
+  "next_user_text": "Please continue with a short reply.",
+  "tool_session_index": 0,
+  "tool_before_turn": 8,
+  "tool_delay_seconds": 2.0,
+  "tool_range_stop": 31,
+  "tool_result_prefix": "Scripted tool result: sum(range(31)) = ",
+  "frontier_policy": "current-frontier",
+  "scope": "native Session correctness and retention validation; concurrent controls, not an independent latency benchmark"
+}

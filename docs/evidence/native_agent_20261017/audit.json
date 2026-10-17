@@ -1,0 +1,33 @@
+{
+  "run_file_sha256": "23f806371e140c8ac831f1c914b0c7842991537563d847982f2d6916d04f1218",
+  "reported_status": "failed",
+  "reported_error": "native tool wait retention/progress mismatch",
+  "source_manifest_sha256": "dc3142dba99acac6e874d82b55de58343da067dd0befa6c1658bbe620b68a394",
+  "workload_sha256": "26cd9cf606589da095f064d9985ccf30a35a7014c711c73b09398a6aeb15a794",
+  "pairs_recorded": 32,
+  "pairs_expected": 32,
+  "output_pairs_matched": 32,
+  "context_pairs_validated": 32,
+  "independent_history_and_pair_checks_passed": true,
+  "violations": [],
+  "max_actual_context_tokens": 968,
+  "tool_observations": [
+    {
+      "actual_delay_seconds": 2.00006638,
+      "tool_result": 465,
+      "expected_tool_result": 465,
+      "resumed_reused_context_tokens": 715,
+      "other_session_requests_completed_inside_window": [],
+      "other_session_requests_started_inside_window": [],
+      "other_session_requests_both_started_and_completed_inside_window": [],
+      "kv_samples_inside_window": [],
+      "positive_held_block_samples_inside_window": 0
+    }
+  ],
+  "idle_before_close_last_metrics": null,
+  "after_close_last_metrics": null,
+  "closed_session_count": 2,
+  "close_errors": [],
+  "target_chip0_idle_after_process_exit": true,
+  "scope": "finite native correctness/retention observations; concurrent full-history controls interfere; no independent performance claim"
+}

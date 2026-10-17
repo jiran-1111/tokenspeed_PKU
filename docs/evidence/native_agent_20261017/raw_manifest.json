@@ -1,0 +1,21 @@
+{
+  "results/analysis/native_agent_4b_16turn_20261017_r4/native_agent_audit.json": "054e8d69432c7492ffddf7b3e5aba5512e0de3f3b8cf966ec63af36a217f544f",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017/before_processes.txt": "e755d242d165b9ff961c5419ed3cf0c67a6d76732ab378fd9398bb8f042c3729",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017/driver_source.py": "426a3ce1bb6ff76b12e94ad6f902c32c75e48f0fe04b811d0089e009fc3d8e7d",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017/mapping.txt": "b136fca78c12ff74cc018363522abbeae3b0a30738444d1618265f763609497f",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017/post_exit_processes.txt": "e755d242d165b9ff961c5419ed3cf0c67a6d76732ab378fd9398bb8f042c3729",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017/run.json": "23f806371e140c8ac831f1c914b0c7842991537563d847982f2d6916d04f1218",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017_driver.log": "04aa7b754ba47ea7a473051eca6fd009e3753eade23b22d6d03969be9c892fda",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017_exit.json": "010b0be3d9dcd59e64ddcb1ed66032dc24967233c94482fb689962604b52b600",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017_post_exit_processes.txt": "e755d242d165b9ff961c5419ed3cf0c67a6d76732ab378fd9398bb8f042c3729",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017_source_after.json": "4276e556255de365a732c6acad6cc4a60d9b2ce3797cc1402c983cfa9d59018b",
+  "results/raw/native_agent_20261017_r4/4b_16turn_20261017_summary.json": "4c7ccc4a66913a73de27f93bfc95f9924297eef50d1804079a6add89848a9a6e",
+  "results/raw/native_agent_20261017_r4/amendment.json": "3e56ed86451b603d71879943da417f683447ba2bb4b65d05c730563fe919aedf",
+  "results/raw/native_agent_20261017_r4/before_sources.tar": "37be7f1023ab923e96e88fd72404cf8f91ccb573afdd9bf6d013b34ca4c1ef62",
+  "results/raw/native_agent_20261017_r4/course.log": "4ab0fa257e2147ad17d4999f00c912667e8bd1fe512089139c671fb97cf86a27",
+  "results/raw/native_agent_20261017_r4/course.xml": "b4c3ddcfccaf71cc72c9a7a242a7357f2da5bf2dc6d7e37608cccdf1a9a5f4ce",
+  "results/raw/native_agent_20261017_r4/patch.tar": "71029a9803526340bc095743c35498e3c08aed5bee82cc775b028761a0352374",
+  "results/raw/native_agent_20261017_r4/patch_sha256.json": "756e10977d802525e2e48020a5fd5cedde69682bcb4f6b30d823e1d525a39a5e",
+  "results/raw/native_agent_20261017_r4/source_manifest.json": "dc3142dba99acac6e874d82b55de58343da067dd0befa6c1658bbe620b68a394",
+  "results/raw/native_agent_4b_16turn_driver_20261017_r4.log": "7256d2ae08e0a65286a129c66132afaea44f12eee506b8cbdf075af9bf8dd736"
+}
