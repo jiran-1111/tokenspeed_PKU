@@ -1,0 +1,185 @@
+{
+  "source_files": 1415,
+  "source_manifest_sha256": "d05a47d932b519b6e50ed0c668725935d93b744fffffa68e95f37a0227f6c6ea",
+  "implementation_files_identical_to_R9r2": 1409,
+  "new_configuration_files": 6,
+  "server_course": {
+    "passed": 637,
+    "skipped": 0
+  },
+  "final_quality_models": 4,
+  "final_quality_pairs": 128,
+  "results": {
+    "final_0.8b": {
+      "summary": {
+        "kind": "validation",
+        "model_id": "Qwen/Qwen3.5-0.8B",
+        "tp_size": 1,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "pairs_collected": 32,
+        "matched_pairs": 32,
+        "context_pairs": 32,
+        "other_session_progress": true
+      },
+      "run_sha256": "f6696c1a50f426c612c67e811e729da510e076be8b07dc5b6ee9c18d50c4742d",
+      "pairs": 32,
+      "max_context_tokens": 1000,
+      "tool_other_completions": 9,
+      "tool_positive_held_samples": 19,
+      "resumed_reused_context_tokens": 729,
+      "idle_active_blocks": 14.0,
+      "closed_active_blocks": 0,
+      "phase_checks_passed": true
+    },
+    "final_4b": {
+      "summary": {
+        "kind": "validation",
+        "model_id": "Qwen/Qwen3.5-4B",
+        "tp_size": 1,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "pairs_collected": 32,
+        "matched_pairs": 32,
+        "context_pairs": 32,
+        "other_session_progress": true
+      },
+      "run_sha256": "5633a3b069a001f4cd2bb639dc6932120cf281f2054f1cc95630c049f6c29fdd",
+      "pairs": 32,
+      "max_context_tokens": 968,
+      "tool_other_completions": 7,
+      "tool_positive_held_samples": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_active_blocks": 14.0,
+      "closed_active_blocks": 0,
+      "phase_checks_passed": true
+    },
+    "final_9b": {
+      "summary": {
+        "kind": "validation",
+        "model_id": "Qwen/Qwen3.5-9B",
+        "tp_size": 1,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "pairs_collected": 32,
+        "matched_pairs": 32,
+        "context_pairs": 32,
+        "other_session_progress": true
+      },
+      "run_sha256": "f045daa26552c1111949251918bf3d79b356d67914e9caddd28f88b00e934a8d",
+      "pairs": 32,
+      "max_context_tokens": 968,
+      "tool_other_completions": 6,
+      "tool_positive_held_samples": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_active_blocks": 14.0,
+      "closed_active_blocks": 0,
+      "phase_checks_passed": true
+    },
+    "final_27b": {
+      "summary": {
+        "kind": "validation",
+        "model_id": "Qwen/Qwen3.5-27B",
+        "tp_size": 2,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "pairs_collected": 32,
+        "matched_pairs": 32,
+        "context_pairs": 32,
+        "other_session_progress": true
+      },
+      "run_sha256": "9ba98cee571a5f3a1498a12ec7bd221d08dfa823e28667b3543e94fb5cb2482c",
+      "pairs": 32,
+      "max_context_tokens": 968,
+      "tool_other_completions": 3,
+      "tool_positive_held_samples": 19,
+      "resumed_reused_context_tokens": 715,
+      "idle_active_blocks": 13.0,
+      "closed_active_blocks": 0,
+      "phase_checks_passed": true
+    },
+    "tp4b_tp2": {
+      "summary": {
+        "kind": "performance",
+        "model_id": "Qwen/Qwen3.5-4B",
+        "tp_size": 2,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "formal_requests": 192,
+        "matched_formal_requests": 192,
+        "sampler_errors": []
+      },
+      "run_sha256": "5471c8ab16f04441428d7fe7a80c9821907095db25896b72b634371bae530375",
+      "performance_audit_passed": true,
+      "formal_requests": 192,
+      "warmup_requests": 64
+    },
+    "tp27b_tp1": {
+      "summary": {
+        "kind": "performance",
+        "model_id": "Qwen/Qwen3.5-27B",
+        "tp_size": 1,
+        "exit_code": -10,
+        "timed_out": false,
+        "status": "no_run_record",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": []
+      },
+      "adopted": false,
+      "classification": "configured_cache_capacity_rejected",
+      "diagnosis": "ValueError: num_lcm_blocks=31 cannot admit one token with the configured qwen_gdn cache scheduler limits",
+      "reason": "startup rejected this fixed cache/scheduler configuration; no valid performance result; not a claim that all TP1 configurations are impossible",
+      "failed_raw_retained": true
+    },
+    "tp4b_tp1_baseline": {
+      "summary": {
+        "kind": "performance",
+        "model_id": "Qwen/Qwen3.5-4B",
+        "tp_size": 1,
+        "exit_code": 0,
+        "timed_out": false,
+        "status": "passed",
+        "error": null,
+        "target_free": true,
+        "source_mismatches": [],
+        "formal_requests": 192,
+        "matched_formal_requests": 192,
+        "sampler_errors": []
+      },
+      "run_sha256": "62f39e7876fc648d49718aec65c3a3c0cbf92804901f8fb7b8aa8c9a87b38ffd",
+      "performance_audit_passed": true,
+      "formal_requests": 192,
+      "warmup_requests": 64
+    }
+  },
+  "scope": "fixed final source validation; TP candidates differ only in tp_size, exact R8 replay gates; separate Engine performance runs, no significance or pure communication causal claim",
+  "local_course": {
+    "passed": 603,
+    "skipped": 34
+  },
+  "all_raw_files_sha_verified": true,
+  "raw_files": 377,
+  "archive_sha256": "76607b0cf61362a162dc507151a53c3daf064138135d693218e3980bf8776fd8",
+  "independent_local_and_server_analysis_equal": true
+}

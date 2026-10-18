@@ -1,0 +1,28 @@
+{
+  "slides": 10,
+  "size_pixels": [
+    1280,
+    720
+  ],
+  "raster_pages": true,
+  "font": "msyh.ttc",
+  "bold_font": "msyhbd.ttc",
+  "font_sha256": "d79c55e68b1131eea0cc1c47be4f572d964f28c682e143db2ad09c1e4cb07a3f",
+  "bold_font_sha256": "4508821b3dffe01f0ef5e5326a3e60df705a44633858811f67b6982dce3f6ee6",
+  "source_manifest_sha256": "d05a47d932b519b6e50ed0c668725935d93b744fffffa68e95f37a0227f6c6ea",
+  "files": {
+    "course_defense.pdf": "1b3093069c7b6370bc6ced1eaaf53861a11003c091d7b6cf6a47b72e20b61d62",
+    "montage.png": "af1d2b70004fd52ef8da2d54d7e4dec2946044eb9ceb2e89b00d830b10eaf0e9",
+    "slide-01.png": "f5974d154a18465e47f17ed7f5401d2816d2cd9a92bf46bf5f1bbc7a5997bce2",
+    "slide-02.png": "2f092f7e736db652e67532f3589d18ee7da0861b8dda978a9717fbb7092901bd",
+    "slide-03.png": "6d6fe4cd114a3ad168dd1c1a2f43a0c1083a14c310fefbb0d732b2b15e716bec",
+    "slide-04.png": "9ebea085a27654e4d997f91dab1135e3b0f2f76874007dcfa8750a678dc81cfd",
+    "slide-05.png": "3e0511c396e98a3c0b25dabef07d80ac84cee6e69a83d5a9558a1886c721024c",
+    "slide-06.png": "1e7de6ab2bc2a0a53a024e28891cbae5ccbc79d91e18d4897531067821835c2a",
+    "slide-07.png": "c219a9f162ce60d7b4665009c04916f1d3bd79e13903ba677f3ed293b792910d",
+    "slide-08.png": "0258adab24625e1c385706064687385aefb605392297556307b1103b5a51d0d6",
+    "slide-09.png": "4ff2f3cf64c27c618a2a0b021b5aee4098b8aed90525299a063ca2328934ecc4",
+    "slide-10.png": "75735dcd92725fe5a6bc029d3ab6d96afd7c752a133a5141e990f965e606926c",
+    "slides.json": "ba578a4352fe396ef4bc46e8529a6492a3ec3b4a344fb8d1c251df50c2017f8b"
+  }
+}

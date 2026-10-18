@@ -2,6 +2,11 @@
 
 本仓库从上游 TokenSpeed `cf4a4f89ae5f9423a9af490d8f3a0613adfba3fd` 开始，复用其 Qwen3.5 模型、C++ continuous-batching scheduler、chunked prefill、paged KV/prefix cache 与 NPU backend。课程代码集中在 `benchmarks/course_project/`、`configs/bringup/` 和 `scripts/`。
 
+
+## 最终课程交付（2026-10-18）
+
+见[最终入口与精确复现命令](docs/project/final_delivery_20261018.md)、[总报告](docs/report/course_project_final_20261018.md)、[最终源与四模型验证证据](docs/evidence/course_final_20261018/README.md)和[答辩材料](docs/presentation/README.md)。最终分支`course/final-20261018`，1415源清单d05a47d9；原1409实现与R9r2逐字节一致，仅新增六配置。四模型最终128原生/重算配对通过，R9主性能768正式请求全部匹配，完整软件637服务器通过/零skip。有限TP候选与失败、旧数值/greedy失败、统计和硬件边界均如实保留；教学网用户本人提交。后文bring-up与旧报告按各自日期解释，以最终入口为准。
+
 ## 第一次作业材料（2026-10-15）
 
 [阶段报告](docs/report/homework1_compute_subsystem.md)与[源码清单、标量证据及复现命令](docs/evidence/hw1_20261015/README.md)已整理。0.8B原16条隔离轨迹的272个完整logits通过预先批准的有限经验双门槛；原1%门槛68个向量失败、条件argmax13处差异独立保留。最终源服务器course569项、关键模块/Session108项通过；最终Decode Profiler及96请求的2×2性能/HBM测量已完成。它们不代表自由greedy完全一致或四模型Agent项目完成。

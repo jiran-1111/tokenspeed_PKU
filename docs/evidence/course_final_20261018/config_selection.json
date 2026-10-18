@@ -1,0 +1,34 @@
+{
+  "configs/final/qwen35_0.8b.yaml": {
+    "source": "configs/baseline/qwen35_0.8b.yaml",
+    "byte_identical": true,
+    "sha256": "63c30484bd6de76a06760fb8adac2f21e5d3b6229ea6187f92be88313cd69545"
+  },
+  "configs/final/qwen35_4b.yaml": {
+    "source": "configs/baseline/qwen35_4b.yaml",
+    "byte_identical": true,
+    "sha256": "e62b789e77d478848a03e9e1c4ca7fb648b691caa56e36f8a9162fb387e7f679"
+  },
+  "configs/final/qwen35_9b.yaml": {
+    "source": "configs/candidates/qwen35_9b_fp32_head.yaml",
+    "byte_identical": true,
+    "sha256": "1350758502a20ffc8d5dce0489365fc44c4f8ec751a03db1018f120b5e7cb047"
+  },
+  "configs/final/qwen35_27b.yaml": {
+    "source": "configs/baseline/qwen35_27b.yaml",
+    "byte_identical": true,
+    "sha256": "bc1fec0c85c2e8cc751c2ab78ed3d3f77b29359706a8ef079f9e6686cf8d9a58"
+  },
+  "configs/candidates/qwen35_4b_tp2.yaml": {
+    "source": "configs/baseline/qwen35_4b.yaml",
+    "only_changed_key": "tp_size",
+    "tp_size": 2,
+    "sha256": "238731c44774827618b8a10e68ed7201231d8da7ad98b66a725f932667b86c54"
+  },
+  "configs/candidates/qwen35_27b_tp1.yaml": {
+    "source": "configs/baseline/qwen35_27b.yaml",
+    "only_changed_key": "tp_size",
+    "tp_size": 1,
+    "sha256": "f1cc3410a6be9f2904586460327bf1151fef98b914f8a20fbc3577cbb54e5973"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "pages": 10,
+  "slide_dimensions_pixels": [
+    1280,
+    720
+  ],
+  "pptx_sha256": "53bbf9dd6edb93ef9ada5ddb91a30c68cbdb989e65e60b756f5d4416af9dbf3f",
+  "pdf_sha256": "1b3093069c7b6370bc6ced1eaaf53861a11003c091d7b6cf6a47b72e20b61d62",
+  "embedded_png_hashes": {
+    "1": "f5974d154a18465e47f17ed7f5401d2816d2cd9a92bf46bf5f1bbc7a5997bce2",
+    "2": "2f092f7e736db652e67532f3589d18ee7da0861b8dda978a9717fbb7092901bd",
+    "3": "6d6fe4cd114a3ad168dd1c1a2f43a0c1083a14c310fefbb0d732b2b15e716bec",
+    "4": "9ebea085a27654e4d997f91dab1135e3b0f2f76874007dcfa8750a678dc81cfd",
+    "5": "3e0511c396e98a3c0b25dabef07d80ac84cee6e69a83d5a9558a1886c721024c",
+    "6": "1e7de6ab2bc2a0a53a024e28891cbae5ccbc79d91e18d4897531067821835c2a",
+    "7": "c219a9f162ce60d7b4665009c04916f1d3bd79e13903ba677f3ed293b792910d",
+    "8": "0258adab24625e1c385706064687385aefb605392297556307b1103b5a51d0d6",
+    "9": "4ff2f3cf64c27c618a2a0b021b5aee4098b8aed90525299a063ca2328934ecc4",
+    "10": "75735dcd92725fe5a6bc029d3ab6d96afd7c752a133a5141e990f965e606926c"
+  },
+  "all_pptx_embedded_pages_equal_public_previews": true,
+  "all_pptx_images_full_page_geometry_verified": true,
+  "notes_pages": 10,
+  "actual_pdf_rendered_pages": 10,
+  "pdf_renderer": "Poppler 24.08.0",
+  "office_application_rerender_performed": false,
+  "visual_review": "10-page montage plus dense pages and PDF render inspected; no clipping or overlap found after revisions",
+  "fix_and_verify_cycle": [
+    "r1: broken English words/ON-OFF wrapping and log chart missing ticks found",
+    "r2: preserve word tokens and add explicit log ticks; reviewed",
+    "r3: attach closing Chinese punctuation to preceding token; re-render and inspect"
+  ],
+  "scope": "image-page PPTX with speaker notes and reproducible drawing source; validates embedded raster identity and full-page geometry, not native editable text/chart layout",
+  "public_formatted_renderer_png_sha_equal": true,
+  "public_formatted_packager_media_sha_equal": true,
+  "public_runner_sha256": {
+    "render.py": "9f331a180ca67d1b1cb534469e6ac2c733112f82a75f5b6357013d91694b493d",
+    "package_deck.cjs": "cbebc3803c58b8441d4f584d2c75079f99ef9018662ac1f1b25c740bbc917e74"
+  }
+}

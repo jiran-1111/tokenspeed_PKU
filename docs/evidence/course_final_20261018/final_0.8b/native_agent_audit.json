@@ -1,0 +1,303 @@
+{
+  "run_file_sha256": "f6696c1a50f426c612c67e811e729da510e076be8b07dc5b6ee9c18d50c4742d",
+  "reported_status": "passed",
+  "reported_error": null,
+  "source_manifest_sha256": "d05a47d932b519b6e50ed0c668725935d93b744fffffa68e95f37a0227f6c6ea",
+  "workload_sha256": "85f80193c06f36dd7e81fef80d99143bcf2ba0480a069e898eaa8d0580073e17",
+  "pairs_recorded": 32,
+  "pairs_expected": 32,
+  "output_pairs_matched": 32,
+  "context_pairs_validated": 32,
+  "independent_history_and_pair_checks_passed": true,
+  "violations": [],
+  "max_actual_context_tokens": 1000,
+  "tool_observations": [
+    {
+      "actual_delay_seconds": 2.00005789,
+      "tool_result": 465,
+      "expected_tool_result": 465,
+      "resumed_reused_context_tokens": 729,
+      "other_session_requests_completed_inside_window": [
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          1,
+          16
+        ]
+      ],
+      "other_session_requests_started_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          1,
+          16
+        ]
+      ],
+      "other_session_requests_both_started_and_completed_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          1,
+          16
+        ]
+      ],
+      "kv_samples_inside_window": [
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 11.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 196.0,
+          "kv_lcm_blocks_allocated": 14.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 0.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 0.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 0.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 0.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 0.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        }
+      ],
+      "positive_held_block_samples_inside_window": 19
+    }
+  ],
+  "idle_before_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 210.0,
+    "kv_lcm_blocks_active": 14.0,
+    "kv_lcm_blocks_cached": 3.0,
+    "kv_lcm_blocks_empty": 193.0,
+    "kv_lcm_blocks_allocated": 17.0
+  },
+  "after_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 210.0,
+    "kv_lcm_blocks_active": 0.0,
+    "kv_lcm_blocks_cached": 5.0,
+    "kv_lcm_blocks_empty": 205.0,
+    "kv_lcm_blocks_allocated": 5.0
+  },
+  "closed_session_count": 2,
+  "close_errors": [],
+  "target_chip0_idle_after_process_exit": true,
+  "scope": "finite native correctness/retention observations; explicit control schedule; no independent performance claim"
+}

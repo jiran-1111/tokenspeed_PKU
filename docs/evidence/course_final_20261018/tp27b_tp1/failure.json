@@ -1,0 +1,22 @@
+{
+  "summary": {
+    "kind": "performance",
+    "model_id": "Qwen/Qwen3.5-27B",
+    "tp_size": 1,
+    "exit_code": -10,
+    "timed_out": false,
+    "status": "no_run_record",
+    "error": null,
+    "target_free": true,
+    "source_mismatches": []
+  },
+  "source_after": {
+    "source_files": 1415,
+    "mismatches": []
+  },
+  "adopted": false,
+  "driver_log_sha256": "76b773cd7d25fa8cf38ec0be707aa5c849553d3475ef56d2691037e7d809be85",
+  "classification": "configured_cache_capacity_rejected",
+  "diagnosis": "ValueError: num_lcm_blocks=31 cannot admit one token with the configured qwen_gdn cache scheduler limits",
+  "reason": "startup rejected this fixed cache/scheduler configuration; no valid performance result; not a claim that all TP1 configurations are impossible"
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "title": "保留会话状态，减少历史重算",
+    "subtitle": "Ascend统一四模型部署、原生Agent负载与有限正确性验证",
+    "notes": "最终报告：docs/report/course_project_final_20261018.md。实际代码、实验与材料由AI工具辅助完成。最终配置同源1415项实现清单与报告分别核验。"
+  },
+  {
+    "title": "统一执行路径，状态随会话保留",
+    "subtitle": "复用上游Engine、C++调度和混合缓存；课程实现集成于原fork",
+    "notes": "上游起点cf4a4f89；最终报告第1、2节。工具是脚本受控注入，不是模型自主选择工具。"
+  },
+  {
+    "title": "数值、greedy与Session分别验收",
+    "subtitle": "通过哪一层，就只对哪一层作结论",
+    "notes": "HW1独立提交1d113e54，最终报告第3节；R5头精度分析见docs/project/9b_lm_head_precision_20261015.md。"
+  },
+  {
+    "title": "独立性能臂，不混入质量控制竞争",
+    "subtitle": "每模型2会话 × 16轮 × 8输出；第8轮前求和465并等待2秒",
+    "notes": "R9r2协议SHA c9bdb5b7e6f5d766a1f862b499410c97ba6019e51a5d46139b0186525d0259af；完整报告docs/project/native_agent_performance_20261018.md。"
+  },
+  {
+    "title": "首字延迟：四模型均观察到下降",
+    "subtitle": "横轴为对数；每个数是三轮各32请求P50的中位数，非全请求合并P50",
+    "notes": "R9r2 audit.json paired_repetitions；三轮描述性观测，不是置信区间或通用最优结论。"
+  },
+  {
+    "title": "吞吐收益与HBM占用同时报告",
+    "subtitle": "吞吐wall包含工具等待；HBM为全运行观察峰值，非瞬时峰值或仅KV",
+    "notes": "主性能为R9r2的768正式请求；每模型192。最终1415源中原1409项实现字节一致。HBM包括预热/臂间，未证明Session减少预分配HBM。"
+  },
+  {
+    "title": "最终配置在同一源快照再次验证",
+    "subtitle": "1415项清单；原1409项实现不变，仅新增4个final与2个TP候选配置",
+    "notes": "最终源SHA d05a47d932b519b6e50ed0c668725935d93b744fffffa68e95f37a0227f6c6ea；docs/evidence/course_final_20261018/verification.json。"
+  },
+  {
+    "title": "精度修复有代价，Profiler也有边界",
+    "subtitle": "不给失败改名，不把任务累计时长当端到端耗时",
+    "notes": "9B头精度成本为R5源；HW1 Profiler为固定1396源、127实际Decode步；均不冒称最终1415源新采。"
+  },
+  {
+    "title": "责任均衡，实际执行如实披露",
+    "subtitle": "责任边界不是成员个人工时或亲自执行记录",
+    "notes": "最终报告第7节。实际代码、服务器实验、原始同步、分析及报告均由AI工具辅助完成；不宣称已完成学生个人理解考核。"
+  },
+  {
+    "title": "可复现交付与答辩关注点",
+    "subtitle": "固定分支、明确配置、原始哈希、完整失败记录",
+    "notes": "分支course/final-20261018；HW1固定1d113e54；R9固定82788a85。教学网由用户本人提交。演示命令见docs/project/final_delivery_20261018.md。"
+  }
+]
