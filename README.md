@@ -88,4 +88,4 @@ bash scripts/serve.sh configs/final/qwen35_4b.yaml
 
 `docs/project/` 和 `docs/superpowers/` 中带日期的记录保留当时状态；当前入口以本页和上方最终交付说明为准。开发使用独立分支和明确文件清单，通过 PR 审阅；不要跨分支全量覆盖运行时或重写他人的历史。
 
-问题与建议可提交到 [本 fork 的 Issues](https://github.com/jiran-1111/tokenspeed_PKU/issues)。安全问题按 [安全策略](SECURITY.md) 私下报告；参与协作遵循 [行为准则](CODE_OF_CONDUCT.md)。
+代码和文档贡献通过 [本 fork 的 Pull requests](https://github.com/jiran-1111/tokenspeed_PKU/pulls) 审阅，在 PR 中说明问题、修改及验证。仓库当前未启用 Issues。安全问题按 [安全策略](SECURITY.md) 私下报告；参与协作遵循 [行为准则](CODE_OF_CONDUCT.md)。
