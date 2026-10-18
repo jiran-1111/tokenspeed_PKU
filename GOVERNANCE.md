@@ -1,5 +1,15 @@
 # TokenSpeed Governance
 
+## Course fork
+
+The `jiran-1111/tokenspeed_PKU` repository is an independent course fork.
+Its repository owners control its branches, reviews and releases. Preserve
+contributor attribution, review changes through focused PRs and keep validated
+experiment snapshots separate from later maintenance. The original TokenSpeed
+governance below describes upstream, not the maintainers of this fork.
+
+## Upstream governance
+
 TokenSpeed is maintained by the LightSeek Foundation and the project core
 maintainers.
 

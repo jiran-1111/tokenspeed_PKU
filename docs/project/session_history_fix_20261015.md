@@ -34,4 +34,4 @@ HW1已发布提交保持 `1d113e54f789a22b14cbbdccbc6230c3f4d0e574`。下述修�
 
 旧9B BF16失败不删除。此补充不代表16轮Agent或任意并发/工具等待验收；0.8B项目扩展也不替代HW1固定快照。即时退出flag仍按原始false保留，独立进程完全退出后确认对应目标chip空闲。
 
-新增4B/27B回归41项证据逐项SHA通过，归档SHA `b9faa5d199f7ab3439c749e9d64bab6bc5e2b99dfefae3eedbaf3f7555d7c7f8`；包含首次端口占用导致启动前拒绝的记录。取回时重新核对服务器全部1398项源零差异。公开结果见[Session汇总](../evidence/agent_20261015/session_summary.json)及[同源回归](../evidence/agent_20261015/uniform_regression.json)。
+新增4B/27B回归41项证据逐项SHA通过，归档SHA `b9faa5d199f7ab3439c749e9d64bab6bc5e2b99dfefae3eedbaf3f7555d7c7f8`；包含首次端口占用导致启动前拒绝的记录。取回时重新核对服务器全部1398项源零差异。公开结果见[Session汇总](https://github.com/jiran-1111/tokenspeed_PKU/blob/course/final-20261018/docs/evidence/agent_20261015/session_summary.json)及[同源回归](https://github.com/jiran-1111/tokenspeed_PKU/blob/course/final-20261018/docs/evidence/agent_20261015/uniform_regression.json)。

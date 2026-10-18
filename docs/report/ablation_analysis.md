@@ -1,8 +1,10 @@
 # 消融实验分析
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](../project/final_delivery_20261018.md)。
+
 ## 实验设置
 
-使用 `scripts/run_ablation.py` 在 Ascend910 V1、Qwen3.5-0.8B BF16/TP=1 上运行。两组矩阵均为目标输入/输出 2048/32 tokens、并发 4、每变体每轮 12 条请求、3 轮、2 条预热请求；E2/E3 的 chunk size 分别为 512 和 1024。每组包含 E0–E3 共 144 条测量请求，输出 12 条 summary 与硬件快照。完整结果分别保存在 [`chunk=512 raw`](../../results/raw/ablation/qwen35_0.8b_formal_chunk512_20261009/) 和 [`chunk=1024 raw`](../../results/raw/ablation/qwen35_0.8b_formal_chunk1024_20261009/)；两组各 30 个文件均已跨端 SHA-256 核验一致。
+使用 `scripts/run_ablation.py` 在 Ascend910 V1、Qwen3.5-0.8B BF16/TP=1 上运行。两组矩阵均为目标输入/输出 2048/32 tokens、并发 4、每变体每轮 12 条请求、3 轮、2 条预热请求；E2/E3 的 chunk size 分别为 512 和 1024。每组包含 E0–E3 共 144 条测量请求，输出 12 条 summary 与硬件快照。完整结果分别保存在 `chunk=512 raw`（归档路径：`results/raw/ablation/qwen35_0.8b_formal_chunk512_20261009`） 和 `chunk=1024 raw`（归档路径：`results/raw/ablation/qwen35_0.8b_formal_chunk1024_20261009`）；两组各 30 个文件均已跨端 SHA-256 核验一致。
 
 所有请求使用相同的重复提示词，因此这组负载有意提供高共享前缀。E0 为 overlap/chunk/prefix cache 关闭；E1 只开启 overlap；E2 在 E1 上设置 chunk；E3 再开启 prefix cache。所有变体均关闭 Ascend 不支持的 mixed batch，并统一关闭 KVStore。E0/E1 使用正的 `max_model_len=4096` prefill cap；E2/E3 按矩阵使用 chunk=512 或 1024。下表是每轮 summary 中位延迟/吞吐再跨三轮取中位数，数值仅描述本 workload。
 
@@ -31,7 +33,7 @@
 
 在同一台 Ascend910 V1/NPU0 上完成 Qwen3.5-4B BF16/TP=1 的两组矩阵，用于与上文 0.8B 条件作描述性对照。两组均以 2048/32 为生成目标、并发 4、每变体 12 个测量请求 × 3 轮、2 个 warmup；每条请求 raw usage 为 1855 input / 32 output（0.8B 对应矩阵为 1857/32）。所有请求仍是相同的重复提示词。两组各有 144 条 raw 请求、12 条 run summary；每个 raw 目录内 30 个数据/服务日志文件加 `.tmp/` 下的 detached runner log，共 31 个相关文件，均跨本机和远端 SHA-256 匹配。硬件是 910 V1，不是课程原目标 910C。
 
-下表报告三轮 run-level summary 中位数，方括号为三轮范围；完整 mean ± sample SD、各轮数值及 ITL histogram provenance 见[统计附录](../../results/analysis/qwen35_4b_ablation_20261010/stats-appendix.md)。
+下表报告三轮 run-level summary 中位数，方括号为三轮范围；完整 mean ± sample SD、各轮数值及 ITL histogram provenance 见统计附录（归档路径：`results/analysis/qwen35_4b_ablation_20261010/stats-appendix.md`）。
 
 | 矩阵 | 变体 | TTFT p50 (ms) | TPOT p50 (ms) | 输出吞吐 (tok/s) | Prefix-hit ratio | KV sampled peak |
 |---:|:---:|---:|---:|---:|---:|---:|
@@ -48,4 +50,4 @@
 
 与上文相同生成目标的 0.8B 矩阵相比，E2/E1 的 TTFT 方向不一致：0.8B 的 chunk=512/1024 TTFT p50 中位数分别低约 5.3%/6.6%，4B 则分别高约 22.9%/21.5%；两模型 E2 的输出吞吐中位数均低于 E1。两者的 E3 都在完全重复提示词下观察到约 0.965–0.966 prefix-hit 与 TTFT/吞吐改善方向，但幅度受模型、轮次状态及实际输入长度（0.8B 1857 tokens、4B 1855 tokens）影响，不能横向解释为一般 Agent 性能收益。
 
-统计单位为整轮 12 请求批次，每 setting 仅 3 个连续重复；未将并发请求当作独立样本，也未进行显著性检验。NPU0 chip0 的结束快照显示 E0/E1 为 23% HBM、E2/E3 为 21%，不是设备峰值或每 session KV 用量。三条 run summary 的 Prometheus prompt/generation token delta 各比 12 条 raw 请求计数多 1；由于输出吞吐按 raw 请求 token 数和墙钟时间计算，主结果不使用该 counter delta 推导吞吐，具体记录见统计附录。长 prefill 与并发 decode 干扰实验仍处于设计门控状态，本节不启动该实验。原始矩阵见 [`chunk=512`](../../results/raw/ablation/qwen35_4b_formal_chunk512_detached_20261010/) 和 [`chunk=1024`](../../results/raw/ablation/qwen35_4b_formal_chunk1024_20261010/)；详细分析、统计表与图目录见[4B analysis bundle](../../results/analysis/qwen35_4b_ablation_20261010/analysis-report.md)。
+统计单位为整轮 12 请求批次，每 setting 仅 3 个连续重复；未将并发请求当作独立样本，也未进行显著性检验。NPU0 chip0 的结束快照显示 E0/E1 为 23% HBM、E2/E3 为 21%，不是设备峰值或每 session KV 用量。三条 run summary 的 Prometheus prompt/generation token delta 各比 12 条 raw 请求计数多 1；由于输出吞吐按 raw 请求 token 数和墙钟时间计算，主结果不使用该 counter delta 推导吞吐，具体记录见统计附录。长 prefill 与并发 decode 干扰实验仍处于设计门控状态，本节不启动该实验。原始矩阵见 `chunk=512`（归档路径：`results/raw/ablation/qwen35_4b_formal_chunk512_detached_20261010`） 和 `chunk=1024`（归档路径：`results/raw/ablation/qwen35_4b_formal_chunk1024_20261010`）；详细分析、统计表与图目录见4B analysis bundle（归档路径：`results/analysis/qwen35_4b_ablation_20261010/analysis-report.md`）。

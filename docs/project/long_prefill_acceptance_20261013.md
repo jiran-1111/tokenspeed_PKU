@@ -1,5 +1,7 @@
 # Long Prefill / Decode 测量验收（2026-10-13）
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](final_delivery_20261018.md)。
+
 本次限定实验已完成测量和 CSV/SVG 验收；不代表整个课程项目已完成。
 
 ## 实验与证据
@@ -9,7 +11,7 @@
 - max_model_len=4096；Decode 输入 256、输出 128；Prefill 输入 2048/3584、输出 1。prefix cache 与 KVStore 在两组都关闭，其余条件一致。
 - 三轮交替配对，共六次服务启动；服务日志均为 ready、exit_status=0。12 项预热加 30 项正式 trial 均 valid，共 54 个 HTTP 请求。
 - 五种条件各有三轮配对，配对 CSV 共 15 行，summary 共 18 行。54 个请求的实际 token 数和发送/首块/drain 顺序通过核验；12 个 staged trial 均存在请求生命周期重叠。
-- [原始目录](../../results/raw/benchmark/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/)、[配对 CSV](../../results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/paired_trials.csv)、[摘要 CSV](../../results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/summary.csv)、[块间隔 SVG](../../results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/decode_chunk_gaps.svg)。
+- 原始目录（归档路径：`results/raw/benchmark/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4`）、配对 CSV（归档路径：`results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/paired_trials.csv`）、摘要 CSV（归档路径：`results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/summary.csv`）、块间隔 SVG（归档路径：`results/analysis/long_prefill_decode/20261013T031215346959Z-132fde4d591240c38762e3bd5bc383b4/decode_chunk_gaps.svg`）。
 - 21 个 raw 文件与 3 个报告文件的本地/远端 SHA-256 全部一致。CSV 可重读、SVG XML 可解析；本机从 raw 重新生成三项报告，字节与远端一致。
 - `measurement-source/` 保存 run.json 指定的五个测量脚本/模块，两端逐一核验 SHA-256。分析器在测量后修正了轮内启动序号校验；归档保留测量时的模块版本，不用修改后的分析模块冒充测量版本。此归档不是完整推理运行时源码快照。
 - 完成后 NPU0 两个 chip 无设备进程，API 8000 连接探测为拒绝连接；未启动 Profiler。

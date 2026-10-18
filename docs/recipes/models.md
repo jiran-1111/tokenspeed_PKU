@@ -1084,7 +1084,7 @@ Mooncake pick an RDMA transport rather than forcing the intra-node NVLink one.
 
 ### GB300 Slurm 1P1D CI
 
-[`deepseek-v4.1-flash-pd-1p1d-dspark-evalscope-gsm8k-gb300-slurm.yaml`](../../test/ci/eval/deepseek-v4.1-flash-pd-1p1d-dspark-evalscope-gsm8k-gb300-slurm.yaml)
+[`deepseek-v4.1-flash-pd-1p1d-dspark-evalscope-gsm8k-gb300-slurm.yaml`](https://github.com/jiran-1111/tokenspeed_PKU/blob/course/final-20261018/test/ci/eval/deepseek-v4.1-flash-pd-1p1d-dspark-evalscope-gsm8k-gb300-slurm.yaml)
 runs one TP4 prefill engine and one TP4 decode engine on two four-GPU nodes.
 Node 0 also hosts the SMG gateway and the Slurm evaluation client, which
 connects to `127.0.0.1:8000`. Both engines use same-checkpoint DSpark,

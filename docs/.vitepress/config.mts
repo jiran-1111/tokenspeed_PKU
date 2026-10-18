@@ -2,36 +2,48 @@ import { defineConfig } from "vitepress";
 
 export default defineConfig({
   lang: "en-US",
-  title: "TokenSpeed",
-  description: "TokenSpeed is a speed-of-light LLM inference engine.",
-  base: "/tokenspeed/",
+  title: "TokenSpeed PKU",
+  description:
+    "TokenSpeed course fork: Ascend experiments, evidence, and runtime documentation.",
+  base: "/tokenspeed_PKU/",
   srcDir: ".",
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ["meta", { property: "og:title", content: "TokenSpeed Docs" }],
+    ["meta", { property: "og:title", content: "TokenSpeed PKU Docs" }],
     [
       "meta",
       {
         property: "og:description",
         content:
-          "Guides and reference for running TokenSpeed, configuring the server, and operating multi-GPU inference."
+          "Course results, reproducible evidence, and upstream runtime documentation."
       }
     ]
   ],
   themeConfig: {
     nav: [
       { text: "Docs Home", link: "/" },
+      { text: "课程交付", link: "/project/final_delivery_20261018" },
       { text: "Getting Started", link: "/guides/getting-started" },
       { text: "Launching", link: "/guides/launching" },
       { text: "Recipes", link: "/recipes/models" },
       { text: "Configuration", link: "/configuration/server" },
-      { text: "GitHub", link: "https://github.com/lightseekorg/tokenspeed" }
+      { text: "GitHub", link: "https://github.com/jiran-1111/tokenspeed_PKU" }
     ],
     sidebar: [
       {
         text: "Overview",
         items: [{ text: "Docs Home", link: "/" }]
+      },
+      {
+        text: "课程项目",
+        items: [
+          { text: "最终交付与复现", link: "/project/final_delivery_20261018" },
+          { text: "课程总报告", link: "/report/course_project_final_20261018" },
+          { text: "公开证据", link: "/evidence/course_final_20261018/README" },
+          { text: "答辩材料", link: "/presentation/README" },
+          { text: "开源维护", link: "/project/oss_maintenance_20261018" }
+        ]
       },
       {
         text: "Guides",
@@ -65,15 +77,16 @@ export default defineConfig({
     },
     editLink: {
       pattern:
-        "https://github.com/lightseekorg/tokenspeed/edit/main/docs/:path",
+        "https://github.com/jiran-1111/tokenspeed_PKU/edit/fix/oss-project-20261018/docs/:path",
       text: "Edit this page on GitHub"
     },
     footer: {
-      message: "TokenSpeed documentation",
+      message:
+        "PKU course fork; runtime and design documentation retain upstream authorship.",
       copyright: "Copyright © lightseekorg"
     },
     socialLinks: [
-      { icon: "github", link: "https://github.com/lightseekorg/tokenspeed" }
+      { icon: "github", link: "https://github.com/jiran-1111/tokenspeed_PKU" }
     ],
     outline: "deep",
     outlineTitle: "On this page",

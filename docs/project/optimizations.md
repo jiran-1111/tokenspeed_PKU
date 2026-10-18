@@ -1,5 +1,7 @@
 # Optimizations
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](final_delivery_20261018.md)。
+
 当前没有保留任何未经 Benchmark/Profiler 证明的优化。
 
 课程分支已增加 E0–E3 的可复现配置运行器，实际调用上游开关。continuous batching 是上游 scheduler 基础能力，不伪造关闭版本。E0 关闭 overlap、chunked prefill 和 prefix cache；E1–E3 逐阶段启用，所有 Ascend 变体均关闭不支持的 mixed batch，并固定关闭 KVStore。
@@ -19,6 +21,6 @@
 
 已实现独立的 Engine 级 Session KV API 和 native Engine Session-vs-stateless runner。910 V1/NPU0 的 4B current-frontier matched correctness/reuse run 已通过；`overlap_schedule=true` 下两条交错 session 的 4/4 轮也匹配 stateless 对照，generic prefix cache 与 KVStore 关闭。另完成串行 paired on/off context sweep：12/12 输出匹配，目标上下文 512/1024/1536 下 `Engine.generate` 整轮请求延迟配对中位降幅为 77.95%/87.11%/91.28%。这是单设备串行整轮延迟观察，不是 TTFT 或并发吞吐；Session 多轮 TTFT 曲线仍待验收，OpenAI chat endpoint 目前仍不使用该 API。除此之外，尚未实现新的 prefill/decode 调度策略或自定义 NPU kernel。TokenSpeed Prometheus 已有 KV 使用率、prefix hit、prompt/generation token 与运行/等待请求指标；课程 runner 会把这些指标写入 summary，并在设备上保存 `npu-smi info` 原始快照。
 
-状态更正（2026-10-12）：上文“Session 多轮 TTFT 曲线仍待验收”已由完成的独立测量取代。4B/TP1/NPU0 四次 16 轮串行测量共 64 对，输出 IDs 全部匹配；Session/stateless TTFT 中位数为 122.71/1394.54 ms，配对降幅中位数为 91.52%。[原始记录](../../results/raw/session_kv_ttft/qwen35-4b-session-kv-ttft-20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a.json)与[图表](../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.svg)对应原生 Engine 串行 TTFT；HTTP、并发和跨模型性能仍需独立验证。
+状态更正（2026-10-12）：上文“Session 多轮 TTFT 曲线仍待验收”已由完成的独立测量取代。4B/TP1/NPU0 四次 16 轮串行测量共 64 对，输出 IDs 全部匹配；Session/stateless TTFT 中位数为 122.71/1394.54 ms，配对降幅中位数为 91.52%。原始记录（归档路径：`results/raw/session_kv_ttft/qwen35-4b-session-kv-ttft-20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a.json`）与图表（归档路径：`results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.svg`）对应原生 Engine 串行 TTFT；HTTP、并发和跨模型性能仍需独立验证。
 
 后续每项候选修改必须记录 baseline 问题、修改机制、相同 workload 的前后数据和 profiler 解释。

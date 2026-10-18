@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-18",
+  "status": "pass",
+  "scope": "VitePress compilation, complete page rendering, clean dependency installation from the original Bun lock, and static existence checks for rendered local links and assets. No website deployment or device execution.",
+  "baseline_commit": "d41b6798c737f923e36b9a3876cd3b276c9074ff",
+  "toolchain": {
+    "node": "22.18.0",
+    "npm_initial_reproduction": "10.9.3",
+    "bun": "1.3.0",
+    "vitepress": "1.6.4",
+    "global_packages_installed": false
+  },
+  "dependency_verification": {
+    "package_manager_declared": "bun@1.3.0",
+    "original_bun_lock_sha256": "b2c1a64c2a8d49bd47dc38ee79f4d463c447714eab1cce02945f68584513e5bf",
+    "lock_matches_baseline_git_blob": true,
+    "lock_unchanged": true,
+    "original_install_command": "bun install --frozen-lockfile --ignore-scripts --cache-dir <workspace-cache>",
+    "clean_install_command": "bun install --frozen-lockfile --ignore-scripts",
+    "clean_install_started_without_node_modules": true,
+    "clean_installed_packages": 127,
+    "dependency_install_scripts_disabled": true,
+    "clean_install_exit_code": 0
+  },
+  "initial_reproduction": {
+    "command": "npm run docs:build",
+    "exit_code": 1,
+    "error": "Vue missing end tag caused by bare angle-bracket placeholders in a historical Markdown plan",
+    "path": "docs/superpowers/plans/2026-10-11-profiler-single-request-window.md",
+    "source_lines_fixed": [
+      238,
+      339
+    ],
+    "next_exposed_error_count": 105,
+    "rendered_link_check_exposed_extra_missing_targets": 12
+  },
+  "repairs": {
+    "modified_files": [
+      ".github/workflows/docs.yml",
+      "docs/.vitepress/config.mts",
+      "docs/index.md",
+      "docs/presentation/README.md",
+      "docs/project/9b_lm_head_precision_20261015.md",
+      "docs/project/baseline.md",
+      "docs/project/current_4b_e0_run_audit_20261014.md",
+      "docs/project/experiments.md",
+      "docs/project/final_results.md",
+      "docs/project/homework1_calibration_inputs_20261014.md",
+      "docs/project/homework1_gdn_reference_audit_20261014.md",
+      "docs/project/homework1_operator_matrix.md",
+      "docs/project/long_prefill_acceptance_20261013.md",
+      "docs/project/optimizations.md",
+      "docs/project/session_history_fix_20261015.md",
+      "docs/recipes/models.md",
+      "docs/report/ablation_analysis.md",
+      "docs/report/ascend_profile.md",
+      "docs/report/final_conclusion.md",
+      "docs/superpowers/plans/2026-10-11-profiler-single-request-window.md"
+    ],
+    "files_use_lf": true,
+    "bare_placeholders_wrapped_in_inline_code": true,
+    "historical_unpublished_references_converted_to_explicit_archive_paths": 154,
+    "archive_notice_pages": 11,
+    "historical_download_and_recipe_links_repointed_to_existing_git_files": 7,
+    "historical_pages_excluded": false,
+    "html_disabled": false,
+    "ignore_dead_links_enabled": false,
+    "fork_navigation_base": "/tokenspeed_PKU/",
+    "course_and_fork_navigation_added": true,
+    "docs_ci_build_branches": [
+      "main",
+      "course/**",
+      "fix/**"
+    ],
+    "pages_write_permissions_limited_to_deploy_job": true
+  },
+  "build_command": "bun run docs:build",
+  "checks": [
+    {
+      "name": "original_docs",
+      "build_exit_code": 0,
+      "vitepress_version": "1.6.4",
+      "html_pages": 133,
+      "local_links_and_assets_checked": 3946,
+      "missing_local_targets": [],
+      "compile_and_render_completed": true,
+      "dead_link_check_enabled": true,
+      "chunk_size_warning_present": true
+    },
+    {
+      "name": "clean_frozen_copy",
+      "build_exit_code": 0,
+      "vitepress_version": "1.6.4",
+      "html_pages": 133,
+      "local_links_and_assets_checked": 3946,
+      "missing_local_targets": [],
+      "compile_and_render_completed": true,
+      "dead_link_check_enabled": true,
+      "chunk_size_warning_present": true
+    }
+  ],
+  "clean_copy_input": {
+    "copied_source_files": 258,
+    "source_manifest_sha256": "c463d5dc20f3b636d91c218f6954de574a3187e17daab646f7930409c067afb9",
+    "note": "The copy records build inputs before later evidence receipts are added; it is not a hardware-validation source manifest."
+  },
+  "limits": [
+    "External web URLs were not requested or network-tested; the seven historical download/recipe targets were checked against the baseline Git tree, while current maintenance links point to files in the repair branch prepared for publication.",
+    "The build emits the existing warning that some minified chunks exceed 500 kB; no warning threshold was raised and no pages or search corpus were removed.",
+    "Static checks cover rendered HTML local href/src targets; they do not replace browser interaction, public hosting, or hardware validation."
+  ]
+}

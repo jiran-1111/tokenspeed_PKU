@@ -235,7 +235,7 @@ Expected: FAIL because the flag, validator, and dedicated capture flow do not ex
 只在新 flag 下启用以下行为；旧 --profile 及默认路径不变：
 
 1. 校验上述固定参数，要求 config 的 served_model_name 为 qwen35-0.8b、tp_size 为 1，并在运行前确认 raw/profile/analysis 目标均不存在。
-2. 生成 UTC run_id，并建立 results/raw/profiler/single_request_ttft/<run_id>/ 与 results/profiles/qwen35-0.8b/single_request_ttft/<run_id>/。Raw 目录保存请求 JSONL、summary JSONL、配置 provenance 和仅 NPU0 的前后快照；配置 provenance 包含配置文件 SHA-256 与本次固定参数。原始记录不保存 Authorization header、api_key、request messages 或 output_text。
+2. 生成 UTC run_id，并建立 `results/raw/profiler/single_request_ttft/<run_id>/` 与 `results/profiles/qwen35-0.8b/single_request_ttft/<run_id>/`。Raw 目录保存请求 JSONL、summary JSONL、配置 provenance 和仅 NPU0 的前后快照；配置 provenance 包含配置文件 SHA-256 与本次固定参数。原始记录不保存 Authorization header、api_key、request messages 或 output_text。
 3. 第 1–7 轮使用 max_tokens=32，不启用 Profiler；第 8 轮使用 max_tokens=1。历史构造继续复用现有 token-sized context 和 conversation history，不额外新增请求或服务端改动。
 4. 第 8 轮 run_concurrent_requests 的 before_request 在 100 ms mock wait 后执行：先写 NPU0 before snapshot，再记录 Profiler start 请求/响应时刻并启动现有 Level1 Profiler。首块 callback 记录命中的字段和 epoch/monotonic 时间，马上记录 stop 请求时刻、调用 ProfilerControlClient.stop()、记录 stop 响应时刻；callback 返回后由 OpenAIChatClient 继续 drain SSE。
 5. 正常返回后保存 drain 完成时间与 NPU0 after snapshot。只将第 8 轮写为被采集请求记录；记录 1-token usage、[DONE] 完成状态、TTFT/E2E、五类规定时间戳和 start/stop 成对状态，但剔除 output_text、messages 和 Authorization/API-key 字段。若请求错误、无非空块、completion_tokens != 1 或没有 [DONE]，写 status=invalid/failed 与可复核原因，不写成功 summary、不生成窗口 CSV。
@@ -336,7 +336,7 @@ Run:
 git diff --check -- benchmarks/course_project/core.py benchmarks/course_project/runner.py scripts/run_agent_benchmark.py benchmarks/course_project/profiler_analysis.py scripts/analyze_profiler_window.py test/course_project/test_benchmark_core.py test/course_project/test_agent_profiler_capture.py test/course_project/test_profiler_analysis.py
 ```
 
-Expected: diff check reports no whitespace errors in the scoped tracked files. Run the secret-pattern scan only after real raw files exist; if it unexpectedly matches, do not print the value and replace it with <REDACTED> before proceeding.
+Expected: diff check reports no whitespace errors in the scoped tracked files. Run the secret-pattern scan only after real raw files exist; if it unexpectedly matches, do not print the value and replace it with `<REDACTED>` before proceeding.
 
 - [ ] **Step 3：在独立用户批准后才做只读 preflight 和一次采集**
 

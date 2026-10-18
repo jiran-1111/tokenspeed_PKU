@@ -1,0 +1,79 @@
+name: Course Project CPU Tests
+
+on:
+  push:
+    branches: [main, "course/**", "fix/**"]
+    paths:
+      - ".github/workflows/course-project.yml"
+      - "requirements/course-test.txt"
+      - "benchmarks/**"
+      - "configs/**"
+      - "scripts/**"
+      - "python/**"
+      - "tokenspeed-kernel/python/**"
+      - "tokenspeed-scheduler/**"
+      - "test/course_project/**"
+  pull_request:
+    paths:
+      - ".github/workflows/course-project.yml"
+      - "requirements/course-test.txt"
+      - "benchmarks/**"
+      - "configs/**"
+      - "scripts/**"
+      - "python/**"
+      - "tokenspeed-kernel/python/**"
+      - "tokenspeed-scheduler/**"
+      - "test/course_project/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: course-project-cpu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cpu-tests:
+    name: CPU contracts (no model or accelerator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tokenspeed-kernel/python:${{ github.workspace }}
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+      TMPDIR: ${{ github.workspace }}/.tmp
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Prepare workspace directories
+        run: mkdir -p .tmp .cache/pip
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install CPU test dependencies
+        run: |
+          python -m venv .tmp/course-test-venv
+          .tmp/course-test-venv/bin/python -m pip install -r requirements/course-test.txt
+
+      - name: Run CPU regression tests
+        run: |
+          .tmp/course-test-venv/bin/python -m pytest test/course_project \
+            --basetemp=.tmp/pytest-course-project -q -ra
+
+      - name: Record validation scope
+        if: always()
+        run: |
+          printf '%s\n' \
+            'CPU software checks only. No models, Torch, CANN, or accelerators are installed.' \
+            'Torch-dependent tests are skipped and listed in the test output.' \
+            'Environment tests use isolated stubs; they do not validate an installed Conda or CANN toolchain.' \
+            'Numerical correctness and performance require the separate documented hardware validation.' \
+            >> "${GITHUB_STEP_SUMMARY}"

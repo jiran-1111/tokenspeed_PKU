@@ -2,13 +2,13 @@ name: Docs
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "course/**", "fix/**"]
     paths:
       - "docs/**"
       - "README.md"
       - ".github/workflows/docs.yml"
   push:
-    branches: [main]
+    branches: [main, "course/**", "fix/**"]
     paths:
       - "docs/**"
       - "README.md"
@@ -17,8 +17,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.ref }}
@@ -54,6 +52,9 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'lightseekorg/tokenspeed'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

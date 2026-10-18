@@ -1,5 +1,9 @@
 # Environment
 
+## 独立克隆后的环境入口
+
+当前维护分支从仓库根目录使用 `scripts/setup_env.ps1` 和 `scripts/use_project_env.ps1` 建立及激活 Windows CPU 开发环境；不再依赖仓库外层脚本。Linux Ascend 使用 `scripts/setup_env.sh` 和 `scripts/use_project_env.sh`，显式指定本机 `CANN_ENV` 或 `TOKENSPEED_CANN_ROOT`。环境默认在仓库 `.conda-env`，缓存和临时文件在仓库内。具体命令见[README](https://github.com/jiran-1111/tokenspeed_PKU/blob/fix/oss-project-20261018/README.md)。下方本机/远端路径关系和软件版本为历史实验记录，不是所有克隆目录都必须具备的布局；硬件兼容性仍需在目标机器验证。
+
 ## 本地开发主机
 
 - OS：Windows（仅用于源码检查、文档和不依赖 NPU 的静态/单元测试）

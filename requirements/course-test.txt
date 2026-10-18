@@ -1,0 +1,4 @@
+# CPU-only course regression tests; this does not install the inference runtime.
+# Prometheus enables the real collector tests instead of silently skipping them.
+pytest==8.4.2
+prometheus-client==0.26.0

@@ -58,6 +58,6 @@ python -m pytest tokenspeed-kernel-npu/test/test_mha.py \
 
 ## 2026-10-15最终源复验补充
 
-本表上方历史缺项以本补充及[最终报告](../report/homework1_compute_subsystem.md)为准：最终源码9个关键模块/状态测试文件同源部署后108passed、0failure/error/skip，记录203properties，包括70 Norm/MRoPE、GDN17（13NPU/4CPU）、MHA9（6NPU/3CPU）、canonical Norm3、QK3、conv3、gatedNorm2及真实Session1。测试源SHA、原XML SHA和最终源码清单见[公开验证摘要](../evidence/hw1_20261015/verification.json)。这是这些明确形状及行为的复验，不外推任意shape或TP通信。
+本表上方历史缺项以本补充及[最终报告](../report/homework1_compute_subsystem.md)为准：最终源码9个关键模块/状态测试文件同源部署后108passed、0failure/error/skip，记录203properties，包括70 Norm/MRoPE、GDN17（13NPU/4CPU）、MHA9（6NPU/3CPU）、canonical Norm3、QK3、conv3、gatedNorm2及真实Session1。测试源SHA、原XML SHA和最终源码清单见[公开验证摘要](https://github.com/jiran-1111/tokenspeed_PKU/blob/course/final-20261018/docs/evidence/hw1_20261015/verification.json)。这是这些明确形状及行为的复验，不外推任意shape或TP通信。
 
 Stage B原16条固定输入及续接的272完整向量通过冻结有限经验双门槛；旧1%失败与greedy差异保持独立记录，不能由模块或Session结果替代。未新增独立Dense GEMM任意形状的证明，不把复用上游矩阵层称作从零开发。

@@ -1,5 +1,7 @@
 # Baseline
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](final_delivery_20261018.md)。
+
 ## 固定条件
 
 - TokenSpeed 上游基线提交：`cf4a4f89ae5f9423a9af490d8f3a0613adfba3fd`；当前运行包含为课程 Ascend/Qwen3.5 路径所需的兼容修复。
@@ -7,7 +9,7 @@
 - 模型：Qwen3.5-0.8B，BF16，TP=1，revision `2fc06364715b967f1860aea9cf38778875588b17`。
 - 服务配置：`configs/bringup/qwen35_0.8b.yaml`，max model length 4096、KV block 128、chunked prefill 4096、overlap scheduler 开启、prefix cache 开启；NPU 不支持的 mixed batch 关闭。
 - 负载：目标输入/输出 128/32 tokens；并发 1/4/8/16；每档 3 轮，每轮 32 请求，共 384 请求和 12 份汇总。请求提示词按 request id 生成等长变体，避免意外复用完整 prompt。
-- 数据：[`results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/`](../../results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/)，含 JSONL、summary 和 NPU 前后快照。
+- 数据：`results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/`（归档路径：`results/raw/baseline/qwen35_0.8b_20261009_unique_prompt`），含 JSONL、summary 和 NPU 前后快照。
 
 ## 首轮并发结果
 
@@ -33,7 +35,7 @@
 | 8 | 27.566 | 30.400 | 40.540 |
 | 16 | 31.983 | 262.609 | 52.121 |
 
-ITL 来自服务端 `tokenspeed:inter_token_latency_seconds` 直方图：用 engine output timestamp 的差分除以该帧新增 token 数，再按新增 token 数计权；它是 run-level 估计，不是每 token 独立时间戳。每组的 `itl_observation_count` 均为 992，与该组 32 个请求的原始 `sum(output_tokens - 1)` 精确一致。分位数受 Prometheus 桶精度限制；c16 的 P95 长尾明显。数据与硬件快照见 [`results/raw/benchmark/itl_20261009_0.8b_corrected/`](../../results/raw/benchmark/itl_20261009_0.8b_corrected/)，本次 26 个文件同步后 SHA-256 全部匹配。该复测补齐 0.8B ITL，不改变上方历史首轮 latency 结果，也不是优化收益。
+ITL 来自服务端 `tokenspeed:inter_token_latency_seconds` 直方图：用 engine output timestamp 的差分除以该帧新增 token 数，再按新增 token 数计权；它是 run-level 估计，不是每 token 独立时间戳。每组的 `itl_observation_count` 均为 992，与该组 32 个请求的原始 `sum(output_tokens - 1)` 精确一致。分位数受 Prometheus 桶精度限制；c16 的 P95 长尾明显。数据与硬件快照见 `results/raw/benchmark/itl_20261009_0.8b_corrected/`（归档路径：`results/raw/benchmark/itl_20261009_0.8b_corrected`），本次 26 个文件同步后 SHA-256 全部匹配。该复测补齐 0.8B ITL，不改变上方历史首轮 latency 结果，也不是优化收益。
 
 ## 4B/9B 修正后的服务端 ITL 复测（2026-10-09）
 
@@ -50,9 +52,9 @@ ITL 来自服务端 `tokenspeed:inter_token_latency_seconds` 直方图：用 eng
 | 9B | 8 | 63.227 | 368.077 | 88.452 |
 | 9B | 16 | 62.760 | 525.000 | 85.292 |
 
-ITL 定义和 Prometheus 桶估算方法与 0.8B 相同；c8/c16 P95 显示明显长尾，不能把这些单机数据解释为优化收益。4B 原始记录/硬件快照位于 [`results/raw/benchmark/itl_20261009_4b_corrected/`](../../results/raw/benchmark/itl_20261009_4b_corrected/)，9B 位于 [`results/raw/benchmark/itl_20261009_9b_corrected/`](../../results/raw/benchmark/itl_20261009_9b_corrected/)；两组各 26 个文件同步后 SHA-256 全部匹配。历史首轮 summary 的 null 值未被改写。
+ITL 定义和 Prometheus 桶估算方法与 0.8B 相同；c8/c16 P95 显示明显长尾，不能把这些单机数据解释为优化收益。4B 原始记录/硬件快照位于 `results/raw/benchmark/itl_20261009_4b_corrected/`（归档路径：`results/raw/benchmark/itl_20261009_4b_corrected`），9B 位于 `results/raw/benchmark/itl_20261009_9b_corrected/`（归档路径：`results/raw/benchmark/itl_20261009_9b_corrected`）；两组各 26 个文件同步后 SHA-256 全部匹配。历史首轮 summary 的 null 值未被改写。
 
-三模型 corrected ITL 的并发曲线见 [`P50`](../../results/plots/after_corrected_itl_20261009/itl_p50_concurrency.svg) 和 [`P95`](../../results/plots/after_corrected_itl_20261009/itl_p95_concurrency.svg)；图表由 36 份 corrected summary 汇总，按模型、输入/输出长度和 TP 配置分组。
+三模型 corrected ITL 的并发曲线见 `P50`（归档路径：`results/plots/after_corrected_itl_20261009/itl_p50_concurrency.svg`） 和 `P95`（归档路径：`results/plots/after_corrected_itl_20261009/itl_p95_concurrency.svg`）；图表由 36 份 corrected summary 汇总，按模型、输入/输出长度和 TP 配置分组。
 
 ## 4B 与 9B 首轮基线
 
@@ -101,7 +103,7 @@ bash scripts/run_benchmark.sh configs/bringup/qwen35_0.8b.yaml \
 
 从并发 16 增到 32，总 token 吞吐仅从 752.41 增至 754.19 tok/s，而 TTFT P50 均值从 3.65 s 增至 11.16 s；在本配置和固定负载下呈现吞吐平台与排队/TTFT 代价。该现象是描述性基线，不证明某项优化的因果效果。active-page ratio 是 scheduler 页面指标，不是 HBM 占用；30 份 NPU0 前后快照的 Chip 0 `npu-smi` HBM 使用率均显示 10%，是离散快照而非运行期间峰值。
 
-原始 JSONL、summary 和 NPU 快照见 [`raw workload`](../../results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_0.8b/)，跨端 32 个文件 SHA-256 全匹配。逐轮 CSV、按并发聚合 CSV 和专用 SVG 位于 [`analysis`](../../results/analysis/agent_workload_a_512_128_20261011/)；聚合保留每轮数据，不把重复轮次伪装为独立样本。
+原始 JSONL、summary 和 NPU 快照见 `raw workload`（归档路径：`results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_0.8b`），跨端 32 个文件 SHA-256 全匹配。逐轮 CSV、按并发聚合 CSV 和专用 SVG 位于 `analysis`（归档路径：`results/analysis/agent_workload_a_512_128_20261011`）；聚合保留每轮数据，不把重复轮次伪装为独立样本。
 
 ## Workload A：4B 512/128 普通聊天并发扩展（2026-10-11）
 
@@ -146,7 +148,7 @@ bash scripts/run_benchmark.sh configs/bringup/qwen35_4b.yaml \
 
 c16 到 c32 总 token 吞吐仅从 348.06 增至 349.66 tok/s，TTFT P50 均值则从 17.92 s 增至 25.18 s，scheduler waiting 峰值从 14 增至 29。该结果描述 `max_num_seqs=8` 的固定单机配置下吞吐平台与排队代价，不代表某项优化的因果收益。active-page ratio 是 scheduler 页面指标；30 份 NPU0 前后快照中，Chip 0 HBM 使用率均为 21%、Chip 1 均为 4%，只是离散前后快照而非运行期间峰值。
 
-原始 JSONL、summary 与硬件快照见 [`4B raw workload`](../../results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_4b/)，32 个数据文件本地/远端 SHA-256 全匹配。15 行 run summary、按并发聚合 CSV 和五张 run-level SVG 位于 [`4B analysis`](../../results/analysis/agent_workload_a_512_128_20261011/qwen35_4b/)；三轮是统计重复单位，不将 96 条请求当作独立 run。
+原始 JSONL、summary 与硬件快照见 `4B raw workload`（归档路径：`results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_4b`），32 个数据文件本地/远端 SHA-256 全匹配。15 行 run summary、按并发聚合 CSV 和五张 run-level SVG 位于 `4B analysis`（归档路径：`results/analysis/agent_workload_a_512_128_20261011/qwen35_4b`）；三轮是统计重复单位，不将 96 条请求当作独立 run。
 
 ## Workload A：9B 512/128 普通聊天并发扩展（2026-10-11）
 
@@ -191,10 +193,10 @@ bash scripts/run_benchmark.sh configs/bringup/qwen35_9b.yaml \
 
 c8 到 c32 总 token 吞吐约为 322.68–324.07 tok/s，显示此固定配置下吞吐平台；c16 到 c32 的 TTFT P50 均值由 18.66 s 升至 26.90 s，scheduler waiting 峰值由 13 升至 29。该结果是描述性基线，不代表某项优化的因果收益。30 份离散 NPU0 快照中，Chip 0 HBM 为 35%（6 份）或 36%（24 份），Chip 1 均为 4%；这不是运行期间峰值。
 
-原始 JSONL、summary 与硬件快照见 [`9B raw workload`](../../results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_9b/)，32 个数据文件本地/远端 SHA-256 全匹配；runner/server 日志也已同步并核对，相关 34 个文件均匹配。15 行 run summary、按并发聚合 CSV 和五张 run-level SVG 位于 [`9B analysis`](../../results/analysis/agent_workload_a_512_128_20261011/qwen35_9b/)；三轮是统计重复单位，不将 96 条请求当作独立 run。
+原始 JSONL、summary 与硬件快照见 `9B raw workload`（归档路径：`results/raw/benchmark/agent_workload_a_512_128_20261011/qwen35_9b`），32 个数据文件本地/远端 SHA-256 全匹配；runner/server 日志也已同步并核对，相关 34 个文件均匹配。15 行 run summary、按并发聚合 CSV 和五张 run-level SVG 位于 `9B analysis`（归档路径：`results/analysis/agent_workload_a_512_128_20261011/qwen35_9b`）；三轮是统计重复单位，不将 96 条请求当作独立 run。
 
 ## 区分共享前缀样本
 
-修正提示词前的首轮试跑同样包含 384 请求，但所有请求使用完全相同的提示词，prefix-cache hit ratio 约 0.99。该结果属于“重复全文/热前缀”压力样本，不作为普通并发 baseline；原始记录保留在 [`results/raw/baseline/qwen35_0.8b_20261009/`](../../results/raw/baseline/qwen35_0.8b_20261009/)。
+修正提示词前的首轮试跑同样包含 384 请求，但所有请求使用完全相同的提示词，prefix-cache hit ratio 约 0.99。该结果属于“重复全文/热前缀”压力样本，不作为普通并发 baseline；原始记录保留在 `results/raw/baseline/qwen35_0.8b_20261009/`（归档路径：`results/raw/baseline/qwen35_0.8b_20261009`）。
 
-消融入口 E0–E3 用于比较可独立切换的优化阶段；continuous batching 保留，因为它是 TokenSpeed scheduler 的基础能力。Ascend 变体统一保持 `mixed_batch=false`，并统一传入 `--disable-kvstore`，避免关闭 prefix cache 时与默认 Host KVStore 冲突，也避免 E3 同时改变两项设置。E0/E1 使用 `chunked_prefill_size=max_model_len`，保证一个合法请求可在单次 prefill 中处理；当前分支的 `-1` sentinel 会传入 KV 容量模型并触发 `max_scheduled_tokens must be > 0`。E2/E3 的 chunk size 由 `--chunked-prefill-size` 指定，E3 另启用 prefix cache。E0 不替代本节默认配置基线，应分别留存。上游 OpenAI chat 路径仍未提供持久 Session KV API；项目 Engine 级 Session API 已通过 4B/NPU0 matched correctness/reuse 验收，并在 `overlap_schedule=true` 下完成续轮复验。独立串行 Session on/off context sweep 为 12/12 输出匹配，目标上下文 512/1024/1536 的 `Engine.generate` 配对中位延迟降幅为 77.95%/87.11%/91.28%；这不是 TTFT 或并发吞吐。另完成 4B/NPU0/TP=1 单会话原生 Engine 的 16-turn TTFT 配对：4×16 共 64 对，输出 IDs 64/64 匹配；Session/stateless TTFT 中位数为 122.71/1394.54 ms，配对降幅中位数为 91.52%。该结果仅适用于固定配置和合成会话，不代表 HTTP、多会话并发或跨模型/硬件收益。详见 [Session KV 串行 paired sweep](final_results.md#session-kv-serial-paired-latency-sweep-2026-10-10)、[TTFT raw JSON](../../results/raw/session_kv_ttft/qwen35-4b-session-kv-ttft-20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a.json)、[TTFT CSV](../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv) 和 [TTFT SVG](../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.svg)。
+消融入口 E0–E3 用于比较可独立切换的优化阶段；continuous batching 保留，因为它是 TokenSpeed scheduler 的基础能力。Ascend 变体统一保持 `mixed_batch=false`，并统一传入 `--disable-kvstore`，避免关闭 prefix cache 时与默认 Host KVStore 冲突，也避免 E3 同时改变两项设置。E0/E1 使用 `chunked_prefill_size=max_model_len`，保证一个合法请求可在单次 prefill 中处理；当前分支的 `-1` sentinel 会传入 KV 容量模型并触发 `max_scheduled_tokens must be > 0`。E2/E3 的 chunk size 由 `--chunked-prefill-size` 指定，E3 另启用 prefix cache。E0 不替代本节默认配置基线，应分别留存。上游 OpenAI chat 路径仍未提供持久 Session KV API；项目 Engine 级 Session API 已通过 4B/NPU0 matched correctness/reuse 验收，并在 `overlap_schedule=true` 下完成续轮复验。独立串行 Session on/off context sweep 为 12/12 输出匹配，目标上下文 512/1024/1536 的 `Engine.generate` 配对中位延迟降幅为 77.95%/87.11%/91.28%；这不是 TTFT 或并发吞吐。另完成 4B/NPU0/TP=1 单会话原生 Engine 的 16-turn TTFT 配对：4×16 共 64 对，输出 IDs 64/64 匹配；Session/stateless TTFT 中位数为 122.71/1394.54 ms，配对降幅中位数为 91.52%。该结果仅适用于固定配置和合成会话，不代表 HTTP、多会话并发或跨模型/硬件收益。详见 [Session KV 串行 paired sweep](final_results.md#session-kv-serial-paired-latency-sweep-2026-10-10)、TTFT raw JSON（归档路径：`results/raw/session_kv_ttft/qwen35-4b-session-kv-ttft-20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a.json`）、TTFT CSV（归档路径：`results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv`） 和 TTFT SVG（归档路径：`results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.svg`）。

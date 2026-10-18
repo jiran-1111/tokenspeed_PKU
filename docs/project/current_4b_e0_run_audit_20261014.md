@@ -1,14 +1,16 @@
 # 当前4B E0测量终态审计
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](final_delivery_20261018.md)。
+
 本记录是原始证据与退出问题审计，不是完整统计报告、正常清理验收或整个项目完成声明。
 
 ## 测量证据
 
-原测量目录：[raw](../../results/raw/benchmark/current_4b_e0_20261014/)。使用已部署4B/TP1/BF16、logical2（physical NPU1/chip0）、FP32 SSM，prefix/KVStore/mixed/overlap关闭，无Profiler或诊断。固定revision和完整参数见原[protocol](../../results/raw/benchmark/current_4b_e0_20261014/protocol.json)。本次不覆盖远端生产源；远端尚缺本机三文件的LCM计数更新，不能冒称本机最新全树验收。
+原测量目录：raw（归档路径：`results/raw/benchmark/current_4b_e0_20261014`）。使用已部署4B/TP1/BF16、logical2（physical NPU1/chip0）、FP32 SSM，prefix/KVStore/mixed/overlap关闭，无Profiler或诊断。固定revision和完整参数见原protocol（归档路径：`results/raw/benchmark/current_4b_e0_20261014/protocol.json`）。本次不覆盖远端生产源；远端尚缺本机三文件的LCM计数更新，不能冒称本机最新全树验收。
 
-原[result.json](../../results/raw/benchmark/current_4b_e0_20261014/result.json)记录benchmark_exit=0、service_exit=0；480请求、15 summaries、30份physical NPU1快照，各并发1/4/8/16/32三轮、每轮32请求。全部实际输入479、输出128，无短输出。目标输入512不等于服务端实际输入，不推断未保留的finish_reason。
+原result.json（归档路径：`results/raw/benchmark/current_4b_e0_20261014/result.json`）记录benchmark_exit=0、service_exit=0；480请求、15 summaries、30份physical NPU1快照，各并发1/4/8/16/32三轮、每轮32请求。全部实际输入479、输出128，无短输出。目标输入512不等于服务端实际输入，不推断未保留的finish_reason。
 
-15个选定源/配置/helper结束后hash未变；这不是完整二进制、全部权重或整个仓库的发布证明。限速同步1814正常退出0，56本地/远端文件逐一SHA-256一致，没有额外或缺失文件。独立跨端清单保存在[项目临时目录](../../.tmp/current_4b_e0_crosshash_20261014.json)，未往raw目录追加或修改数据。
+15个选定源/配置/helper结束后hash未变；这不是完整二进制、全部权重或整个仓库的发布证明。限速同步1814正常退出0，56本地/远端文件逐一SHA-256一致，没有额外或缺失文件。独立跨端清单保存在项目临时目录（归档路径：`.tmp/current_4b_e0_crosshash_20261014.json`），未往raw目录追加或修改数据。
 
 ## 退出失败及直接证据
 

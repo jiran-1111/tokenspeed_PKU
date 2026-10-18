@@ -1,5 +1,7 @@
 # GDN归一化参考语义审计（2026-10-14）
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](final_delivery_20261018.md)。
+
 ## 发现与影响
 
 当前生产Prefill与Decode、固定安装的HF fallback均以`s=sum(x*x)`、`eps=1e-6`计算`x/sqrt(s+eps)`。旧Prefill测试参考及真实激活独立递推脚本采用`x/sqrt(max(s,eps))`，不具有相同数学定义；此前将二者说成生产Prefill/Decode有不同epsilon约定，是参考说明错误，而非已证实的生产内核错误。
@@ -45,7 +47,7 @@
 
 旧clamp参考已按固定数学合同修正，未改生产kernel或任何原NPU容差。两个测试源的当前SHA为40de22f7297e34d592ed82db587a8385a3a0e90e8ae6864a5daf58c703285fb7（homework1）及7ef0c0d3761f01b3ab446ef525a68ba770b0cf442bae11d56c7de4d088f4c6f9（旧prefill）。SPEC与quality均实际读取源码并通过。新增四ratio0/.5/1/2，以实际BF16量化后的16×128 Q/K及FP32零初态，CPU FP64解析式独立检查输出/state。
 
-服务器从实际测试源AST只提取helper及CPU测试函数，不导入NPU算子：旧clamp源四ratio分别pass/fail/fail/fail，纠正后全部pass、GREEN进程退出0。RED及GREEN源、逐ratio原始断言JSON保存到[新独占结果目录](../../results/raw/homework1_gdn_epsilon_20261014/)，四文件已同步本机并与远端SHA一致。CPU自检紧容差只用于解析式，不替换原NPU包络；这是参考函数数学验证，不是NPU执行或全模型通过。
+服务器从实际测试源AST只提取helper及CPU测试函数，不导入NPU算子：旧clamp源四ratio分别pass/fail/fail/fail，纠正后全部pass、GREEN进程退出0。RED及GREEN源、逐ratio原始断言JSON保存到新独占结果目录（归档路径：`results/raw/homework1_gdn_epsilon_20261014`），四文件已同步本机并与远端SHA一致。CPU自检紧容差只用于解析式，不替换原NPU包络；这是参考函数数学验证，不是NPU执行或全模型通过。
 
 2026-10-15正式参考采集完成后，在physical1/chip0（logical2）串行执行两文件完整pytest，实际17 passed（13 NPU、4 CPU解析式）、0 failure/error/skip、8.326秒、52条误差properties。包装任务退出0；结束后两源SHA仍与上述冻结值一致，fresh npu-smi确认physical1无运行进程，未碰NPU0他人服务。XML位于`results/raw/homework1_gdn_epsilon_20261014/npu_tests_20261015/tests.xml`，两端SHA256为`cfd00e5261a49591aa588464d9c0b174d64c4c5e9cf0eeec6785786c8b3b14f5`。原NPU输出/state包络不变；这完成本模块参考纠正复验，不是全模型验收。下面旧“本轮未实现”仅表示原审计轮次；原训练输入FP64只读观察的范围及归档限制保持不变。
 

@@ -1,0 +1,380 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-18",
+  "scope": "Read-only comparison of fetched remote refs; no branch merge, checkout, index mutation, runtime edit, hardware execution or remote write.",
+  "ref_snapshot": {
+    "course/agent-20261015": "c7f7694a42f717611f28b82f952570ee0b2e5ea5",
+    "course/agent-20261017": "82788a85eca26a631222d6ca0d03ac245aff6d9a",
+    "course/final-20261018": "d41b6798c737f923e36b9a3876cd3b276c9074ff",
+    "course/hw1-20261015": "1d113e54f789a22b14cbbdccbc6230c3f4d0e574",
+    "jr": "202838e6cb4549b290dbf5db2ad9733355af3f9b",
+    "main": "d7091b25ade62cd4e58dfe619602bfb8e88887d5"
+  },
+  "final_commit": "d41b6798c737f923e36b9a3876cd3b276c9074ff",
+  "jr_commit": "202838e6cb4549b290dbf5db2ad9733355af3f9b",
+  "jr_base_main": "d7091b25ade62cd4e58dfe619602bfb8e88887d5",
+  "merge_base": "cf4a4f89ae5f9423a9af490d8f3a0613adfba3fd",
+  "commit_divergence": {
+    "final_only": 18,
+    "jr_only": 367
+  },
+  "changed_path_counts": {
+    "final_from_merge_base": 435,
+    "jr_from_merge_base": 1449,
+    "jr_personal_two_commits": 38,
+    "personal_final_intersection": 0,
+    "broad_final_intersection": 46
+  },
+  "personal_changed_paths": [
+    "docs/design/qwen35-offline-ascend.md",
+    "my_docs/hw1_ascend_report.md",
+    "my_docs/hw1_results/.gitignore",
+    "my_docs/hw1_results/benchmark_chunk.json",
+    "my_docs/hw1_results/benchmark_chunk.log",
+    "my_docs/hw1_results/dependency_install.log",
+    "my_docs/hw1_results/environment.txt",
+    "my_docs/hw1_results/failed_native_profiler.log",
+    "my_docs/hw1_results/final_tests.log",
+    "my_docs/hw1_results/formatter_install.log",
+    "my_docs/hw1_results/gdn_microbenchmark.json",
+    "my_docs/hw1_results/gdn_microbenchmark.log",
+    "my_docs/hw1_results/generate_bf16.json",
+    "my_docs/hw1_results/generate_bf16.log",
+    "my_docs/hw1_results/modelscope_files.json",
+    "my_docs/hw1_results/operator_tests.log",
+    "my_docs/hw1_results/personal_environment.txt",
+    "my_docs/hw1_results/profile_chunk.json",
+    "my_docs/hw1_results/profile_chunk.log",
+    "my_docs/hw1_results/source_manifest.json",
+    "my_docs/hw1_results/summary.json",
+    "my_docs/hw1_results/validation_bf16.json",
+    "my_docs/hw1_results/validation_bf16.log",
+    "my_docs/hw1_results/validation_fp32.json",
+    "my_docs/hw1_results/validation_fp32.log",
+    "my_docs/hw1_results/validation_fp32_before_fix.json",
+    "my_docs/hw1_results/weights_manifest.json",
+    "my_docs/my_log.md",
+    "my_docs/第一次作业.md",
+    "python/tokenspeed/experiments/__init__.py",
+    "python/tokenspeed/experiments/qwen35/__init__.py",
+    "python/tokenspeed/experiments/qwen35/model.py",
+    "python/tokenspeed/experiments/qwen35/run.py",
+    "test/experiments/bench_qwen35_gdn.py",
+    "test/experiments/run_qwen35.sh",
+    "test/experiments/test_qwen35_aten.py",
+    "tokenspeed-kernel/python/tokenspeed_kernel/__init__.py",
+    "tokenspeed-kernel/python/tokenspeed_kernel/ops/experimental_qwen35.py"
+  ],
+  "broad_intersection_paths": [
+    ".gitignore",
+    "README.md",
+    "python/tokenspeed/runtime/distributed/comm_backend/hccl.py",
+    "python/tokenspeed/runtime/engine/async_llm.py",
+    "python/tokenspeed/runtime/engine/event_loop.py",
+    "python/tokenspeed/runtime/engine/generation_output_processor.py",
+    "python/tokenspeed/runtime/engine/io_struct.py",
+    "python/tokenspeed/runtime/engine/output_processor.py",
+    "python/tokenspeed/runtime/engine/pause.py",
+    "python/tokenspeed/runtime/engine/protocol.py",
+    "python/tokenspeed/runtime/engine/request_handler.py",
+    "python/tokenspeed/runtime/engine/scheduler_control_client.py",
+    "python/tokenspeed/runtime/engine/scheduler_utils.py",
+    "python/tokenspeed/runtime/entrypoints/engine.py",
+    "python/tokenspeed/runtime/execution/device.py",
+    "python/tokenspeed/runtime/execution/forward_step.py",
+    "python/tokenspeed/runtime/execution/weight_loader.py",
+    "python/tokenspeed/runtime/layers/attention/backends/state/mamba.py",
+    "python/tokenspeed/runtime/layers/attention/kv_cache/recipes/qwen35.py",
+    "python/tokenspeed/runtime/layers/attention/linear/layernorm_gated.py",
+    "python/tokenspeed/runtime/layers/layernorm.py",
+    "python/tokenspeed/runtime/layers/logits_processor.py",
+    "python/tokenspeed/runtime/metrics/collector.py",
+    "python/tokenspeed/runtime/models/qwen3_5.py",
+    "python/tokenspeed/runtime/utils/server_args.py",
+    "test/cli/test_argsplit.py",
+    "test/runtime/test_generation_output_processor.py",
+    "test/runtime/test_logits_processor.py",
+    "tokenspeed-kernel/python/tokenspeed_kernel/ops/attention/gdn/_triton/chunk_scaled_dot_kkt.py",
+    "tokenspeed-kernel/python/tokenspeed_kernel/ops/attention/gdn/_triton/solve_tril.py",
+    "tokenspeed-kernel/python/tokenspeed_kernel/ops/attention/gdn/triton.py",
+    "tokenspeed-scheduler/bindings/python_module.cpp",
+    "tokenspeed-scheduler/csrc/core/token_container.h",
+    "tokenspeed-scheduler/csrc/fsm/forward_events.cpp",
+    "tokenspeed-scheduler/csrc/fsm/forward_events.h",
+    "tokenspeed-scheduler/csrc/fsm/forward_states.h",
+    "tokenspeed-scheduler/csrc/fsm/states.h",
+    "tokenspeed-scheduler/csrc/scheduler/operations/forward.cpp",
+    "tokenspeed-scheduler/csrc/scheduler/outside_event_handler.cpp",
+    "tokenspeed-scheduler/csrc/scheduler/request.cpp",
+    "tokenspeed-scheduler/csrc/scheduler/request.h",
+    "tokenspeed-scheduler/csrc/scheduler/request_spec.h",
+    "tokenspeed-scheduler/csrc/scheduler/scheduler.cpp",
+    "tokenspeed-scheduler/csrc/scheduler/scheduler.h",
+    "tokenspeed-scheduler/python/tests/test_fsm_and_scheduling.py",
+    "tokenspeed-scheduler/tests/cpp/test_scheduler_plan.cpp"
+  ],
+  "merge_tree_check": {
+    "returncode": 1,
+    "conflict_file_count": 22,
+    "conflict_paths": [
+      "README.md",
+      "python/tokenspeed/runtime/engine/generation_output_processor.py",
+      "python/tokenspeed/runtime/engine/output_processor.py",
+      "python/tokenspeed/runtime/engine/request_handler.py",
+      "python/tokenspeed/runtime/engine/scheduler_utils.py",
+      "python/tokenspeed/runtime/execution/device.py",
+      "python/tokenspeed/runtime/execution/forward_step.py",
+      "python/tokenspeed/runtime/layers/attention/linear/layernorm_gated.py",
+      "python/tokenspeed/runtime/metrics/collector.py",
+      "python/tokenspeed/runtime/models/qwen3_5.py",
+      "test/runtime/test_logits_processor.py",
+      "tokenspeed-kernel/python/tokenspeed_kernel/ops/attention/gdn/_triton/chunk_scaled_dot_kkt.py",
+      "tokenspeed-kernel/python/tokenspeed_kernel/ops/attention/gdn/triton.py",
+      "tokenspeed-scheduler/bindings/python_module.cpp",
+      "tokenspeed-scheduler/csrc/core/token_container.h",
+      "tokenspeed-scheduler/csrc/fsm/forward_events.h",
+      "tokenspeed-scheduler/csrc/fsm/forward_states.h",
+      "tokenspeed-scheduler/csrc/fsm/states.h",
+      "tokenspeed-scheduler/csrc/scheduler/operations/forward.cpp",
+      "tokenspeed-scheduler/csrc/scheduler/request_spec.h",
+      "tokenspeed-scheduler/csrc/scheduler/scheduler.cpp",
+      "tokenspeed-scheduler/csrc/scheduler/scheduler.h"
+    ],
+    "object_only": true,
+    "working_tree_merge_performed": false
+  },
+  "personal_patch_apply_check": {
+    "returncode": 1,
+    "failure_paths": [
+      "tokenspeed-kernel/python/tokenspeed_kernel/__init__.py"
+    ],
+    "mutations_performed": false
+  },
+  "kernel_api_boundary": {
+    "final_public_export_count": 50,
+    "jr_initializer_has_explicit_exports": false,
+    "final_required_names_missing_from_jr_initializer": [
+      "silu_and_mul",
+      "fp8_linear",
+      "mhc_post",
+      "NoKernelFoundError"
+    ],
+    "final_import_examples": [
+      {
+        "path": "python/tokenspeed/runtime/layers/activation.py",
+        "line": 30
+      },
+      {
+        "path": "python/tokenspeed/runtime/layers/dense/fp8.py",
+        "line": 30
+      },
+      {
+        "path": "python/tokenspeed/runtime/layers/hyperconnection.py",
+        "line": 29
+      }
+    ],
+    "assessment": "The personal patch assumes newer upstream root-import migration; replacing the initializer would break imports still required by the delivered runtime. Preserving old exports also retains eager imports, so the experimental lazy-profiling change alone does not establish old-runtime import compatibility."
+  },
+  "independent_experiment_boundary": {
+    "design_path": "docs/design/qwen35-offline-ascend.md",
+    "design_lines": [
+      3,
+      13,
+      21,
+      27
+    ],
+    "scope": "Single-request offline ATen harness; not a production backend or scheduler/LCM/prefix/retraction implementation.",
+    "jr_model_revision": "05f056712f8c582c8708395156518d963b46fb29",
+    "frozen_hw1_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "jr_validation": {
+      "lengths": [
+        1,
+        17,
+        65,
+        128,
+        512
+      ],
+      "prefill_vectors_per_input": 1,
+      "decode_vectors_per_input": 4,
+      "vectors_per_precision": 25,
+      "bf16_limits": {
+        "max_abs": 0.5,
+        "relative_rmse": 0.02,
+        "cosine_min": 0.999
+      },
+      "reference_transformers_version": "5.17.0",
+      "reference": "CPU FP32 eager using the same checkpoint values"
+    },
+    "hw1_frozen_validation": {
+      "original_inputs": 16,
+      "prefill_vectors_per_input": 1,
+      "decode_vectors_per_input": 16,
+      "vectors": 272,
+      "manifest_sha256": "23dbfc6e21d99b674f0aa40a95374c4a215a7ec838f715692eec12d07f3f22fb"
+    },
+    "results_are_interchangeable": false,
+    "profiler_boundary": "Synchronized intrusive stage wall time in the offline harness is not the delivered runtime Decode Profiler result."
+  },
+  "environment_boundaries": {
+    "jr_report": {
+      "path": "my_docs/hw1_ascend_report.md",
+      "lines": [
+        23,
+        24
+      ],
+      "cann": "9.0.0",
+      "torch": "2.9.0+cpu",
+      "torch_npu": "2.9.0",
+      "transformers": "5.17.0"
+    },
+    "package_metadata": {
+      "path": "python/pyproject.toml",
+      "line": 83,
+      "transformers_pin": "5.12.0"
+    },
+    "script_machine_specific_lines": {
+      "path": "test/experiments/run_qwen35.sh",
+      "lines": [
+        14,
+        15,
+        16,
+        17,
+        31,
+        39
+      ]
+    },
+    "assessment": "Do not silently replace the verified course environment with the offline experiment environment. Any migration needs explicit compatible dependencies and portable environment inputs."
+  },
+  "privacy_scan": {
+    "scope": "Only the 38 paths in the two personal commits; static patterns, not a guarantee that all secrets were detected. Only categories, relative paths and line numbers are retained.",
+    "category_line_counts": {
+      "credential_assignment": 0,
+      "private_key": 0,
+      "provider_token": 0,
+      "credential_in_url": 0,
+      "private_ip": 0,
+      "user_host": 0,
+      "private_path": 37
+    },
+    "findings": [
+      {
+        "path": "my_docs/hw1_ascend_report.md",
+        "category": "private_path",
+        "lines": [
+          20,
+          25,
+          27
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/benchmark_chunk.log",
+        "category": "private_path",
+        "lines": [
+          13
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/environment.txt",
+        "category": "private_path",
+        "lines": [
+          7,
+          8,
+          10,
+          15,
+          20,
+          21,
+          22,
+          26,
+          29,
+          38,
+          39,
+          48,
+          55,
+          57,
+          58,
+          86,
+          91,
+          93,
+          100
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/failed_native_profiler.log",
+        "category": "private_path",
+        "lines": [
+          13,
+          22,
+          31,
+          33
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/final_tests.log",
+        "category": "private_path",
+        "lines": [
+          20
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/gdn_microbenchmark.log",
+        "category": "private_path",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/generate_bf16.log",
+        "category": "private_path",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/operator_tests.log",
+        "category": "private_path",
+        "lines": [
+          19
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/profile_chunk.log",
+        "category": "private_path",
+        "lines": [
+          13
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/validation_bf16.log",
+        "category": "private_path",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "path": "my_docs/hw1_results/validation_fp32.log",
+        "category": "private_path",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "path": "test/experiments/run_qwen35.sh",
+        "category": "private_path",
+        "lines": [
+          17,
+          31,
+          39
+        ]
+      }
+    ],
+    "matched_values_retained": false,
+    "private_path_files": 12
+  },
+  "recommendation": {
+    "merge_entire_jr_branch": false,
+    "overwrite_kernel_initializer": false,
+    "combine_numerical_evidence": false,
+    "preserve_existing_jr_branch_and_attribution": true,
+    "future_integration": "If requested later, migrate an explicit allowlist of personal paths in a new source epoch, design backward-compatible kernel imports, sanitize private paths, and run independent software and device validation."
+  }
+}

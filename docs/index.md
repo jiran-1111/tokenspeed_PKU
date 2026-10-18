@@ -2,11 +2,14 @@
 layout: home
 
 hero:
-  name: TokenSpeed
-  text: Speed-of-light LLM inference
-  tagline: Production-oriented docs for launching, tuning, and operating low-latency OpenAI-compatible serving.
+  name: TokenSpeed PKU
+  text: Ascend course project
+  tagline: Course results, reproducible evidence, and upstream runtime documentation.
   actions:
     - theme: brand
+      text: 课程交付与复现
+      link: /project/final_delivery_20261018
+    - theme: alt
       text: Get Started
       link: /guides/getting-started
     - theme: alt
@@ -29,12 +32,22 @@ features:
 
 ## Start Here
 
+- [课程最终交付与复现](./project/final_delivery_20261018.md)
+- [课程总报告](./report/course_project_final_20261018.md)
+- [公开证据](./evidence/course_final_20261018/README.md)
+- [开源维护记录](./project/oss_maintenance_20261018.md)
 - [Getting Started](./guides/getting-started.md)
 - [Launching a Server](./guides/launching.md)
 - [Model Recipes](./recipes/models.md)
 - [Server Parameters](./configuration/server.md)
 - [Compatible Parameters](./configuration/compatible-parameters.md)
 - [Parallelism](./serving/parallelism.md)
+
+This repository is a course fork of [LightSeek TokenSpeed](https://github.com/lightseekorg/tokenspeed).
+The course evidence applies to its recorded source snapshots and configurations.
+Historical experiment pages retain their original results and dates; unpublished local
+artifacts are identified by their archive paths. Use the final delivery entry above
+for the current report and public evidence.
 
 ## Common Workflow
 

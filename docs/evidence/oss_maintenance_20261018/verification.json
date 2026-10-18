@@ -1,0 +1,97 @@
+{
+  "status": "verified",
+  "date": "2026-10-18",
+  "branch": "fix/oss-project-20261018",
+  "base_commit": "d41b6798c737f923e36b9a3876cd3b276c9074ff",
+  "source": {
+    "manifest": "docs/evidence/oss_maintenance_20261018/source_manifest.json",
+    "sha256": "db84fa1d7da5e9c42e21d6bd38eeac4b5478ba716371cec51d9aba63c11bfdfc",
+    "files": 1421,
+    "mismatches": 0,
+    "historical_files": 1415,
+    "historical_files_unchanged": 1412,
+    "historical_changed_paths": [
+      "scripts/setup_env.sh",
+      "scripts/use_project_env.sh",
+      "test/course_project/test_project_env.py"
+    ],
+    "historical_manifest_unchanged": true,
+    "frozen_final_worktree_bytes_unchanged": true
+  },
+  "local_cpu_tests": {
+    "tests": 651,
+    "passed": 624,
+    "skipped": 27,
+    "failures": 0,
+    "errors": 0,
+    "exit_code": 0,
+    "python": "3.11.15",
+    "direct_test_dependencies": {
+      "pytest": "8.4.2",
+      "prometheus-client": "0.26.0"
+    },
+    "torch_available": false,
+    "skips": {
+      "missing_torch": 19,
+      "windows_symlink_privileges": 7,
+      "posix_socket_semantics": 1
+    },
+    "project_environment_regressions_passed": 15,
+    "windows_powershell_5_1_regressions_passed": 8
+  },
+  "server_software_tests": {
+    "tests": 651,
+    "passed": 643,
+    "skipped": 8,
+    "failures": 0,
+    "errors": 0,
+    "exit_code": 0,
+    "skips": "Windows PowerShell tests on Linux",
+    "source_files_verified_before_and_after": 1421,
+    "source_mismatches": 0,
+    "separate_project_temporary_directory": true,
+    "existing_runtime_environment_reused": true,
+    "npu_model_or_performance_test": false,
+    "preparation_failures_retained": true,
+    "ssh_disconnect_run_checked_via_junit_then_durable_exit_receipt": true
+  },
+  "documentation": {
+    "receipt": "docs_build_verification.json",
+    "builds": 2,
+    "html_pages_per_build": 133,
+    "local_links_and_assets_checked_per_build": 3946,
+    "missing_local_targets": 0,
+    "frozen_bun_lock_unchanged": true,
+    "disabled_dead_link_checks": false,
+    "deployed": false
+  },
+  "python_package": {
+    "metadata_preparation_exit_code": 0,
+    "readme_exists": true,
+    "full_device_wheel_build_tested": false
+  },
+  "repository_checks": {
+    "pre_commit_command": "pre-commit run --all-files",
+    "pre_commit_exit_code": 0,
+    "allowlist_paths": 42,
+    "privacy_pattern_candidates": 0,
+    "original_dirty_worktree_head_unchanged": true,
+    "published_snapshots_overwritten": false
+  },
+  "collaboration": {
+    "receipt": "collaboration_audit.json",
+    "other_branch": "jr",
+    "personal_paths": 38,
+    "personal_path_intersection": 0,
+    "whole_branch_text_conflict_files": 22,
+    "personal_patch_applies_to_course_base": false,
+    "merged_other_branch": false
+  },
+  "limits": [
+    "No fresh NPU numerical, performance or Profiler measurements.",
+    "Environment workflow regressions use isolated command stubs, not a fresh full Ascend stack installation.",
+    "Linux and Windows software checks do not certify every upstream model or platform.",
+    "GitHub Ubuntu/Python 3.12 CI execution is separate from the local Python 3.11 result.",
+    "Documentation checks cover local generated targets, not external-site availability or browser rendering."
+  ]
+}

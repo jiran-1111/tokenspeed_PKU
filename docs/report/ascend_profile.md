@@ -1,5 +1,7 @@
 # Ascend Profiler 分析
 
+> 归档说明：本文保留按日期记录的实验过程。标为“归档路径”的本地文件未随公开源码发布，因此以路径文字保留，不提供无效下载链接。当前可公开复核的材料见[最终交付](../project/final_delivery_20261018.md)。
+
 `scripts/run_profiler.sh` 对服务端 `/start_profile` 发起 `CPU`、`NPU` 和内存采集，并在压测结束后调用 `/stop_profile`。NPU trace 使用 TorchNPU 官方 `torch_npu.profiler.profile`；项目环境脚本将 `ASCEND_WORK_PATH` 设为项目内 `.tmp/ascend_work`，以保留 CANN profiler 侧产物。每个场景先预热 3 次，随后采集服务 Prometheus KV/prefix 指标，并保存 `npu-smi info` 原始快照。
 
 采集场景为：
@@ -40,7 +42,7 @@ trace 可见 CPU operator、enqueue/dequeue task-queue 事件和 async flow。�
 
 虽然本轮已有 CANN `op_summary`/`task_time` sidecar，但当前 trace 中仍没有独立 NPU kernel timeline，Task Duration 也不能代替纯设备执行时长。采集未配置 `experimental_config`；远端 `torch_npu.profiler.profile` 默认 `profiler_level=Level0`、`aic_metrics=ACL_AICORE_NONE`，所以没有 AI Core hardware counters。flow 分位数同样不是 kernel duration，不能据此认定队列或 NPU 瓶颈。
 
-以上是单轮、带 profiler 开销的观察结果，不与无 profiler 的性能测试直接比较。summary 中 TTFT p50 分别为 prefill 1427.42 ms、decode 390.42 ms、Agent 3510.23 ms；这些值不代表无 profiler 服务延迟。Agent trace 是并发 16 的 32 请求单轮场景，不是出现 TTFT 长尾的 8-turn 场景；三种 trace 仍只有 Level0 指标，不能判断 AICore 利用率、Host gap、通信或 HBM 瓶颈，也不能支撑优化收益结论。原始 trace、规范化副本、CANN 解析产物和逐事件审计见 [`results/profiles/qwen35-0.8b/ascend_work_path_fix_full/`](../../results/profiles/qwen35-0.8b/ascend_work_path_fix_full/) 与 [`notes.md`](../../notes.md)。
+以上是单轮、带 profiler 开销的观察结果，不与无 profiler 的性能测试直接比较。summary 中 TTFT p50 分别为 prefill 1427.42 ms、decode 390.42 ms、Agent 3510.23 ms；这些值不代表无 profiler 服务延迟。Agent trace 是并发 16 的 32 请求单轮场景，不是出现 TTFT 长尾的 8-turn 场景；三种 trace 仍只有 Level0 指标，不能判断 AICore 利用率、Host gap、通信或 HBM 瓶颈，也不能支撑优化收益结论。原始 trace、规范化副本、CANN 解析产物和逐事件审计见 `results/profiles/qwen35-0.8b/ascend_work_path_fix_full/`（归档路径：`results/profiles/qwen35-0.8b/ascend_work_path_fix_full`） 与 `notes.md`（归档路径：`notes.md`）。
 
 ## 8-turn Agent 异常负载 Level1 复采（2026-10-10）
 
@@ -57,9 +59,9 @@ trace 可见 CPU operator、enqueue/dequeue task-queue 事件和 async flow。�
 | c4 / r2 | `20261009191917471` | 272,000 | 31,102 | `chunk_fwd_kernel_o` — 657,059.42 |
 | c4 / r3 | `20261009192038548` | 270,264 | 31,103 | `chunk_fwd_kernel_o` — 668,574.22 |
 
-六个原始 CANN 目录（含 `profiler_info_0.json`、原始 profiling 数据库和 MindStudio `op_summary`/`task_time`）保存在 [`results/profiles/qwen35-0.8b/agent_level1_cann/`](../../results/profiles/qwen35-0.8b/agent_level1_cann/)；对应 Torch-NPU trace 位于 `results/profiles/qwen35-0.8b/<profile_id>/`。请求记录、summary 与硬件快照分别见 [`results/raw/agent/`](../../results/raw/agent/) 下 `qwen35-0.8b-20261009T191532Z*` 文件。38 个关键产物（6 trace、6 profiler info、12 张 CANN CSV、2 个 raw/summary、12 个硬件快照）的本地/远端 SHA-256 全部一致。
+六个原始 CANN 目录（含 `profiler_info_0.json`、原始 profiling 数据库和 MindStudio `op_summary`/`task_time`）保存在 `results/profiles/qwen35-0.8b/agent_level1_cann/`（归档路径：`results/profiles/qwen35-0.8b/agent_level1_cann`）；对应 Torch-NPU trace 位于 `results/profiles/qwen35-0.8b/<profile_id>/`。请求记录、summary 与硬件快照分别见 `results/raw/agent/`（归档路径：`results/raw/agent`） 下 `qwen35-0.8b-20261009T191532Z*` 文件。38 个关键产物（6 trace、6 profiler info、12 张 CANN CSV、2 个 raw/summary、12 个硬件快照）的本地/远端 SHA-256 全部一致。
 
-可在项目根目录运行 `python scripts/analyze_profiler.py`，从上述 Level1 CANN 原始产物重建描述性汇总；默认写入 [`results/analysis/agent_level1_cann_summary.json`](../../results/analysis/agent_level1_cann_summary.json)，不会修改输入 trace。脚本汇总正 `aicore_time` 任务行、同名算子的累计值、任务区间并集/间隙，以及跨 HBM channel 的原始带宽值。HBM 单位未在此独立核验；“任务未覆盖区间”不等于 NPU 空闲；`npu_mem.csv` 的 DDR/HBM 用量字段依 CANN README 在该产品上不受支持，故不报告。JSON 可用于复核下表 AICore 数字，但这些聚合仍不能建立单请求延迟归属或瓶颈因果关系。若要重新生成已存在的默认 JSON，需显式加 `--overwrite`；该选项仅替换汇总文件，不触碰原始采集。
+可在项目根目录运行 `python scripts/analyze_profiler.py`，从上述 Level1 CANN 原始产物重建描述性汇总；默认写入 `results/analysis/agent_level1_cann_summary.json`（归档路径：`results/analysis/agent_level1_cann_summary.json`），不会修改输入 trace。脚本汇总正 `aicore_time` 任务行、同名算子的累计值、任务区间并集/间隙，以及跨 HBM channel 的原始带宽值。HBM 单位未在此独立核验；“任务未覆盖区间”不等于 NPU 空闲；`npu_mem.csv` 的 DDR/HBM 用量字段依 CANN README 在该产品上不受支持，故不报告。JSON 可用于复核下表 AICore 数字，但这些聚合仍不能建立单请求延迟归属或瓶颈因果关系。若要重新生成已存在的默认 JSON，需显式加 `--overwrite`；该选项仅替换汇总文件，不触碰原始采集。
 
 这些表格中的 AICore 时间是 `op_summary` 对同名算子各任务行的累计值，不是互不重叠的墙钟时间，也不是整轮请求延迟。并发 4 的工作量是并发 1 的四倍，不能直接用累计时间比较效率；带 profiler 的延迟也不与无 profiler 基线混比。结果确认异常负载期间存在可测的 AICore 工作，并给出后续候选算子，但尚不能区分算子执行、调度/排队、Host gap 或其他因素对 TTFT 长尾的因果贡献；因此当前不据此选定 kernel/host 优化，也不宣称性能收益。
 
@@ -67,7 +69,7 @@ trace 可见 CPU operator、enqueue/dequeue task-queue 事件和 async flow。�
 
 对现有 c1/r1 trace 的抽查可见 5,036 个 `cpu_op`、39,812 个 enqueue 与 39,812 个 dequeue 事件，以及 79,624 个 `async_task_queue` flow；对应 CANN 文件可按 task ID、stream 和时间查看任务级 `Task Duration`、`Task Wait Time` 与 AICore 时间。这些字段尚未形成从单个请求 ID，经服务端阶段 span/队列交接，再到 CANN task ID 的可靠关联，因而不能量化它们对该请求 TTFT 的贡献。
 
-同一 c1/r1 汇总的 task 时间包络为 5,415,831 μs、区间并集为 3,199,867 μs、未覆盖约 2,215,965 μs；“未覆盖”仅描述记录区间，不表示 NPU idle，也不能单独归因于 Host 或排队。代表 trace 位于 [`c1/r1 Torch-NPU trace`](../../results/profiles/qwen35-0.8b/20261009T191532Z-c1-p0.5-t512-n256-r1/20261009-191541-TP0.trace.json)，汇总来源为 [`Level1 CANN summary`](../../results/analysis/agent_level1_cann_summary.json)。
+同一 c1/r1 汇总的 task 时间包络为 5,415,831 μs、区间并集为 3,199,867 μs、未覆盖约 2,215,965 μs；“未覆盖”仅描述记录区间，不表示 NPU idle，也不能单独归因于 Host 或排队。代表 trace 位于 `c1/r1 Torch-NPU trace`（归档路径：`results/profiles/qwen35-0.8b/20261009T191532Z-c1-p0.5-t512-n256-r1/20261009-191541-TP0.trace.json`），汇总来源为 `Level1 CANN summary`（归档路径：`results/analysis/agent_level1_cann_summary.json`）。
 
 若要完成因果归因，最小后续采集应固定输入、输出、并发与 profiler 配置，为单请求分配唯一 ID，并把 ID 贯穿服务阶段 span、enqueue/dequeue 与 CANN task/stream；重复采集后再一次只改一个调度因素或候选实现。缺少这条关联链之前，只能报告任务级观察，不能写成已确认瓶颈。
 

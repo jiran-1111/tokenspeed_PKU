@@ -208,3 +208,7 @@ outputs/
 .tmp/
 models/
 data/
+
+# Experiment results and legacy pytest temporary directories stay local.
+results/
+.pytest_tmp*/

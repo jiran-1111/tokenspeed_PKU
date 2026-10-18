@@ -1,6 +1,6 @@
-# 课程提交验收状态（2026-10-15）
+# 课程提交验收状态
 
-依据任务书第 54 节验收清单及第 41 节重点实验核对。项目整体尚未通过验收；文件存在与软件测试通过均不能替代设备实验。这里列出当前证据和继续完成所需工作。
+当前状态以[最终交付入口](final_delivery_20261018.md)和下节 2026-10-18 发布记录为准：原始课程要求下的有限实验及交付材料已完成，教学网由用户本人提交；不宣称未知统一评测或个人理解考核已通过。维护分支的环境、复现和协作修复另见[维护记录](oss_maintenance_20261018.md)。本页随后按日期保留历史进度，其“当前”“待完成”仅指当时状态，不能替代最新发布记录。
 
 ## 当前交付与后续项目
 
@@ -77,7 +77,7 @@ HW1已完成原四项任务、报告、同源服务器复验及GitHub发布：�
 | C：Context length vs TTFT | Session context 延迟与多轮 TTFT 已有 | 独立长 Prefill 长度矩阵 |
 | D：Chunk size vs 延迟/吞吐 | 0.8B/4B重复prompt的512/1024矩阵，4B staged 4096/512干扰配对已验收 | 更多负载/模型、完整瓶颈归因和最终默认值选择 |
 | E：Prefix ratio vs TTFT/吞吐 | 已有 pilot 与多轮共享比例数据 | 异常长尾解释及一般收益验收 |
-| F：Conversation turn vs TTFT OFF/ON | [64 对 CSV](../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv)及 SVG 已有 | 当前范围为 4B 原生 Engine 串行测量 |
+| F：Conversation turn vs TTFT OFF/ON | 64 对 CSV（历史本地产物：`../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv`）及 SVG 已有 | 当前范围为 4B 原生 Engine 串行测量 |
 | G：KV block size vs HBM/并发/吞吐 | 使用率曲线已有 | block-size sweep 不具备，不能伪造粒度可调性或最优结论 |
 | H：Baseline vs Full System | [消融分析](../report/ablation_analysis.md)有 E0–E3 | E4–E7/最终系统、相同协议下完整对照 |
 | I：TP1 vs TP2 | 4B TP2 smoke/诊断；27B HCCL基础通信、TP2恢复及E0实测 | 严格正确性闭环及匹配协议TP吞吐/时延/每chip HBM/通信对比 |
