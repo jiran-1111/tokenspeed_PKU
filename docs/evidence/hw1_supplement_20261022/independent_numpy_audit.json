@@ -1,0 +1,254 @@
+{
+  "replay_vectors": 272,
+  "original_argmax_mismatches": 13,
+  "replay_argmax_mismatches": 9,
+  "original_mismatches_resolved": 8,
+  "newly_introduced_mismatches": 4,
+  "replay_relative_l2_recheck_max_delta": 2.0469737016526324e-15,
+  "captured_serialized_sha_matches_original": 272,
+  "gdn_lengths": [
+    {
+      "length": 64,
+      "passed": true,
+      "independent_checks": {
+        "full_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.129103410099086e-05,
+          "passed": true
+        },
+        "full_state": {
+          "max_abs": 8.344650268554688e-07,
+          "relative_l2": 8.265696890315321e-07,
+          "passed": true
+        },
+        "segmented_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.129103410099086e-05,
+          "passed": true
+        },
+        "segmented_state": {
+          "max_abs": 8.344650268554688e-07,
+          "relative_l2": 8.265696890315321e-07,
+          "passed": true
+        },
+        "decode_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 3.879735814572073e-05,
+          "passed": true
+        },
+        "decode_state": {
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 5.089164354976594e-07,
+          "passed": true
+        },
+        "hybrid_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.514461296873285e-05,
+          "passed": true
+        },
+        "hybrid_state": {
+          "max_abs": 5.662441253662109e-07,
+          "relative_l2": 4.890569559608263e-07,
+          "passed": true
+        }
+      },
+      "numpy_vs_torch_reference_output_max_abs": 2.086162567138672e-07,
+      "numpy_vs_torch_reference_state_max_abs": 7.748603820800781e-07
+    },
+    {
+      "length": 65,
+      "passed": true,
+      "independent_checks": {
+        "full_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.097164179183666e-05,
+          "passed": true
+        },
+        "full_state": {
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 5.018439330584144e-07,
+          "passed": true
+        },
+        "segmented_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.097164179183666e-05,
+          "passed": true
+        },
+        "segmented_state": {
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 5.018439330584144e-07,
+          "passed": true
+        },
+        "decode_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 3.849725479212255e-05,
+          "passed": true
+        },
+        "decode_state": {
+          "max_abs": 5.960464477539062e-07,
+          "relative_l2": 5.213575629206248e-07,
+          "passed": true
+        },
+        "hybrid_output": {
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.097164179183666e-05,
+          "passed": true
+        },
+        "hybrid_state": {
+          "max_abs": 5.364418029785156e-07,
+          "relative_l2": 4.868089539721944e-07,
+          "passed": true
+        }
+      },
+      "numpy_vs_torch_reference_output_max_abs": 2.086162567138672e-07,
+      "numpy_vs_torch_reference_state_max_abs": 6.556510925292969e-07
+    },
+    {
+      "length": 127,
+      "passed": true,
+      "independent_checks": {
+        "full_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.224029081925376e-05,
+          "passed": true
+        },
+        "full_state": {
+          "max_abs": 1.0058283805847168e-06,
+          "relative_l2": 9.54440870167393e-07,
+          "passed": true
+        },
+        "segmented_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.224029081925376e-05,
+          "passed": true
+        },
+        "segmented_state": {
+          "max_abs": 1.0058283805847168e-06,
+          "relative_l2": 9.54440870167393e-07,
+          "passed": true
+        },
+        "decode_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 3.7042064013042136e-05,
+          "passed": true
+        },
+        "decode_state": {
+          "max_abs": 6.705522537231445e-07,
+          "relative_l2": 6.880588574979695e-07,
+          "passed": true
+        },
+        "hybrid_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.423782411794365e-05,
+          "passed": true
+        },
+        "hybrid_state": {
+          "max_abs": 5.960464477539062e-07,
+          "relative_l2": 6.614071972853801e-07,
+          "passed": true
+        }
+      },
+      "numpy_vs_torch_reference_output_max_abs": 2.086162567138672e-07,
+      "numpy_vs_torch_reference_state_max_abs": 7.152557373046875e-07
+    },
+    {
+      "length": 128,
+      "passed": true,
+      "independent_checks": {
+        "full_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.2078856138178654e-05,
+          "passed": true
+        },
+        "full_state": {
+          "max_abs": 1.0728836059570312e-06,
+          "relative_l2": 9.82903316121179e-07,
+          "passed": true
+        },
+        "segmented_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.2078856138178654e-05,
+          "passed": true
+        },
+        "segmented_state": {
+          "max_abs": 1.0728836059570312e-06,
+          "relative_l2": 9.82903316121179e-07,
+          "passed": true
+        },
+        "decode_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 3.689564543152636e-05,
+          "passed": true
+        },
+        "decode_state": {
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 6.995588520729811e-07,
+          "passed": true
+        },
+        "hybrid_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.406296270868161e-05,
+          "passed": true
+        },
+        "hybrid_state": {
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 6.727441058282583e-07,
+          "passed": true
+        }
+      },
+      "numpy_vs_torch_reference_output_max_abs": 2.086162567138672e-07,
+      "numpy_vs_torch_reference_state_max_abs": 7.450580596923828e-07
+    },
+    {
+      "length": 129,
+      "passed": true,
+      "independent_checks": {
+        "full_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.192448783433005e-05,
+          "passed": true
+        },
+        "full_state": {
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 6.997260286635164e-07,
+          "passed": true
+        },
+        "segmented_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.192448783433005e-05,
+          "passed": true
+        },
+        "segmented_state": {
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 6.997260286635164e-07,
+          "passed": true
+        },
+        "decode_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 3.676029198498871e-05,
+          "passed": true
+        },
+        "decode_state": {
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 7.290887475346966e-07,
+          "passed": true
+        },
+        "hybrid_output": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.390657769850366e-05,
+          "passed": true
+        },
+        "hybrid_state": {
+          "max_abs": 6.258487701416016e-07,
+          "relative_l2": 7.022045698838964e-07,
+          "passed": true
+        }
+      },
+      "numpy_vs_torch_reference_output_max_abs": 2.086162567138672e-07,
+      "numpy_vs_torch_reference_state_max_abs": 7.748603820800781e-07
+    }
+  ],
+  "elapsed_seconds": 3.0105640000001586,
+  "torch_imported": false,
+  "new_forward_or_npu": false
+}

@@ -1,0 +1,43 @@
+"""Round saved CPU scores to BF16; isolate output rounding without a new forward."""
+
+import ast
+import csv
+import json
+from pathlib import Path
+
+import numpy as np
+
+task = Path(__file__).parent
+tree = ast.parse((task / "audit_supplement.py").read_text())
+definitions = [n for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom, ast.ClassDef, ast.FunctionDef))]
+namespace = {}
+exec(compile(ast.Module(body=definitions, type_ignores=[]), "strict_numpy_tensor_reader", "exec"), namespace)
+load = namespace["load_tensor_record"]
+round_bf16 = namespace["bf16_round"]
+scores = load(task / "evidence/head_replay_r1/replay_logits.pt")["replay_logits"]
+raw = task.parents[1] / "tokenspeed/results/raw/homework1_stage_b_20261015"
+rows = []
+for case in range(16):
+    reference = load(raw / f"cpu-fp32-eager-cached-threads1/case_{case:02d}.pt")["cached_logits"]
+    for step in range(17):
+        original = load(raw / f"engine_r3/case_{case:02d}/step_{step:02d}.pt")["logits"]
+        fp32 = scores[case*17+step]
+        rounded = round_bf16(fp32)
+        rows.append(dict(case=case, step=step, reference_argmax=int(reference[step].argmax()),
+                         original_argmax=int(original.argmax()), fp32_argmax=int(fp32.argmax()),
+                         rounded_fp32_argmax=int(rounded.argmax()),
+                         different_elements=int(np.count_nonzero(original != rounded)),
+                         max_abs=float(np.max(np.abs(original-rounded)))))
+summary = dict(vectors=len(rows), elements=scores.size,
+               rounded_vs_original_different_elements=sum(r["different_elements"] for r in rows),
+               rounded_vs_original_different_vectors=sum(r["different_elements"]>0 for r in rows),
+               rounded_vs_original_max_abs=max(r["max_abs"] for r in rows),
+               rounded_vs_original_argmax_differences=sum(r["rounded_fp32_argmax"] != r["original_argmax"] for r in rows),
+               rounded_vs_reference_argmax_differences=sum(r["rounded_fp32_argmax"] != r["reference_argmax"] for r in rows),
+               limits="CPU FP32 rounded to BF16 reproduces only output quantization, not the NPU accumulation algorithm. Uses saved vectors; no model forward or NPU execution.")
+with (task / "head_rounding_vectors.csv").open("x", newline="") as stream:
+    writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+(task / "head_rounding_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
+print(json.dumps(summary))

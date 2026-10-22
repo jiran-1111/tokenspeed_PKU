@@ -1,143 +1,334 @@
-# 第一次作业：计算子系统——Qwen3.5-0.8B 模型适配与正确性
+# 智能计算系统课程第一次作业实验报告
 
-## 成员职责与 AI 工具使用
+**题目：Qwen3.5-0.8B 单 chip Ascend 计算子系统适配与正确性验证**
 
-小组成员：张晟祺、李书砚、计然。下表是小组责任边界和成果归属安排，按实现、实验核验、文档三类交付尽量均衡；不是个人实操或工时统计。
+**小组成员：张晟祺、李书砚、计然**
 
-| 成员 | 负责的成果范围 | 与其他成员的接口 |
-|---|---|---|
-| 张晟祺 | 环境/依赖与启动配置；算子支持矩阵；GDN、Norm、注意力等计算路径及适配来源说明 | 交付固定模型、配置和计算实现，供正确性与性能实验共同使用 |
-| 李书砚 | 数值参考及冻结判据；典型/边界形状、多步状态和请求隔离验证；失败记录与误差审计 | 交付可复查的通过项、失败项和覆盖边界，不以修改性能配置或阈值规避失败 |
-| 计然 | TTFT/Decode/HBM 基线；Profiler 证据与分析；复现入口、报告整合和源码交付 | 只分析匹配源码的数据，保持原始记录、实验口径和发布版本可追溯 |
+## 小组分工
 
-**实际执行说明：** 本阶段的代码编辑、实验调度、数据处理和报告起草由 Codex AI 工具辅助代为完成；未记录三位成员各自亲手执行的操作或个人工时，因此不虚构个人实操贡献。上述职责用于界定材料理解和答辩责任，不能代替学生对实现及结论的理解。教学网提交由用户本人处理。
+| 成员 | 主要责任与交付成果 | 与其他成员的协作边界 |
+| --- | --- | --- |
+| 张晟祺 | 环境与模型适配：整理依赖和启动配置，负责权重加载、Prefill/Decode 计算接入、算子支持矩阵及 GDN 路径说明；对应第1、2章 | 提供固定实现、配置及张量接口，作为正确性验证与性能测量的共同输入 |
+| 李书砚 | 正确性验证：建立独立参考与误差判据，负责典型/边界形状、多步状态、请求隔离和完整模型连续推理的验证及误差分析；对应第3章 | 独立检查实现的输出和状态，反馈可复现问题；验证结论不由性能结果替代 |
+| 计然 | 性能与瓶颈分析：负责两档输入×两档输出的测量方案、TTFT/Decode/HBM 数据、Profiler 热点和复现材料；对应第4章及附录 | 在固定计算实现上采集与分析；诊断、Profiler 和正式计时分别运行 |
 
-## 1. 范围、环境与固定版本
+三人的责任分别覆盖实现、验证与性能分析，各自负责对应章节和证据整理；结论核对属于小组共同责任。代码编辑、实验执行、数据处理和报告整理由 Codex AI 工具在本组授权下完成，上表为成果责任分工，不据此认领个人实操或工时。
 
-本阶段对应《作业1.md》，截止日期为 2026-10-27，仅验收 0.8B、TP1、单 chip 的计算路径、分层数值/状态验证与性能基线。四模型 Agent 总项目仍未完成；4B/9B/27B 的结果不替代本报告的 0.8B 证据。
+## 1. 任务一：建立运行环境
 
-| 项目 | 本次条件 |
-|---|---|
-| 硬件 | Huawei Atlas 800I A3；运行时 SoC `Ascend910_9362` / `Ascend910_93`；单 chip 64 GiB HBM；Kunpeng920 系列主机 |
-| 系统与软件 | openEuler 24.03 / aarch64；项目 Conda Python 3.11；PyTorch/torch_npu 2.9.0；CANN 8.5.0；Transformers 5.12.0；Triton-Ascend 3.2.1 |
+### 1.1 实验目标
+
+本实验对应第一次作业的计算子系统要求：在一个 Ascend 910C chip 上运行 Qwen3.5-0.8B，说明模型计算路径及算子支持，建立可信的分层正确性验证，并测得可比较的基础性能。模型主要计算在 NPU 上执行；主机承担请求处理、分词和调度，CPU 高精度计算仅用于离线参考与分析。
+
+### 1.2 硬件、软件与模型版本
+
+| 项目 | 实验配置 |
+| --- | --- |
+| 服务器与 NPU | Huawei Atlas 800I A3；运行时 SoC 为 `Ascend910_9362`，CANN 系列标识为 `Ascend910_93`；使用单个 64 GiB HBM chip |
+| 主机与系统 | Kunpeng 920 系列主机；openEuler 24.03，aarch64 |
+| 软件 | 项目 Conda Python 3.11；PyTorch 2.9.0；torch_npu 2.9.0；CANN 8.5.0；Transformers 5.12.0；Triton-Ascend 3.2.1 |
 | 模型 | `Qwen/Qwen3.5-0.8B`，revision `2fc06364715b967f1860aea9cf38778875588b17` |
-| 推理 | BF16、TP1；最大上下文4096、block128、chunk4096、max_num_seqs16、max_total_tokens65536；prefix cache、KVStore、mixed batch、overlap 关闭 |
-| 源码身份 | 独立交付分支 `course/hw1-20261015`；数值/Profiler共用1396文件源码清单，SHA256 `f44d5c85b1d9bfe30d3e04177fa6d4b5daf773564ee0a5611c07179fa2acb34e` |
+| 权重与并行 | BF16；tensor parallel size=1；主计算不使用 CPU offload |
+| 调度与缓存 | 最大上下文 4096，block size=128，chunked prefill size=4096，max_num_seqs=16，max_total_tokens=65536，memory_utilization=0.9 |
+| 实验控制 | prefix cache、KVStore、mixed batch、overlap schedule 均关闭；性能测量的客户端并发为 1 |
 
-不能只凭工具的 `Chip Version: V1` 字段判定设备代际；SoC、板型和 CPU 证据见[硬件身份核实](../project/hardware_identity_20261014.md)。实验使用逻辑NPU2→物理NPU1/chip0；每次运行前实时检查映射及进程，一次只运行一个 NPU 实验，未终止物理NPU0的既有任务。环境、缓存、模型、临时文件和结果均留在工作区，未安装全局依赖或重置已有 dirty worktree。
+设备身份依据 SoC、CANN 设备系列和服务器板型确认，详见[硬件记录](../project/hardware_identity_20261014.md)。每项实验记录对应源码、配置和模型版本；本报告各数值与性能实验使用同一计算实现，未将诊断用的额外同步带入性能基线。
 
-运行环境来自课程既有 Ascend 栈的项目内 Conda 副本；运行前使用 `source scripts/use_project_env.sh` 加载项目环境和 CANN。完整依赖、模型版本及环境边界见[环境说明](../project/environment.md)。不把旧 setup 脚本中的建议版本冒充本次实际版本。
+### 1.3 启动与连续推理
 
-## 2. 计算路径与适配范围
+在已准备好的 Ascend 项目环境中，从仓库根目录激活环境并使用固定配置启动：
 
-模型包含24个 decoder layers，其中18层 Gated DeltaNet、6层 full attention；hidden=1024、MLP intermediate=3584、vocab=248320。Full attention 为8个Q头、2个KV头、head_dim256；GDN为16头、K/V维128、卷积宽4。
+```bash
+source scripts/use_project_env.sh
+# 先核对当前设备映射及空闲，再选择一个可用 chip。
+export ASCEND_RT_VISIBLE_DEVICES=2
+OMP_NUM_THREADS=1 bash scripts/serve.sh configs/baseline/qwen35_0.8b.yaml
+```
 
-| 模块 | 主要形状与精度 | 来源与本阶段工作 |
-|---|---|---|
-| Embedding、线性层、MLP、LM head | IDs→hidden[N,1024]；gate/up[N,3584]；logits[B,248320]；BF16 | 复用上游并行层及 NPU 矩阵运算，未自写 GEMM |
-| Gemma RMSNorm、残差、Q/K Norm | hidden宽1024，Q/K末维256；BF16输入/输出，FP32中间计算 | 保留FP32有效gamma；BF16残差原位更新；Q/K归一化后恢复输入dtype，避免与BF16 V不兼容 |
-| RoPE、Q/gate、paged MHA | Q[8,256]、KV[2,256]；rotary64、192维不旋转；page128 | 修正Q/gate布局；复用实际MRotaryEmbedding与NPU注意力接口，补D256及跨页验证 |
-| GDN投影、短卷积 | mixed QKV[N,6144]；Z[N,16,128]；conv state[P,6144,3] | 复用上游Triton-Ascend路径，验证卷积实际NPU执行、多步与slot隔离 |
-| GDN、gated norm、输出投影 | Q/K/V[B,T,16,128]；SSM[P,16,V=128,K=128]；输出投影回[N,1024] | NPU Prefill beta采用FP32 sigmoid，并保留关键WY/状态计算FP32；检查状态读写槽及末端输出dtype |
+设备 2 是本次实验使用的逻辑编号，其他机器应按实时映射选择。该配置启用图执行路径；用于提取完整 logits 的数值诊断单独采用 eager 模式。完整推理结果包括 96 条正式基线请求，覆盖实际 130/940 个输入 tokens 与 32/128 个输出 tokens；所有正式请求均生成规定长度，完成从输入到连续 Decode 的推理流程。
 
-完整功能、输入输出、dtype、实现来源、Ascend支持状态和测试方法见[算子矩阵](../project/homework1_operator_matrix.md)。模型结构、scheduler和大部分算子直接复用 TokenSpeed；来源遵循原仓库 MIT 许可。本组适配集中于精度/布局、D256注意力和有状态计算兼容，不把整个引擎或 GDN 算法称为从零开发。
+## 2. 任务二：打通模型计算
 
-### 关键模块：GDN 从模型调用到状态更新
+### 2.1 整体计算路径
 
-1. Decoder先处理残差与Gemma RMSNorm；`_forward_input_proj`投影QKVZ/BA，拆出mixed QKV、Z及a/b。GDN拆分不能套用full attention的Q/gate按头交错布局。
-2. `ctx.attn_backend.forward`进入Mamba backend；Prefill按packed序列边界执行卷积，Decode按slot索引更新3个历史位置。
-3. 卷积后Q/K/V整理为[B,T,16,128]；归一化采用平方和加eps，执行decay及delta-rule。NPU Prefill显式从FP32 b计算sigmoid，并输出最终状态。
-4. Decode分别传入初始状态读索引和输出写索引。状态池按[V,K]存储，CPU递推参考通常按[K,V]存储，对照时明确转置；不能覆盖别的请求的输入页。
-5. 输出与Z整理为[N×16,128]进行gated RMSNorm，再投影回[N,1024]。请求结束时按scheduler生命周期回收状态；Session的current-frontier不把尚未forward的末个采样token写入KV/SSM。
+模型包含 24 个 decoder layers，其中 18 层为 Gated DeltaNet，6 层为 full attention。hidden size 为 1024，MLP intermediate size 为 3584，词表大小为 248320。Full attention 具有 8 个 Q heads、2 个 KV heads，head dimension=256；GDN 具有 16 个 heads，K/V dimension=128，短卷积核宽度为 4。
 
-详细调用位置与布局见[GDN路径](../project/homework1_gdn_path.md)。D2H、`.item()`及保存logits会同步并改变时延，所以数值诊断与性能测量使用不同进程。最大的适配障碍是混合注意力的布局/缓存语义和多处BF16舍入边界，不能仅凭输出finite或首token一致证明正确。
+```text
+输入 Token IDs → Embedding
+  → 24 层 Decoder：归一化 → Full Attention 或 Gated DeltaNet → 残差/MLP
+  → 最终归一化 → LM head → logits → greedy 采样 → 输出 Token
+```
 
-## 3. 分层正确性与请求状态
+Prefill 并行处理提示词，建立 full-attention KV cache、卷积历史状态和 GDN 递推状态。Decode 每次处理新进入前沿的 Token，读取当前请求的历史缓存并更新对应状态。两阶段共享模型权重，区别主要在张量长度、缓存访问和状态更新方式。
 
-最终源码在服务器新进程执行课程软件集合 **569 passed、0 skipped**。关键模块及真实Session组合复验 **108 passed、0 failure/error/skip**，记录203条误差或状态属性；其中101项包含NPU计算，7项为CPU解析检查。完整向量诊断、模块误差与Session行为分别验收，不互相替代。
+### 2.2 算子功能、形状与精度
 
-| 验证层 | 本次覆盖与参考 | 结果与限制 |
-|---|---|---|
-| Norm / 实际 MRoPE | 宽度256/1024、典型及边界rows、rotary64及未旋转192维；CPU FP32公式；canonical gamma与Q/K额外检查 | 70+3+3项通过；辅助归约分支的通信使用mock，不当作真实TP通信验收 |
-| GDN Prefill / Decode | 真实16头；Prefill长度1/8/127/128/129；多步双slot、读写槽分离；CPU FP32/FP64递推与epsilon边界 | 17项通过，其中4项CPU解析；原数值容差未放宽；历史clamp参考勘误保留 |
-| D256 paged MHA | 8Q/2KV、KV长度127/128/129、非连续页表、Extend/Decode；独立CPU FP32 GQA/causal参考 | 6项NPU+3项CPU通过；输入不变性检查保留，不外推所有图执行形状 |
-| 卷积 / gated norm | 通道16/6143/6144、每slot连续8步及未选slot精确不变；gated norm宽128及大rows边界 | 3+2项通过；覆盖有限形状 |
-| 原生 Engine Session | 两会话交错、stateless对照、关闭后拒绝、重开及context元数据 | 1项集成测试内8组输出/context配对、4次关闭拒绝及重开复现通过；不外推HTTP多并发Session性能 |
+表中 N 为本次 forward 的 Token 行数，B 为序列数，T 为序列长度，P 为状态池 slot 数。
 
-测试退出码为0、设备释放，但Session清理仍有pending-task及关闭日志流错误记录，因此不称完全无警告退出。关键算子精确判据及依据见[数值合同](../project/homework1_numerical_contract.md)；GDN参考语义勘误见[审计记录](../project/homework1_gdn_reference_audit_20261014.md)。
+| 模块 | 功能与主要输入→输出形状 | 数据类型 |
+| --- | --- | --- |
+| Embedding / LM head | `IDs[N] → [N,1024]`；采样位置 `[B,1024] → [B,248320]` | 权重与主激活 BF16；诊断保存 logits 时展开为 FP32 |
+| Dense / MLP | `[N,1024] → gate/up 各[N,3584] → [N,1024]`，完成线性投影和门控激活 | 权重、输入及输出 BF16 |
+| RMSNorm / Gemma RMSNorm | 对 hidden 1024 或 Q/K 末维 256 归一化，保留输入形状；处理残差 | BF16 存储，FP32 归约及有效 gamma |
+| Q/K Norm、Q gate、MRoPE | Q/gate 各 `[N,8,256]`，K/V 各 `[N,2,256]`；旋转其中 64 维 | Q/K 归一化在 FP32 中间计算，恢复 BF16；其余 192 维不旋转 |
+| Paged MHA | `Q[B,T,8,256]`、`KV[B,T,2,256] → [B,T,8,256]`；page size=128 | Q/K/V 与 KV cache 为 BF16 |
+| GDN 投影与拆分 | `[N,1024] → QKVZ[N,8192]`、`BA[N,32]`；拆为 mixed QKV `[N,6144]`、Z `[N,16,128]` 与 a/b `[N,16]` | 投影 BF16；gate 的关键中间计算 FP32 |
+| 短因果卷积 | mixed QKV `[N,6144] → [N,6144]`；权重 `[6144,1,4]`；历史状态 `[P,6144,3]` | 输入与历史状态 BF16 |
+| GDN 递推 | Q/K/V `[B,T,16,128] → output 同 V`；状态池 `[P,16,128,128]`，末两维为 V、K | 输入/输出 BF16；本次 SSM state 为 FP32 |
+| Gated RMSNorm / 输出投影 | 输出与 Z 展为 `[N×16,128]`，归一化及门控后 reshape 为 `[N,2048]`，投影至 `[N,1024]` | norm/gate 中间 FP32，输出 BF16 |
+| 采样与输出 | `[B,248320] → Token IDs[B] → 文本` | logits 按模型计算精度处理；Token IDs 为整数 |
 
-## 4. Stage B：冻结的完整模型数值验证
+### 2.3 实现来源、Ascend 支持与测试方法
 
-先完成校准组四种独立精度/设备参考、缓存/重算敏感性审计，再由用户批准冻结经验判据；本次没有按验证组结果调阈值、换样例或删除失败。该判据仅用于固定配置下的有限回归，不是普遍误差上界或模型质量充分证明。
+| 模块 | 当前实现来源和适配方式 | Ascend 支持及验证方法 |
+| --- | --- | --- |
+| Embedding、线性层、MLP、LM head | 复用 TokenSpeed Qwen3.5 与并行层，使用 NPU 矩阵运算 | 参与完整 NPU 推理；用全词表 logits 与多长度连续推理验证组合计算 |
+| Gemma Norm / 残差 | 复用 NPU RMSNorm；有效 gamma 按 FP32 的 `1+weight` 计算；残差在原 BF16 对象中更新 | NPU 支持；真实宽度、残差结果、gamma 精度和输出 dtype 对照 |
+| Q/K Norm、MRoPE、Q gate | 按 head 正确拆分 Q/gate；Q/K norm 后恢复输入 dtype；使用 runtime 实际 MRotaryEmbedding | NPU 支持；packed 非连续输入、位置边界、未旋转维度与 CPU 公式对照 |
+| Paged MHA | 复用 Ascend 注意力实现，适配 D256 与分页访问 | NPU 支持；真实 8Q/2KV、非连续页表和 127/128/129 长度的 Extend/Decode 对照 |
+| GDN 投影及卷积 | 复用上游合并投影和 Triton-Ascend 卷积路径 | NPU 支持；通道尾边界、双 slot 连续更新、历史移位与未选槽检查 |
+| GDN Prefill / Decode | 复用统一 GDN 算子接口；Prefill beta 用 FP32 sigmoid，关键状态计算保持 FP32；显式传入状态读写索引 | NPU 支持；CPU 递推参考、分块边界、近 epsilon 输入及多步状态对照 |
+| Gated Norm / 输出投影 | 复用 gated RMSNorm 与输出线性层，保持 norm-before-gate 语义 | NPU 支持；实际宽度 128、超大 rows 边界及 CPU FP32 公式对照 |
 
-验证集为原manifest中16条validation输入：长度1/8/127/128/129/512/1024/2048各两条，使用原固定16-token续接。文件SHA256为`23dbfc6e21d99b674f0aa40a95374c4a215a7ec838f715692eec12d07f3f22fb`，canonical SHA为`f78c051acc44a969210824200d0b3de17dbc32eaca6643b8124383c47f1d4936`。主参考为同投影learned weights的CPU FP32/eager缓存路径，threads1；320参数共同值SHA为`c2084362ae79d1d0f3d61a9781598296fae0944efe4e6fd04888a48692c57884`。
+本组的适配工作集中在精度、布局和有状态计算的兼容性上。模型主体、线性层、调度器以及大部分 GDN/卷积算法来自 TokenSpeed，未将其作为从零编写的实现；来源及许可证遵循原项目规定。
 
-引擎为BF16/TP1单chip，诊断显式eager。每条保存末端Prefill及连续Decode step1–16的248320维完整logits，校验实际ID、绝对位置与三轴MRoPE位置、shape、finite和缓存前沿；仅在原采样完成后替换输出token以控制下一步输入，绝不修改保存的logits。
+### 2.4 关键模块：Gated DeltaNet 调用、布局和状态更新
 
-误差在CPU FP64计算：relative-L2=`||actual-reference||₂ / max(||reference||₂, 1e-12)`，max-abs为全部元素最大绝对差。每个向量必须同时满足两项门槛。
+GDN 路径从 `Qwen3_5LinearDecoderLayer.forward` 开始。hidden `[N,1024]` 经过 Gemma RMSNorm 后进入 `_forward_input_proj`，合并投影拆出 mixed QKV、Z、a、b。这里的 QKVZ 布局与 full-attention 的 Q/gate 布局不同，拆分后的维度需分别与各自算子接口匹配。
 
-| 阶段 | 向量数 | 冻结relative-L2上限 | 观测最大relative-L2 | 冻结max-abs上限 | 观测最大max-abs |
-|---|---:|---:|---:|---:|---:|
-| Prefill | 16 | 0.04160680933973707 | 0.021534648897684416 | 0.4934459924697876 | 0.32581615447998047 |
-| Decode step1–16 | 256 | 0.027781371644764415 | 0.019179627022419887 | 0.4458632469177246 | 0.4235382080078125 |
+`ctx.attn_backend.forward` 将上述张量交给 Mamba backend。Prefill 卷积使用 packed sequence 边界；Decode 卷积按请求 slot 读取三个历史位置，与当前输入构成宽度 4 的窗口。执行卷积和激活后，Q/K/V 按 `[B,T,16,128]` 排列。
 
-**272/272向量通过冻结协议。** 最终源码重采与上一轮的272个原始张量文件SHA逐项一致；NumPy使用独立平方和公式复算全部向量，门槛判定、max-abs及argmax均一致，relative-L2最大重算差约2.50e-15。两次重复不当作32条新的独立样本，也不计算总体覆盖概率。
+以 CPU 参考的 K×V 状态方向表示，一个 head 的递推语义为：
 
-仍须单列：本批向量在原额外1%工程门槛下有 **68个失败**，固定输入前沿下argmax有 **13处不同**；历史1%失败及自由greedy的长上下文分叉保持原结论。强制共同续接下的条件argmax不等于自由生成轨迹，不能把本次272向量通过改写成greedy全一致、Session全覆盖或普遍正确性证明。[冻结记录](../project/homework1_frozen_numerical_gate_20261015.md)与[Stage B执行、失败及终态](../project/homework1_stage_b_20261015.md)保留完整依据。
+```text
+q̂t = qt / sqrt(sum(qt²) + ε)，k̂t = kt / sqrt(sum(kt²) + ε)，ε = 10⁻⁶
+S̄t = exp(gt) · S(t−1)
+δt = βt · (vt − k̂tᵀ S̄t)
+St = S̄t + k̂t δtᵀ
+yt = q̂tᵀ St / sqrt(128)
+```
 
-## 5. 最终源码的可比较性能与 HBM
+Prefill 的 NPU 路径显式使用 `beta=b.float().sigmoid()`，通过 `gdn_chunk_prefill` 输出计算结果和最终状态。Decode 通过 `gdn_decode_step` 分别传入 `initial_state_indices` 与 `output_state_indices`，读取前一前沿并写入本次前沿。实际状态池按 `[P,16,V,K]` 保存，因此与 CPU 参考对照时要转置末两维；若只比较范数而不处理方向，会掩盖错误的布局。
 
-同一最终源码、同一服务配置完成96条正式请求/12份摘要。四条件各24请求，实际输出均为32或128，无提前结束。目标输入128/1024经网关构造后实际为130/940，不能称精确128/1024的native性能测量。
+算子输出整理后与 Z 一同展为 `[N×16,128]` 做 gated RMSNorm，再合并为 `[N,2048]`，经输出投影返回 hidden `[N,1024]`。状态属于请求对应的 slot；读页和写页可以不同，更新不得改写其他请求或仍需复用的输入页。
 
-| 实际输入/输出tokens | TTFT P50均值(ms) | 客户端TPOT P50均值(ms) | 服务端ITL mean均值(ms) | E2E P50均值(ms) | 输出吞吐(tok/s) |
-|---|---:|---:|---:|---:|---:|
-| 130/32 | 206.133 | 10.868 | 10.862 | 543.207 | 58.919 |
-| 130/128 | 206.211 | 10.806 | 10.793 | 1577.973 | 81.179 |
-| 940/32 | 722.418 | 10.872 | 10.963 | 1060.191 | 30.101 |
-| 940/128 | 719.266 | 10.893 | 10.887 | 2103.297 | 60.891 |
+设备同步主要涉及调度元数据准备及结果回传。保存 logits、复制到 CPU 和读取标量会额外同步，因此正确性采集与计时分进程执行。状态正确性还受计算前沿约束：刚采样但尚未进入下一次 forward 的 Token，其 KV/SSM 尚未物化；多步和 Session 检查按这个前沿比较。
 
-12轮均有服务端metrics，ITL observation count分别为8×31=248及8×127=1016。长输入主要增加首token前延迟，稳态Decode指标变化较小；这一阶段差异不单独证明全部新增耗时来自哪类kernel。服务退出码0，开始/结束全部源码清单一致。
+## 3. 任务三：验证功能正确性
 
-| HBM状态 | 目标chip设备占用(MB) |
-|---|---:|
-| 启动前 | 3112 |
-| health通过后 | 8459 |
-| 两档输出负载采样最大 | 8461 |
-| 退出后 | 3113 |
+### 3.1 分层方法与误差定义
 
-共121个查询样本，返回码均为0；每次查询后等待1秒，最大查询耗时1.147秒、最大相邻查询起点间隔2.148秒，覆盖启动、两档输出负载及退出。峰值包含条件预热且可能遗漏短尖峰；退出后的基础占用不判为模型泄漏。历史基线保留，不据新旧测量之差宣称优化收益。
+验证分为三个层次：关键算子检查数值和边界形状；状态模块检查多步递推与请求隔离；完整模型检查同一权重下从输入到全部 logits 的组合结果。离线参考从与 NPU 相同的量化后输入和初始状态出发，使用独立 CPU FP32 公式或递推计算；近 epsilon 的解析自检另用 FP64。
 
-TTFT为客户端首token延迟，包含服务、主机、HTTP等；客户端TPOT按生成总时间计算，服务端ITL来自Prometheus直方图sum/count差分，三者不混用。每个条件预热3次后，正式三轮、每轮8请求；表中P50先按每轮计算再取三轮均值，不是合并请求分位数。目标输入长度与实际token数分别报告。所有计时排除logits诊断和Profiler。
+算子逐元素判据为 `|actual−reference| ≤ atol + rtol×|reference|`。同时记录 finite、最大绝对误差和 relative-L2：
 
-HBM采用独立全设备周期采样、按本次physical1/chip0（Phy-ID2）解析；设备总占用不是模型有效tensor或KV专属占用，采样最大值也不是瞬时峰值保证。旧benchmark helper每轮硬编码读取physical0，其快照不用于本次目标设备资源结论。
+```text
+relative-L2 = ||actual − reference||₂ / max(||reference||₂, 10⁻¹²)
+max-abs     = maxᵢ |actualᵢ − referenceᵢ|
+```
 
-## 6. Prefill 与 Decode 热点
+BF16 输出允许量化和归约次序带来的误差；FP32 中间状态采用更紧的绝对包络。对纯拷贝、历史移位、未选中 slot、有效 gamma 和未旋转维度等结构性不变量，使用精确相等。以下包络是实测前设定的工程判据，依据包含 BF16 舍入量级、FP32 状态存储及边界测试，不作为任意输入的理论误差上界。
 
-最终Decode Profiler在Stage B通过、源码固定之后串行执行。native输入128 tokens，三个8-token预热请求后，单请求生成256 tokens；首个输出之后启动、累计128个输出时停止采集，再继续完成请求。实际metadata确认Level1及`ACL_AICORE_PIPE_UTILIZATION`。762次full-attention调用对应6层×127步，GDN Decode为18×127次，无GDN chunk Prefill算子，支持该窗口为连续Decode而不是混合Prefill/Decode。
+### 3.2 关键算子与模块结果
 
-| Decode算子类别 | 记录任务数 | 全部Task Duration累计占比 |
-|---|---:|---:|
-| 卷积状态更新 `_causal_conv1d_update_kernel` | 2286 | 36.944% |
+| 模块 | 典型与边界覆盖 | 参考及主要判据 | 结果 |
+| --- | --- | --- | --- |
+| RMSNorm、Gemma Norm、实际 MRoPE | 宽度 256/1024；rows 0/1/129/1024；位置 0/1/127/128/4095；旋转 64 维，保留 192 维 | CPU FP32；BF16 Norm atol=0.002、rtol=0.02；MRoPE 0.02/0.02；FP32 额外检查 10⁻⁵；残差/未旋转部分精确不变 | 70 项通过 |
+| Canonical Gemma gamma 与 Q/K Norm | 有/无残差、实际 gamma、非连续 Q/K、rows 1/129 | gamma/残差精确相等；canonical 输出 10⁻⁴/10⁻³；Q/K 输出 0.002/0.02 | 3+3 项通过；辅助归约通信采用 mock |
+| GDN Prefill / Decode | 16 heads、K/V=128；Prefill 长度 1/8/127/128/129；近 epsilon 级别；双 slot 各连续 8 步及读写槽分离 | CPU FP32 递推；BF16 输出 0.002/0.02；FP32 state 0.0003/0.01；未选槽精确不变；4 项 CPU FP64 解析自检 | 17 项通过，其中 13 项含 NPU 计算 |
+| D256 paged MHA | 8Q/2KV；KV 长度 127/128/129；两个非连续页序列；Extend 和 Decode | 独立 CPU FP32 GQA/causal attention；0.02/0.02；七个输入保持不变 | 6 项 NPU 与 3 项 CPU 检查通过 |
+| 短因果卷积 | 通道 16/6143/6144；width=4；双 slot 各 8 步 | CPU FP32 点积+bias+SiLU；输出 0.002/0.02；移位和未选槽精确相等 | 3 项通过 |
+| Gated RMSNorm | width=128；rows=65536、width=8 的 grid 边界 | CPU FP32 Norm×gamma×SiLU(z)，再量化；0.02/0.02 | 2 项通过 |
+
+以上模块与下节 Session 集成共 108 项测试通过，包含 101 项实际 NPU 计算和 7 项 CPU 解析检查，无 failure、error 或 skip。MHA 跨页测试的观测最大 max-abs 为 0.002144873，最大 relative-L2 为 0.002221517，分别来自不同样例。测试覆盖实际模型维度及关键分块/分页边界，未把它扩展解释为任意形状或真实 TP 通信验收。
+
+### 3.3 多步状态更新与请求隔离
+
+卷积测试在两个 slot 上交错推进，各进行 8 步更新，将每一步输出及三个历史位置与 CPU 参考比较，并检查未选中的 slot 完全不变。GDN 测试同时对输出和 FP32 state 作逐元素对照，增加“从一个 slot 读取、向另一个 slot 写入”的情况，检查输入页与其他页未被覆盖。这些检查分别约束递推数值、历史移位和写入归属。
+
+完整引擎的状态检查使用两个交错原生 Session，将增量执行结果与全历史重算对照。8 组输出 Token IDs 和 context 元数据配对一致；关闭后的 4 次使用均被拒绝，重新建立会话后结果可复现。它验证请求状态的持有、隔离与释放语义；其对照来自同一引擎，不能代替下一节的独立 CPU 数值参考。进程退出码为 0，目标设备资源释放，但 Session 清理日志存在 pending-task 与关闭日志流提示。
+
+### 3.4 完整模型：多输入长度与连续 Decode
+
+完整模型固定同一模型 revision、投影权重数值、精度和续接配置。CPU FP32/eager 缓存路径为主参考，CPU threads=1；NPU 侧为 BF16、TP1、单 chip。验证输入长度为 **1、8、127、128、129、512、1024、2048**，每档两条，共 16 条，相同输入之间独立初始化状态。
+
+每条轨迹保存末端 Prefill 和连续 Decode 第 1–16 步的 **248320 维完整 logits**，共 16+256=272 个向量。使用原固定 16-token 续接使参考与引擎的输入前沿一致；保存的是实际计算出的 logits，续接控制只决定下一步输入。与此同时检查实际输入 IDs、绝对位置和三轴 MRoPE 位置、shape、finite 与缓存前沿。
+
+冻结判据在独立校准后、验证组执行前确定，每个向量必须同时满足 relative-L2 与 max-abs。下表为结果，完整阈值精度见附录。
+
+| 阶段 | 向量数 | relative-L2 上限 | 实测最大 relative-L2 | max-abs 上限 | 实测最大 max-abs | 结果 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Prefill | 16 | 0.04160680934 | 0.02153464890 | 0.4934459925 | 0.3258161545 | 16/16 通过 |
+| Decode 1–16 | 256 | 0.02778137164 | 0.01917962702 | 0.4458632469 | 0.4235382080 | 256/256 通过 |
+
+这说明当前计算实现在指定多长度、固定前沿协议下满足约定误差范围。独立 NumPy 复算的判定、最大绝对误差及 argmax 与原分析一致，relative-L2 重算差约为 2.50×10⁻¹⁵；重复采集得到的 272 个张量文件逐项相同。
+
+**仍存在的数值边界：**若采用额外的 1% relative-L2 工程门槛，本批有 68 个向量失败；固定前沿下有 13 个向量的 argmax 与参考不同。因此，本实验没有证明自由 greedy 输出逐 Token 相同，自由生成的长上下文分叉也未被上述结果消除。通过的结论是固定协议下的完整 logits 误差验收，不能用它取代生成质量评价。第4章的连续推理基线说明系统能够完成规定长度请求，并不另行宣称输出与参考完全一致。
+
+### 3.5 最后评分精度与选词敏感性
+
+为检查完整 logits 误差与选词差异的关系，首先复查第3.4节的全部向量。13处 argmax 差异全部发生在 Decode，且引擎所选 Token 都是 CPU 参考的第二名。参考前两名的分差为 0.00501–0.09095；其中12处在引擎 BF16 分数中并列，另外1处引擎两候选相差0.0625。小分差意味着分数的轻微变化就可能改变选词，但这些排名事实本身不能定位误差来源。
+
+采用同一计算实现、同一投影权重及原16条输入和固定16-token续接，在 NPU 上重新运行，捕获最终词表投影前的真实 BF16 hidden vector，保持原评分和采样计算。新采集的272个 logits 文件与原R3逐文件 SHA 完全一致，确认本次捕获复现了原结果。实际输出头权重展开成 FP32 后的数值指纹与主参考 embedding 权重相同；0.8B 的输出头和 embedding 共享参数。
+
+随后在 CPU 上将这组已保存的 hidden 和权重数值展开为 FP32，仅重算最后的词表投影。计算使用单线程、每块4096个词表行，并在全部272个前沿与原 CPU FP32/eager 完整模型参考比较。上游层和状态仍来自原 BF16 服务路径。
+
+| 检查项 | 原服务 BF16 评分 | 同一 hidden 的 CPU FP32 最后投影 |
+| --- | ---: | ---: |
+| 完整 logits 向量数 | 272 | 272 |
+| 冻结双门槛失败数 | 0 | 0 |
+| 额外1% relative-L2门槛失败数 | 68 | 66 |
+| 相对完整模型参考的 argmax 差异数 | 13 | 9 |
+
+FP32重放使原13处差异中的8处消失，另5处仍存在，同时在原先一致的前沿新增4处差异，最终为9处。仅提高这一步的精度，仍无法恢复完整 CPU FP32 参考的全部排名。两个阶段的最大 relative-L2 仅从 Prefill 的0.021535降至0.021469、Decode的0.019180降至0.019105，说明完整分数误差不能仅归因于最终评分的BF16输出舍入。
+
+CPU重放同时改变了设备和累加实现。为单独观察输出舍入，对已保存的CPU FP32分数再做BF16舍入：272个前沿的argmax全部恢复为原服务的选择，相对参考仍有13处差异。这支持输出量化对本批近并列选词的影响；但两组完整分数仍有12559/67543040个元素不同，最大绝对差0.0625，不能据此把全部logits误差归因于量化。
+
+对参考、原服务和FP32重放所选候选追加CPU FP64点积检查，候选分数与FP32的最大绝对差为2.535e-5，另有1处近并列候选排序不同。这只是候选检查，没有计算全词表FP64结果。本实验是局部精度诊断，不能视作整模型NPU FP32实验，也不据此宣称自由生成质量改善。生产模型保持原精度，原13处差异和68个1%失败记录均保留。
+
+### 3.6 相关 key、缓慢衰减下的 GDN 状态验证
+
+除随机与分块边界输入外，构造 key 方向高度相似、beta接近1、状态衰减很慢的输入，以检查重复更新时的数值稳定性。采用真实的16 heads、K/V维128、BF16 Q/K/V和FP32状态。固定seed=20261022，所有长度取同一129-token母序列的前缀；key为同一基向量叠加标准差0.01的噪声，query叠加标准差0.05的噪声，V为独立随机输入，初始状态标准差0.01。beta约0.99，g约−1e-8，其FP32指数在该条件下舍入为1，构成几乎不遗忘历史的压力情形。
+
+固定测试长度64/65/127/128/129，分别运行整段Prefill、分段Prefill、全序列逐步Decode，以及先Prefill再逐步Decode。长度64在32处分段，其余在64处分段。CPU FP32逐Token递推作为独立参考；CPU状态采用K×V方向，NPU状态池采用V×K方向，比较时显式转置。输出比较参考的BF16舍入值，容差仍为atol=0.002、rtol=0.02；FP32状态仍为atol=0.0003、rtol=0.01，未改变原模块判据。
+
+| 长度 | 整段Prefill输出max-abs | 整段Prefill状态max-abs | 逐步Decode状态max-abs | Prefill后Decode状态max-abs | 14组数值对照 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 64 | 0.0009765625 | 9.536743e-07 | 6.556511e-07 | 6.556511e-07 | 14/14通过 |
+| 65 | 0.0009765625 | 7.152557e-07 | 6.258488e-07 | 7.152557e-07 | 14/14通过 |
+| 127 | 0.0009765625 | 1.162291e-06 | 7.450581e-07 | 8.940697e-07 | 14/14通过 |
+| 128 | 0.0009765625 | 1.221895e-06 | 8.046627e-07 | 8.34465e-07 | 14/14通过 |
+| 129 | 0.0009765625 | 7.748604e-07 | 7.748604e-07 | 8.940697e-07 | 14/14通过 |
+
+五种长度共70组输出/状态数值对照全部通过，包含各执行方式与CPU参考，以及分段、逐步执行与整段Prefill之间的比较。Decode首次从slot 1读、向slot 3写，之后持续更新slot 3；每步检查其余四个slot逐位不变。先Prefill后Decode的情况也逐步检查未选槽。所有结构检查均通过，没有出现非有限值。
+
+本机另外使用NumPy独立实现同一递推，复算五组原始输入及各执行方式的40组输出/状态比较，结论一致。本轮在服务器复验原108项模块与Session测试，加上6项捕获保护测试，共114项通过，零失败、零跳过。困难输入结果支持本实现对这些固定形状和更新条件的稳定性，不证明任意输入下均无误差，也不替代第3.4节完整模型验证。
+
+## 4. 任务四：建立性能基线
+
+### 4.1 测量方法
+
+性能实验使用第 1 节配置，客户端并发为 1，分别组合短/长输入和短/长输出。目标输入为 128/1024 tokens，经网关提示词构造与分词后，**实际输入为 130/940 tokens**；输出固定为 32/128 tokens。四种条件各预热 3 次，再测 3 轮，每轮 8 个请求，共 96 条正式请求。没有提前结束的正式请求。
+
+计时在无 logits 诊断、无 Profiler 的独立进程中完成。TTFT 从客户端发出请求计至首个输出 Token，包含 Prefill、服务和主机侧开销。客户端 TPOT 为首 Token 后剩余生成时间除以 `输出 Token 数−1`；服务端 ITL mean 由时间直方图的 sum/count 差分得到。表中 TTFT、TPOT、E2E 为“每轮 P50 的三轮均值”，不是把全部请求合并后求 P50；ITL mean 和吞吐量也按三轮汇总取均值。
+
+### 4.2 两档输入与两档生成长度的结果
+
+| 输入 tokens | 输出 tokens | TTFT (ms) | TPOT (ms/token) | 服务端 ITL (ms/token) | E2E (ms) | 输出吞吐 (token/s) |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 130 | 32 | 206.133 | 10.868 | 10.862 | 543.207 | 58.919 |
+| 130 | 128 | 206.211 | 10.806 | 10.793 | 1577.973 | 81.179 |
+| 940 | 32 | 722.418 | 10.872 | 10.963 | 1060.191 | 30.101 |
+| 940 | 128 | 719.266 | 10.893 | 10.887 | 2103.297 | 60.891 |
+
+![图1：四种实际输入与输出长度下的首Token延迟和Decode时间](assets/homework1_latency.svg)
+
+**图 1.** 同一配置下，输入从 130 增至 940 tokens 时，TTFT 从约 206 ms 升至约 720 ms；Decode TPOT 在四种条件下保持约 10.8–10.9 ms/token。柱顶为三轮汇总值，不表示置信区间。
+
+输入增长主要影响首 Token 之前的阶段：短、长输出条件下均能观察到约 3.5 倍 TTFT。Decode 指标变化较小，说明本组测量范围内增加提示词主要增加 Prefill 及首 Token 前处理成本。生成长度增加时，固定首 Token 成本被更多输出摊薄，输出吞吐随之提高。TTFT 包含 HTTP 和主机开销，不能由这组延迟差直接计算纯 Prefill kernel 耗时。
+
+服务端 ITL 的每轮计数分别为 `8×31=248` 和 `8×127=1016`，与扣除首 Token 后的输出间隔数一致，为 Decode 统计口径提供了交叉检查。
+
+### 4.3 HBM 占用
+
+使用独立 `npu-smi` 采样器，按实际目标 chip 解析设备占用，覆盖服务启动、两档输出负载和退出。共 121 次查询，均正常返回；每次查询后等待约 1 秒，最大相邻查询起点间隔为 2.148 秒。
+
+| 阶段 | 目标 chip HBM 设备占用 (MB) |
+| --- | ---: |
+| 服务启动前 | 3112 |
+| 模型加载且 health 检查通过后 | 8459 |
+| 32-token 输出负载采样最大值 | 8461 |
+| 128-token 输出负载采样最大值 | 8461 |
+| 服务退出后 | 3113 |
+
+负载期最大观测值为 8461 MB；相对启动前增加约 5349 MB。这里统计的是驱动报告的整个目标 chip 占用，包括已有基础占用、权重、状态池、缓存和执行缓冲，不能视为有效模型 tensor 或 KV cache 专属大小。采样包含条件预热，可能遗漏短时尖峰。退出后设备占用恢复到接近启动前的水平。
+
+### 4.4 Decode Profiler 测量范围
+
+为区分 Prefill 与 Decode，使用独立原生请求采集稳态 Decode。输入为 128 tokens；先执行 3 个生成 8 tokens 的预热请求，随后单请求生成 256 tokens。在首个输出之后开始采集，到累计 128 个输出时停止采集，然后继续完成请求。采集使用 Level1 和 `ACL_AICORE_PIPE_UTILIZATION`。
+
+记录中有 762 次 full-attention 调用，等于 6 层×127 步；GDN Decode 与卷积更新各为 18 层×127 步=2286 次，且没有 GDN chunk Prefill 算子。这些计数确认所分析窗口为连续 127 步 Decode。Profiler 导出和采集会扰动请求时延，因此该请求不进入4.2节性能样本。
+
+### 4.5 算子任务时间与主要瓶颈
+
+| 算子类别 | 任务数 | 累计 Task Duration 占比 |
+| --- | ---: | ---: |
+| 卷积状态更新 | 2286 | 36.944% |
 | 矩阵乘法 MatMulV2 | 12319 | 21.107% |
-| ViewCopy | 3302 | 13.334% |
-| fused GDN Decode状态更新 | 2286 | 3.223% |
-| Cast | 18415 | 2.840% |
+| 布局拷贝 ViewCopy | 3302 | 13.334% |
+| 逐元素乘法 Mul | 12446 | 3.636% |
+| GDN Decode 状态更新 | 2286 | 3.223% |
+| 数据类型转换 Cast | 18415 | 2.840% |
 
-分母为108331行算子记录的累计Task Duration（981676.691µs），不是端到端延迟或互斥墙钟分解。只看AICore计数会得到MatMul约92.15%，却漏掉卷积更新等无该计数的kernel，因此不能据此宣称MatMul占整个Decode的92%。
+![图2：连续127步Decode的算子任务时间构成](assets/homework1_decode_profile.svg)
 
-任务时间线包络1.531812秒、记录区间并集0.996449秒，未覆盖0.535363秒，最大间隙约1.406ms；未覆盖不等于设备空闲，也不能全部归因Host调度。MatMul记录的搬运计数明显高于MAC计数，且存在大量Cast/ViewCopy，支持继续检查权重读取、状态布局转换和小算子调度；这些流水计数可重叠，不相加成“访存占比”。
+**图 2.** 分母为全部 108331 行算子记录的累计 Task Duration，合计约 981676.691 μs。不同任务可能重叠，因此图中的百分比不是请求墙钟时间的互斥分解；“其余类型”为剩余所有类型的合计。
 
-本阶段最值得优化的Decode环节是**卷积状态更新及相关布局拷贝**，其次检查矩阵投影和小算子发射开销，而不是仅凭GDN名称先优化递推核心。Prefill历史混合负载中，MatMul、GDN chunk输出和W/U重算居前；该历史结果只用于解释阶段差别，不冒充本次纯Prefill测量或最终源码优化收益。完整资料见[历史资源分布](../project/homework1_profile_resource_share_20261014.md)及本次公开证据。
+卷积状态更新是本次最大的单类任务时间来源，ViewCopy 也具有显著占比，表明状态访问和布局处理值得优先检查。矩阵乘法承担投影与输出层计算，占比约 21.1%；GDN 递推更新本身约为 3.2%。据此，后续优化顺序应为：先检查卷积状态更新及相邻布局拷贝，考虑减少中间搬运或融合连续操作；再检查矩阵投影与小算子发射开销。每种优化仍需维持完整状态更新和本报告的正确性验证。
 
-Profiler会扰动时延，停止后的导出/解析还引入长暂停，因此其请求E2E不能写入第5节无Profiler基线。本阶段不宣称已完成严格计算/带宽/Host的全部因果分解或新的性能优化收益。
+### 4.6 Prefill、Decode 与开销归因
 
-## 7. 复现与适用边界
+只统计带 AICore 计数的任务时，MatMul 占比约 92.15%；这个子集遗漏大量卷积更新等任务，不能代表全部 Decode。MatMul 的原始搬运流水计数高于 MAC 计数，加上 ViewCopy/Cast 的记录，支持进一步研究数据访问成本；流水可重叠，且 HBM 带宽原始单位未独立校准，尚不能给出可信的带宽利用率或纯访存墙钟占比。
 
-- 运行入口、固定配置：`scripts/use_project_env.sh`、`configs/baseline/qwen35_0.8b.yaml`；模型主要计算在NPU执行，CPU仅作离线参考和分析。
-- 分层测试：上述9个测试文件；全软件集合为 `python -m pytest test/course_project`，须使用项目内新basetemp。
-- 固定输入：`configs/validation/homework1_inputs.json.gz`无损解压后必须得到上述原文件SHA；不得重新分词后替换验证集。
-- 完整模型：`collect_homework1_validation_reference.py` → `run_homework1_stage_b.py` → `analyze_homework1_stage_b.py`；输出目录必须不存在，既有失败数据保留。
-- Profiler：`run_homework1_decode_profile.py`要求272向量全部通过、源码清单一致及无诊断环境；先检查实时设备映射和空闲，串行运行。
-- 性能：`serve.py`配合`run_benchmark.py`，短/长输入与两档输出、c1、三轮各8请求；具体最终配置、数据、源码清单和复现命令见交付证据目录与README。
+任务时间线包络约为 1.532 秒，所记录任务区间的并集约为 0.996 秒，未覆盖区间约为 0.535 秒，最大间隙约为 1.406 ms。未覆盖可能涉及主机发射、同步或未记录活动，现有 trace 不能把它全部归因于主机调度或设备空闲。
 
-该阶段完成的是固定0.8B配置的计算适配、分层验证、有限完整logits回归和基础测量。尚未解决的总项目事项包括9B自由greedy长上下文分叉、四模型最终统一版本/负载、并发Session与服务端工具等待语义、完整消融和最终演示答辩；不以本报告宣称四模型Agent项目完成。
+Prefill 与 Decode 的计算结构不同：Prefill 的投影和 GDN chunk 输出/W-U 重算可以批量处理，Decode 需要逐步维护请求状态。本次基线量化了输入长度对首 Token 阶段的影响，并给出了独立 Decode 热点；既有 Prefill/Decode 混合 trace 也能看到矩阵乘法和 GDN chunk 计算，但不据此编造纯 Prefill 的分项耗时。当前证据足以确定优先优化候选，尚不足以完成计算、访存和主机开销的全部因果分解。本报告没有报告未经同配置对照验证的加速比。
+
+## 5. 作业1总结
+
+本实验在 Ascend 910C 系列单 chip 上完成了 Qwen3.5-0.8B 的权重加载、Prefill、Decode、状态维护与连续推理。复用模块主要是模型骨架、线性层、调度和现有算子；适配设计主要解决 Gemma/QK 归一化精度、Q/gate 及状态方向的布局一致性、D256 分页访问与状态读写索引问题。最大的困难是混合 full-attention 与 GDN 模型中多种缓存布局和精度边界同时影响完整输出，单个模块输出 finite 不足以说明组合实现正确。
+
+关键模块、边界形状和多步隔离验证通过，完整模型在固定 16 条轨迹的 272 个 logits 向量上满足冻结判据。较严的 1% 条件及 argmax 仍有失败，故结论限定于已给出的协议，不宣称自由生成逐 Token 相同。 相关key与缓慢衰减压力测试进一步覆盖了GDN分段及Prefill/Decode接续；局部FP32评分重放将argmax差异从13处变为9处，其中消除8处、增加4处，说明最终评分精度只解释了部分选词差异。
+
+短/长输入和短/长输出的性能基线已建立：TTFT 约 206–722 ms，Decode 每 Token 约 10.8–10.9 ms，HBM 负载采样最大占用为 8461 MB。Decode 的首要优化候选是卷积状态更新与相关布局拷贝，依据是同一计算实现的独立 Profiler，而非算子名称或旧快照之间的性能差。
+
+## 附录：复现入口与数据来源
+
+### A. 实现、模型和输入身份
+
+本报告使用 HW1 实验快照 `1d113e54f789a22b14cbbdccbc6230c3f4d0e574` 中的计算实现。1396 项源码清单 SHA-256 为 `f44d5c85b1d9bfe30d3e04177fa6d4b5daf773564ee0a5611c07179fa2acb34e`。源码清单包含对应的实现、配置和测试，用于核对本报告实验的复现身份。
+
+验证输入来自 `configs/validation/homework1_inputs.json.gz`，解压文件 SHA-256 为 `23dbfc6e21d99b674f0aa40a95374c4a215a7ec838f715692eec12d07f3f22fb`；canonical SHA 为 `f78c051acc44a969210824200d0b3de17dbc32eaca6643b8124383c47f1d4936`。同投影权重的 320 个参数共同数值指纹为 `c2084362ae79d1d0f3d61a9781598296fae0944efe4e6fd04888a48692c57884`。
+
+完整向量判据的全部有效数字如下，复现时不得使用正文表格四舍五入后的值：
+
+```text
+Prefill: relative-L2 ≤ 0.04160680933973707，max-abs ≤ 0.4934459924697876
+Decode : relative-L2 ≤ 0.027781371644764415，max-abs ≤ 0.4458632469177246
+```
+
+第3.5、3.6节的补充实验继续使用这1396项计算实现，另行记录诊断脚本与测试源身份，见[补充实验记录](../project/homework1_supplement_20261022.md)和[补充证据](../evidence/hw1_supplement_20261022/README.md)。补充实验使用实时查验为空闲的逻辑设备3（NPU1/chip1），不将其诊断耗时计入第4章性能样本。
+
+### B. 测试与采集入口
+
+在上述 HW1 实现的独立检出中，激活现有 Ascend 环境、确认所需 chip 空闲后执行。各输出路径使用新目录。
+
+| 实验 | 入口与输出 |
+| --- | --- |
+| 关键算子/状态 | `test_homework1_norm_rope_npu.py`、`test_gemma_rmsnorm_canonical_npu.py`、`test_qk_norm_fp32_gamma.py`、`test_gdn_homework1.py`、`test_gdn_prefill.py`、`test_mha_homework1.py`、`test_causal_conv1d_homework1_npu.py`、`test_layernorm_gated_npu.py`、`test_homework1_session_npu.py`；完整路径见[复现命令](../evidence/hw1_20261015/README.md) |
+| 完整模型参考与采集 | `scripts/collect_homework1_validation_reference.py`、`scripts/run_homework1_stage_b.py`、`scripts/analyze_homework1_stage_b.py` |
+| 性能基线 | `scripts/serve.py`、`scripts/run_benchmark.py`；固定 2×2 编排文本在公开证据目录 |
+| Decode Profiler | `scripts/run_homework1_decode_profile.py`；数值验证通过且源码固定后，在独立干净进程运行 |
+
+以下公开数据均对应本报告的实验快照，可通过[证据目录](../evidence/hw1_20261015/README.md)查看文件说明及完整命令。大型 logits、原始 trace、退出日志和 XML 的文件哈希已记录；模型权重及完整原始采集不随报告打包。
+
+| 正文结果 | 对应数据 |
+| --- | --- |
+| 关键模块与请求状态108项验证 | `verification.json`；含原 XML 与测试源码 SHA |
+| 完整 logits 误差与失败 | `numerical_vectors.csv`、`numerical_summary.json`、独立复算与重复采集审计 |
+| 延迟、吞吐和 HBM | `baseline_summary.csv`、`baseline_audit.json`、`hbm_samples.csv` |
+| Decode 范围和算子分布 | `decode_scope_audit.json`、`decode_op_types.csv`、`decode_profiler_summary.json` |
+
+表格和图 1、图 2 均由上述数据整理。文中历史硬件结果只归属于该实现与实验协议。
+
+### C. 补充实验与复算数据
+
+| 正文结果 | 补充证据目录中的文件 |
+| --- | --- |
+| 最后评分与选词差异 | `head_replay_vectors.csv`、`head_replay_summary.json`、`captured_raw_sha256.json` |
+| 已保存评分的BF16舍入对照 | `head_rounding_vectors.csv`、`head_rounding_summary.json` |
+| GDN困难输入、分段与状态更新 | `gdn_protocol.json`、`gdn_results.json` |
+| 服务器回归与本机独立复算 | `verification.json`、`independent_numpy_audit.json`、`regression.xml` |
+| 源码、原始文件与启动记录 | `source_manifest.json`、`capture_source_manifest.json`、`raw_evidence_sha256.json`、`run_receipts.json` |
+
+捕获、GDN测试和CPU重放入口分别为 `scripts/run_homework1_head_capture.py`、`scripts/run_homework1_gdn_stress.py`、`scripts/analyze_homework1_head_replay.py`；完整参数见补充证据目录。相关key/慢衰减测试的思路参考组内[独立实现中的压力测试](https://github.com/jiran-1111/tokenspeed_PKU/blob/202838e6cb4549b290dbf5db2ad9733355af3f9b/test/experiments/test_qwen35_aten.py)，这里的全部数值均由本报告的TokenSpeed路径重新采集与复核。

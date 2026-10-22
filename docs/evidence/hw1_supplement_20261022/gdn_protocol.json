@@ -1,0 +1,30 @@
+{
+  "seed": 20261022,
+  "lengths": [
+    64,
+    65,
+    127,
+    128,
+    129
+  ],
+  "shape": [
+    1,
+    129,
+    16,
+    128
+  ],
+  "q_noise": 0.05,
+  "k_noise": 0.01,
+  "initial_state_std": 0.01,
+  "g": -9.999991057441093e-09,
+  "beta": 0.9900000691413879,
+  "output_atol": 0.002,
+  "output_rtol": 0.02,
+  "state_atol": 0.0003,
+  "state_rtol": 0.01,
+  "split": "32 for length64; otherwise64",
+  "decode_read": 1,
+  "decode_write": 3,
+  "reference_state_orientation": "K,V",
+  "npu_state_orientation": "V,K"
+}

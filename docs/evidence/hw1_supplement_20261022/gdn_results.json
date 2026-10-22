@@ -1,0 +1,672 @@
+{
+  "passed": true,
+  "lengths": [
+    {
+      "length": 64,
+      "untouched_slots_exact": true,
+      "checks": {
+        "prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.590755997924134e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 9.5367431640625e-07,
+          "relative_l2": 8.810671943138004e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.590755997924134e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 9.5367431640625e-07,
+          "relative_l2": 8.810671943138004e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.501601870288141e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 6.032050237081421e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_vs_prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.182017801213078e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_vs_prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.897615432739258e-07,
+          "relative_l2": 7.858488402234798e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.940234066452831e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 5.790861905552447e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 2.7186613806406967e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.344650268554688e-07,
+          "relative_l2": 7.402473443107738e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        }
+      },
+      "passed": true
+    },
+    {
+      "length": 65,
+      "untouched_slots_exact": true,
+      "checks": {
+        "prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.5552449591923505e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 5.90813158396486e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.5552449591923505e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 5.90813158396486e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.466780592338182e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 6.258487701416016e-07,
+          "relative_l2": 6.178995022310119e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_vs_prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 4.149668529862538e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_vs_prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 4.76837158203125e-07,
+          "relative_l2": 4.125888040107384e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.5552449591923505e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.152557373046875e-07,
+          "relative_l2": 5.750821401306894e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 3.5762786865234375e-07,
+          "relative_l2": 1.4226473865619482e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        }
+      },
+      "passed": true
+    },
+    {
+      "length": 127,
+      "untouched_slots_exact": true,
+      "checks": {
+        "prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.600653483066708e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.1622905731201172e-06,
+          "relative_l2": 1.042035023601784e-06,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.600653483066708e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.1622905731201172e-06,
+          "relative_l2": 1.042035023601784e-06,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.199230170343071e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.450580596923828e-07,
+          "relative_l2": 8.205640824598959e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_vs_prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 3.4894997952505946e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_vs_prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 9.5367431640625e-07,
+          "relative_l2": 8.999722354019468e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.779922528541647e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.940696716308594e-07,
+          "relative_l2": 7.89492730746133e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 2.8575968826771714e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.493661880493164e-07,
+          "relative_l2": 8.053262945395545e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        }
+      },
+      "passed": true
+    },
+    {
+      "length": 128,
+      "untouched_slots_exact": true,
+      "checks": {
+        "prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.5834829506929964e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.2218952178955078e-06,
+          "relative_l2": 1.0704065971367527e-06,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.5834829506929964e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.2218952178955078e-06,
+          "relative_l2": 1.0704065971367527e-06,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.183187411399558e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.046627044677734e-07,
+          "relative_l2": 8.329577667609556e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_vs_prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 3.476376150501892e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_vs_prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.043081283569336e-06,
+          "relative_l2": 9.170718158202362e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.761516902362928e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.344650268554688e-07,
+          "relative_l2": 8.012391958800436e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 2.8471187761169858e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 1.2367963790893555e-06,
+          "relative_l2": 8.232149752984697e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        }
+      },
+      "passed": true
+    },
+    {
+      "length": 129,
+      "untouched_slots_exact": true,
+      "checks": {
+        "prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.566667848848738e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.748603820800781e-07,
+          "relative_l2": 8.179689530152245e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.566667848848738e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.748603820800781e-07,
+          "relative_l2": 8.179689530152245e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "segmented_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "segmented_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.1678409615997225e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 7.748603820800781e-07,
+          "relative_l2": 8.639154316369968e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "decode_vs_prefill_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.00048828125,
+          "relative_l2": 3.46362212439999e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "decode_vs_prefill_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 6.556510925292969e-07,
+          "relative_l2": 5.957429607406084e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 4.744535544887185e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 8.940696716308594e-07,
+          "relative_l2": 8.31291401937051e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        },
+        "prefill_then_decode_vs_full_output": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 0.0009765625,
+          "relative_l2": 2.837487954820972e-05,
+          "atol": 0.002,
+          "rtol": 0.02
+        },
+        "prefill_then_decode_vs_full_state": {
+          "finite": true,
+          "passed": true,
+          "failed_elements": 0,
+          "max_abs": 4.172325134277344e-07,
+          "relative_l2": 4.2840170522140397e-07,
+          "atol": 0.0003,
+          "rtol": 0.01
+        }
+      },
+      "passed": true
+    }
+  ],
+  "elapsed_seconds": 10.45913801016286,
+  "inputs_sha256": "e5271e435deaa92602cec000b132f9f584473a546ce4b1fdc62f840cd894d533"
+}

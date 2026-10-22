@@ -1,0 +1,79 @@
+{
+  "initial": [
+    {
+      "label": "capture_r1",
+      "exit_code": 1,
+      "elapsed_seconds": 1.26100157,
+      "epoch_ns": 1792665412753408790,
+      "failure_reason": "Output outside isolated repository rejected before model execution"
+    },
+    {
+      "label": "capture_r2",
+      "exit_code": 0,
+      "elapsed_seconds": 59.14300859,
+      "epoch_ns": 1792665529934184370
+    },
+    {
+      "label": "head_replay_r1",
+      "exit_code": 0,
+      "elapsed_seconds": 14.00717553,
+      "analysis_source_sha256": "79077cf1b49a49226632a2f2f57a5d6cabbe97f55ce639658c2d627334d3710a"
+    },
+    {
+      "label": "gdn_r1",
+      "exit_code": 0,
+      "elapsed_seconds": 27.64163135,
+      "epoch_ns": 1792665599589872270
+    },
+    {
+      "label": "regression_r1",
+      "exit_code": 4,
+      "elapsed_seconds": 1.41538906,
+      "epoch_ns": 1792665664663583180,
+      "failure_reason": "Missing original runtime test files; pytest collection exited before tests ran"
+    },
+    {
+      "label": "regression_r2",
+      "exit_code": 0,
+      "elapsed_seconds": 64.3185337,
+      "epoch_ns": 1792665817909531810
+    }
+  ],
+  "final": {
+    "passed": true,
+    "source_files": 1407,
+    "source_manifest_sha256": "402ba211fdae786fe6f4f3866e2d7972d9e90a2477ed233b493abc43ec8e2bf6",
+    "jobs": [
+      {
+        "label": "capture_final",
+        "exit_code": 0,
+        "elapsed_seconds": 51.81727887,
+        "source_manifest_sha256": "402ba211fdae786fe6f4f3866e2d7972d9e90a2477ed233b493abc43ec8e2bf6"
+      },
+      {
+        "label": "head_replay_final",
+        "exit_code": 0,
+        "elapsed_seconds": 13.64943592,
+        "source_manifest_sha256": "402ba211fdae786fe6f4f3866e2d7972d9e90a2477ed233b493abc43ec8e2bf6"
+      },
+      {
+        "label": "gdn_final",
+        "exit_code": 0,
+        "elapsed_seconds": 24.51004425,
+        "source_manifest_sha256": "402ba211fdae786fe6f4f3866e2d7972d9e90a2477ed233b493abc43ec8e2bf6"
+      },
+      {
+        "label": "regression_final",
+        "exit_code": 0,
+        "elapsed_seconds": 65.8358677,
+        "source_manifest_sha256": "402ba211fdae786fe6f4f3866e2d7972d9e90a2477ed233b493abc43ec8e2bf6"
+      }
+    ]
+  },
+  "cpu_contract_red": "Capture helper absent: expected assertion failure before implementation",
+  "cpu_contract_green": "6 passed before NPU capture",
+  "numerical_thresholds_changed": false,
+  "samples_replaced": false,
+  "original_one_percent_failures_preserved": 68,
+  "original_argmax_mismatches_preserved": 13
+}
