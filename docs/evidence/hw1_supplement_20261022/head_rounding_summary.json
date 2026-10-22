@@ -1,0 +1,10 @@
+{
+  "vectors": 272,
+  "elements": 67543040,
+  "rounded_vs_original_different_elements": 12559,
+  "rounded_vs_original_different_vectors": 272,
+  "rounded_vs_original_max_abs": 0.0625,
+  "rounded_vs_original_argmax_differences": 0,
+  "rounded_vs_reference_argmax_differences": 13,
+  "limits": "CPU FP32 rounded to BF16 reproduces only output quantization, not the NPU accumulation algorithm. Uses saved vectors; no model forward or NPU execution."
+}

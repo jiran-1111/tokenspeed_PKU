@@ -1,0 +1,11 @@
+{
+  "tokenspeed-kernel-npu/test/test_gdn_homework1.py": "64a20a3516a0da4d06bfd84eed1a2475e4f68ccdbe237d5845f35ba51b0ba7e8",
+  "tokenspeed-kernel-npu/test/test_gdn_prefill.py": "7ef0c0d3761f01b3ab446ef525a68ba770b0cf442bae11d56c7de4d088f4c6f9",
+  "tokenspeed-kernel-npu/test/test_mha_homework1.py": "98ca8722d35cd20561a6f6e952f2058f5cb3c388bf9a64d944f46a6aded4bfb1",
+  "test/runtime/test_homework1_norm_rope_npu.py": "34cbdd316343b2f8e604621e08ff13e50d4c3031e91194fb438e6092bc65a19b",
+  "test/runtime/layers/test_gemma_rmsnorm_canonical_npu.py": "3d5580a6209fb3c1cb4e44b3cd304d5dc59d66c8e5eb7665c8fbba2325c7316e",
+  "tokenspeed-kernel-npu/test/test_qk_norm_fp32_gamma.py": "0c0fc3f6448d2ccb01f8b412ea31d331801ef8cd91517a000307fb2a80fc38f0",
+  "test/runtime/test_causal_conv1d_homework1_npu.py": "0535ac645b75ac23786c5c86139192d05959bedcd3885ce9cf78d80e4afdd8c2",
+  "test/runtime/layers/test_layernorm_gated_npu.py": "383e18f707988c5356ef89fc68db66e52e1e08580be010fa113b37e16bdf60ac",
+  "test/runtime/test_homework1_session_npu.py": "3053842b2efc74c24e6adee2c325c17f1b8e4bb6be90fe295dd133a9942aeb59"
+}

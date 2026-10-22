@@ -1,0 +1,36 @@
+{
+  "vector_count": 272,
+  "old_argmax_mismatches": 13,
+  "captured_argmax_mismatches": 13,
+  "replay_argmax_mismatches": 9,
+  "old_mismatches_resolved": 8,
+  "newly_introduced_mismatches": 4,
+  "capture_bitwise_equal_vectors": 272,
+  "capture_vs_old_max_abs": 0.0,
+  "candidate_fp32_vs_fp64_max_abs": 2.534780651330948e-05,
+  "candidate_fp32_fp64_argmax_disagreements": 1,
+  "captured_gate_failures": 0,
+  "replay_gate_failures": 0,
+  "captured_old_one_percent_failures": 68,
+  "replay_one_percent_failures": 66,
+  "by_phase": {
+    "prefill": {
+      "captured_relative_l2": 0.021534648897684416,
+      "captured_max_abs": 0.32581615447998047,
+      "replay_relative_l2": 0.021469076106241995,
+      "replay_max_abs": 0.3243534564971924
+    },
+    "decode": {
+      "captured_relative_l2": 0.019179627022419887,
+      "captured_max_abs": 0.4235382080078125,
+      "replay_relative_l2": 0.019105123241254015,
+      "replay_max_abs": 0.4222564697265625
+    }
+  },
+  "actual_head_bf16_sha256": "3247e63f0f265462e2fba5316dfb2819941ea8ed62ab5b2c4904e4aab5b9d7aa",
+  "projected_head_fp32_sha256": "91b62c11c47aa68048a8db37998b1796686ba78465155874a82d7852661bdd66",
+  "elapsed_seconds": 5.530548040056601,
+  "threads": 1,
+  "vocab_block": 4096,
+  "scope": "Only final dense projection recomputed on CPU FP32 from actual service BF16 hidden values; candidate-only FP64 check; not full-model FP32 or free greedy"
+}
