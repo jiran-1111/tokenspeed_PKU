@@ -1,12 +1,24 @@
-# TokenSpeed Ascend Agent 推理课程项目
+# TokenSpeed：作业1已完成版本
 
-本仓库从上游 TokenSpeed `cf4a4f89ae5f9423a9af490d8f3a0613adfba3fd` 开始，复用其 Qwen3.5 模型、C++ continuous-batching scheduler、chunked prefill、paged KV/prefix cache 与 NPU backend。课程代码集中在 `benchmarks/course_project/`、`configs/bringup/` 和 `scripts/`。
+**当前分支：`homework1/completed`。用途：查看和复现已经完成的作业1。**
 
-## 第一次作业材料（2026-10-15）
+| 入口 | 状态 | 应当如何使用 |
+| --- | --- | --- |
+| `homework1/completed` | **作业1已完成** | Qwen3.5-0.8B单chip适配、正确性、状态、性能、Profiler及最终报告 |
+| [`project/develop`](https://github.com/jiran-1111/tokenspeed_PKU/tree/project/develop) | **整个大项目继续开发** | 四模型Agent项目的日常开发、维护和后续整合 |
+| `jr` | **其他成员所有，本次未修改** | 保留独立工作，不作为我方历史分支清理 |
 
-[阶段报告](docs/report/homework1_compute_subsystem.md)与[源码清单、标量证据及复现命令](docs/evidence/hw1_20261015/README.md)已整理。0.8B原16条隔离轨迹的272个完整logits通过预先批准的有限经验双门槛；原1%门槛68个向量失败、条件argmax13处差异独立保留。最终源服务器course569项、关键模块/Session108项通过；最终Decode Profiler及96请求的2×2性能/HBM测量已完成。它们不代表自由greedy完全一致或四模型Agent项目完成。
+详细分支说明、旧阶段归档和恢复命令见 [BRANCHES.md](BRANCHES.md)。原 `course/hw1-20261015`、`course/hw1-supplement-20261022` 已转为同名冻结标签；旧链接继续指向原提交。
 
-交付使用独立分支`course/hw1-20261015`，不覆盖目标fork的main；教学网报告由用户本人提交。
+## 作业1报告与冻结证据
+
+- [统一实验报告](docs/report/homework1_compute_subsystem.md)：按作业1四项任务组织，含成员责任边界和AI工具披露。
+- [原始计算/数值/性能/Profiler证据](docs/evidence/hw1_20261015/README.md)：原1396项计算实现、272个完整logits、96请求2×2基线和Decode Profiler。
+- [补充正确性实验](docs/project/homework1_supplement_20261022.md)、[补充证据](docs/evidence/hw1_supplement_20261022/README.md)：最终1407项快照、114项回归、GDN五长度70组数值对照及CPU最后评分重放。
+
+固定标签 `hw1-completed-20261022` 指向已验证的 `abad5130bc9add029b258bc7e8e9ea8194885f33`；此后分支上的说明更新不更改1407项计算/测试源。原1%门槛68个失败和13处argmax差异仍保留，局部FP32投影重放为9处差异（消除8处、新增4处），不宣称自由greedy逐Token一致。教学网报告由用户本人提交。
+
+本分支保留原HW1的环境与代码版本，不作为整个大项目的当前开发主线；新开发机的当前安装/维护说明请使用 `project/develop`，严格复现实验请使用相应冻结标签及已记录环境。
 
 ## 环境
 
