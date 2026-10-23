@@ -1,5 +1,7 @@
 # 最终课程交付入口
 
+当前完整项目后续开发入口为 `project/develop`，作业1完成版为 `homework1/completed`，见[分支与标签说明](https://github.com/jiran-1111/tokenspeed_PKU/blob/project/develop/BRANCHES.md)。下文 `course/final-20261018`、`course/hw1-20261015` 和 `fix/oss-project-20261018` 等旧名称现为同名冻结标签；严格复现请用 `git switch --detach refs/tags/<标签名>` 或指定commit，不跳过源码身份检查。
+
 本页保存 `course/final-20261018` 的冻结复现协议。要逐字节复现历史 1415 项清单，请在该分支或提交 `d41b6798` 的独立检出中执行；不要在维护分支上把旧清单检查跳过或改成通过。`fix/oss-project-20261018` 修复了环境入口及软件测试，维护后源码清单和兼容性边界见[维护记录](oss_maintenance_20261018.md)。该分支没有追加设备性能结果。
 
 最终分支`course/final-20261018`；完整材料提交`bb51066d5552db8d45569b77d28259a5c446881d`已发布并回读核实，后续状态补充保持1415项实现字节不变。原始课程要求对应的四模型配置、最终同源质量验证、独立性能、有限TP候选、总报告与答辩材料集中于本页。HW1仍固定在`course/hw1-20261015`提交`1d113e54f789a22b14cbbdccbc6230c3f4d0e574`；R9性能固定提交`82788a85eca26a631222d6ca0d03ac245aff6d9a`。本分支通过普通新分支上传，不覆盖fork main、HW1或历史阶段。

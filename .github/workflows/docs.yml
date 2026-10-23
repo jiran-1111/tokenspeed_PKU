@@ -2,13 +2,13 @@ name: Docs
 
 on:
   pull_request:
-    branches: [main, "course/**", "fix/**"]
+    branches: [main, "project/develop", "course/**", "fix/**"]
     paths:
       - "docs/**"
       - "README.md"
       - ".github/workflows/docs.yml"
   push:
-    branches: [main, "course/**", "fix/**"]
+    branches: [main, "project/develop", "course/**", "fix/**"]
     paths:
       - "docs/**"
       - "README.md"

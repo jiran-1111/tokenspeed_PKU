@@ -77,7 +77,7 @@ export default defineConfig({
     },
     editLink: {
       pattern:
-        "https://github.com/jiran-1111/tokenspeed_PKU/edit/fix/oss-project-20261018/docs/:path",
+        "https://github.com/jiran-1111/tokenspeed_PKU/edit/project/develop/docs/:path",
       text: "Edit this page on GitHub"
     },
     footer: {

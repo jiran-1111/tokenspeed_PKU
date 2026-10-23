@@ -2,7 +2,7 @@ name: Course Project CPU Tests
 
 on:
   push:
-    branches: [main, "course/**", "fix/**"]
+    branches: [main, "project/develop", "course/**", "fix/**"]
     paths:
       - ".github/workflows/course-project.yml"
       - "requirements/course-test.txt"

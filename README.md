@@ -2,16 +2,27 @@
 
 面向 Ascend 的大模型推理课程项目，基于 [TokenSpeed](https://github.com/lightseekorg/tokenspeed) 开发。复用统一推理引擎、C++ 连续批处理调度器及多设备算子接口，增加 Qwen3.5 四模型配置、原生 Session KV 实验、分层正确性验证与性能分析。代码采用 [MIT 许可](LICENSE)，第三方组件遵循各自许可。
 
-## 当前版本与实验边界
+## 当前分支与项目状态
 
-课程最终快照为分支 `course/final-20261018`、提交 `d41b6798`；第一次作业独立快照为 `course/hw1-20261015`、提交 `1d113e54`。本维护分支 `fix/oss-project-20261018` 从课程最终快照修复环境入口、文档和自动检查，保留历史配置、数值门槛、报告与证据。维护修复不追认成历史设备实验使用的源码。
+**当前分支：`project/develop`。用途：继续完成、整合和维护整个四模型Agent大项目。**
 
-- [课程最终交付入口](docs/project/final_delivery_20261018.md)：四模型配置、精确复现命令、性能和 TP 候选边界。
-- [课程总报告](docs/report/course_project_final_20261018.md)、[第一次作业报告](docs/report/homework1_compute_subsystem.md)、[答辩材料](docs/presentation/README.md)。
-- [最终验证证据](docs/evidence/course_final_20261018/README.md)、[HW1 证据](docs/evidence/hw1_20261015/README.md)。失败、旧门槛结果及适用范围一并保留。
-- [维护与协作核查](docs/project/oss_maintenance_20261018.md)：当前修复与其他分支的关系。
+| 入口 | 状态 | 用途 |
+| --- | --- | --- |
+| `project/develop` | **大项目继续开发** | 四模型运行时、原生Session/KV、Agent实验、开源维护与后续整合主线 |
+| [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成** | 独立保留0.8B单chip验证、基线、Profiler、补充实验和报告 |
+| `jr` | **其他成员所有，本次未修改** | 保留独立工作；不跨分支覆盖或自动合并 |
+| `main` | **上游参考/原默认分支** | 保留原历史，当前课程开发请使用本分支 |
 
-已发布证据覆盖固定协议下的四模型验证与性能，不代表任意输入完全一致或未知课程统一评测通过。原生 Session API 与普通 HTTP 请求的行为边界不同；工具等待实验使用固定工具结果。报告中的硬件、数值和统计限制以各自证据说明为准。教学网由用户本人提交，实际项目工作如实披露 AI 工具辅助。
+[BRANCHES.md](BRANCHES.md)记录完整归档表及恢复命令。R5、R9、课程最终、旧HW1和旧维护分支已转为同名附注标签，原源码、证据和历史GitHub链接继续保留。
+
+整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；后续工作在本分支继续。
+
+- [课程阶段交付及冻结复现入口](docs/project/final_delivery_20261018.md)：四模型配置、精确命令、性能和TP候选边界。
+- [课程总报告](docs/report/course_project_final_20261018.md)、[作业1统一报告](docs/report/homework1_compute_subsystem.md)、[答辩材料](docs/presentation/README.md)。
+- [阶段验证证据](docs/evidence/course_final_20261018/README.md)、[HW1原证据](docs/evidence/hw1_20261015/README.md)、[HW1补充证据](docs/evidence/hw1_supplement_20261022/README.md)。失败、旧门槛和适用范围一并保留。
+- [维护与协作核查](docs/project/oss_maintenance_20261018.md)：维护修复与其他成员分支的关系。
+
+原生Session API与普通HTTP请求的行为边界不同；工具等待实验使用固定工具结果。报告中的硬件、数值和统计限制以各自证据为准。教学网由用户本人提交，实际项目工作如实披露AI工具辅助。
 
 ## 仓库结构
 
