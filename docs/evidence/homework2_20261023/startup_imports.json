@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "results": {
+    "parent": {
+      "packages_use_snapshot": {
+        "tokenspeed": true,
+        "tokenspeed_kernel": true,
+        "tokenspeed_kernel_npu": true,
+        "tokenspeed_scheduler": true
+      },
+      "extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+      "extension_matches": true
+    },
+    "spawn": {
+      "packages_use_snapshot": {
+        "tokenspeed": true,
+        "tokenspeed_kernel": true,
+        "tokenspeed_kernel_npu": true,
+        "tokenspeed_scheduler": true
+      },
+      "extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+      "extension_matches": true
+    },
+    "forkserver": {
+      "packages_use_snapshot": {
+        "tokenspeed": true,
+        "tokenspeed_kernel": true,
+        "tokenspeed_kernel_npu": true,
+        "tokenspeed_scheduler": true
+      },
+      "extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+      "extension_matches": true
+    }
+  }
+}

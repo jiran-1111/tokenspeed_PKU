@@ -4,12 +4,13 @@
 
 | 分支 | 标签/状态 | 用途 |
 | --- | --- | --- |
+| [`homework2/in-progress`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/in-progress) | **作业2进行中，未完成** | 从project/develop a77f25c3建立；四模型TP2、并行正确性、通信分析。先开发和测试，再写报告。 |
 | [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成**；冻结标签 `hw1-completed-20261022` | Qwen3.5-0.8B单chip、作业1报告、原正确性/性能/Profiler及补充实验。实现保持冻结，文档可继续说明。 |
 | [`project/develop`](https://github.com/jiran-1111/tokenspeed_PKU/tree/project/develop) | **大项目继续开发**；整理前基线 `project-baseline-20261023` | 四模型Agent项目的开发、维护和后续整合入口。已有阶段实验与报告不等于全部最终验收已通过。 |
 | [`jr`](https://github.com/jiran-1111/tokenspeed_PKU/tree/jr) | **其他成员分支，受保护不清理** | 保留作者独立工作。本次不修改、不重命名、不删除、不合并该分支。 |
 | [`main`](https://github.com/jiran-1111/tokenspeed_PKU/tree/main) | **上游参考/原默认分支** | 保留原历史，不把它当作当前课程开发成果入口。本次不改其内容。 |
 
-只需查看作业1成果时选择 `homework1/completed`；继续整个项目时选择 `project/develop`。Git标签是固定快照，开发分支可以继续前进。这里的“作业1已完成”指任务书范围内已记录的实验与报告，不表示教师评分或自由生成逐Token一致；“大项目继续开发”不抹除已经完成的阶段材料。
+只需查看作业1成果时选择 `homework1/completed`；作业2实验使用 `homework2/in-progress`；继续整个项目时选择 `project/develop`。Git标签是固定快照，开发分支可以继续前进。这里的“作业1已完成”指任务书范围内已记录的实验与报告，不表示教师评分或自由生成逐Token一致；“大项目继续开发”不抹除已经完成的阶段材料。
 
 ## 已退役分支及归档
 

@@ -4,10 +4,13 @@
 
 ## 当前分支与项目状态
 
-**当前分支：`project/develop`。用途：继续完成、整合和维护整个四模型Agent大项目。**
+**当前分支：`homework2/in-progress`。用途：完成作业2的四模型双chip TP2、并行正确性和通信分析。开发与服务器验收进行中，尚未完成作业2，尚未编写作业2报告。**
+
+[作业2实施与验收清单](docs/project/homework2_status_20261023.md)记录现有证据、缺口、事前协议与验收顺序；全部开发、测试与实验完成后再编写报告。
 
 | 入口 | 状态 | 用途 |
 | --- | --- | --- |
+| `homework2/in-progress` | **作业2进行中** | 本分支；四模型同卡TP2、测量与通信实验 |
 | `project/develop` | **大项目继续开发** | 四模型运行时、原生Session/KV、Agent实验、开源维护与后续整合主线 |
 | [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成** | 独立保留0.8B单chip验证、基线、Profiler、补充实验和报告 |
 | `jr` | **其他成员所有，本次未修改** | 保留独立工作；不跨分支覆盖或自动合并 |
@@ -15,7 +18,7 @@
 
 [BRANCHES.md](BRANCHES.md)记录完整归档表及恢复命令。R5、R9、课程最终、旧HW1和旧维护分支已转为同名附注标签，原源码、证据和历史GitHub链接继续保留。
 
-整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；后续工作在本分支继续。
+整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；本分支专门补齐作业2，整合主线仍为 `project/develop`。
 
 - [课程阶段交付及冻结复现入口](docs/project/final_delivery_20261018.md)：四模型配置、精确命令、性能和TP候选边界。
 - [课程总报告](docs/report/course_project_final_20261018.md)、[作业1统一报告](docs/report/homework1_compute_subsystem.md)、[答辩材料](docs/presentation/README.md)。

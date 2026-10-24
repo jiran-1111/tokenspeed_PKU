@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "orphan_case": false,
+      "child_stopped": true,
+      "unrelated_control_alive": true
+    },
+    {
+      "orphan_case": true,
+      "child_stopped": true,
+      "unrelated_control_alive": true
+    }
+  ]
+}

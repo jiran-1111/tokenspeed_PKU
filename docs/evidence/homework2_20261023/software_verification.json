@@ -1,0 +1,63 @@
+{
+  "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "source_files": 1531,
+  "local_cpu": {
+    "tests": 911,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 33,
+    "passed": 878
+  },
+  "server_cpu": {
+    "tests": 911,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 8,
+    "passed": 903,
+    "torch_version": "2.9.0+cpu",
+    "torch_npu_import_blocked": true
+  },
+  "isolated_scheduler_python": {
+    "tests": 259,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "passed": 259,
+    "extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae"
+  },
+  "startup_imports": {
+    "passed": true,
+    "modes": [
+      "parent",
+      "spawn",
+      "forkserver"
+    ]
+  },
+  "timeout_cleanup": {
+    "passed": true,
+    "cases": 2,
+    "unrelated_control_process_affected": false
+  },
+  "precommit": {
+    "command": "pre-commit run --all-files",
+    "passed": true
+  },
+  "model_artifact_manifest_sha256": "169e3069d4fdb70e57aaaffdee9f1a84b3f0001aceb4fe4a007ed66f9eeda1c6",
+  "driver_sha256": "40859dcbee943bf71693592b61a8176a65d1889f1713bcf8e0f22a929fb99acd",
+  "scheduler_source_unchanged_after_line_normalization": true,
+  "startup_bootstrap_sha256": "92b0041a4e196c5fc2ce7d87fe801d5d806aec670df7dd470a73d8d646f1daa0",
+  "acceptance": {
+    "software_checks_passed": true,
+    "npu_execution_verified": false,
+    "homework2_complete": false,
+    "homework2_report_written": false
+  },
+  "retained_preparation_failures": [
+    "Initial source comparison incorrectly filtered the enclosing .tmp path; relative-source comparison corrected it.",
+    "Scheduler core sources matched but build definitions differed, so the frozen source was rebuilt in isolation. Initial OpenSSL discovery failure was fixed using existing project-environment headers and libraries.",
+    "First server CPU run had 121 fixture setup errors because the isolated .tmp parent was missing; complete corrected reruns are retained.",
+    "First scheduler import probe rejected the old editable installation. Snapshot-specific startup ordering was verified in parent, spawn and forkserver processes.",
+    "Monitor v1 treated identity-less chip responses as unavailable; its history cannot establish continuous occupation. Monitor v2 uses identity-bearing whole-card responses."
+  ],
+  "scope": "CPU/software and source/dependency preparation only. Hardware TP2 correctness, performance and communication profiling remain pending device availability."
+}

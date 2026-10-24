@@ -1,0 +1,9 @@
+{
+  "previous_manifest_sha256": "a5b39835ebbdd0ec678c131b003890b4231221dc0e65f7e80895b6bcbf5c4b80",
+  "current_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "normalized_files": [
+    "benchmarks/course_project/tp_comparison.py",
+    "test/course_project/test_tp_comparison.py"
+  ],
+  "scheduler_sources_unchanged": true
+}

@@ -1,0 +1,11 @@
+"""Prefer explicit snapshot paths over the existing scheduler editable redirect."""
+import os
+import sys
+from pathlib import Path
+
+snapshot = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"]).resolve(strict=True)
+if not (snapshot / "python/tokenspeed").is_dir():
+    raise SystemExit("the explicit TokenSpeed source snapshot is unavailable")
+redirectors = [finder for finder in sys.meta_path
+               if type(finder).__module__ == "_editable_skbc_tokenspeed_scheduler"]
+sys.meta_path[:] = [finder for finder in sys.meta_path if finder not in redirectors] + redirectors

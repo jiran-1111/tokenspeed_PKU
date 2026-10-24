@@ -1,0 +1,325 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Run the fixed HW2 experiment queue when a same-card pair is idle.
+
+This task-owned server helper never stops other users' processes. A timeout only
+signals the new process group created for the current, verified child process.
+"""
+from __future__ import annotations
+
+import fcntl
+import hashlib
+import importlib.metadata
+import json
+import os
+import shlex
+import signal
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+BASE = Path.home() / "tokenspeed"
+TASK = BASE / ".tmp/hw2-20261023"
+SOURCE = TASK / "source_final"
+MANIFEST = SOURCE / "docs/evidence/homework2_20261023/source_manifest.json"
+sys.path.insert(0, str(SOURCE))
+from benchmarks.course_project.tp_devices import check_sources, parse_mapping, require_idle, validate_target
+
+
+def package_versions() -> dict[str, str]:
+    wanted = {"torch", "torch-npu", "transformers", "triton-ascend", "triton", "tokenspeed-triton"}
+    versions = {}
+    for package in importlib.metadata.distributions(path=[str(BASE / ".conda-env/lib/python3.11/site-packages")]):
+        name = package.metadata["Name"].lower().replace("_", "-")
+        if name in wanted:
+            versions[name] = package.version
+    if not {"torch", "torch-npu", "transformers"} <= set(versions):
+        raise ValueError("required inference package metadata is unavailable")
+    return versions
+
+
+def write_state(state: dict) -> None:
+    state["updated_utc"] = datetime.now(timezone.utc).isoformat()
+    temporary = TASK / "queue_state.tmp"
+    temporary.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    temporary.replace(TASK / "queue_state.json")
+
+
+def free_pairs() -> dict[int, dict[int, int]]:
+    text = subprocess.check_output(["npu-smi", "info", "-m"], text=True, timeout=15)
+    mapping = parse_mapping(text)
+    available = {}
+    for card in sorted({card for card, _ in mapping}):
+        selected = {chip: mapping[card, chip] for chip in (0, 1) if (card, chip) in mapping}
+        if len(selected) != 2:
+            continue
+        try:
+            for chip in selected:
+                response = subprocess.check_output(
+                    ["npu-smi", "info", "-t", "proc-mem", "-i", str(card)],
+                    text=True, timeout=15,
+                )
+                require_idle(response, npu_id=card, chip_id=chip)
+        except (ValueError, subprocess.SubprocessError):
+            continue
+        available[card] = selected
+    return available
+
+
+def terminate_owned_group(process: subprocess.Popen, *, expected_start: str) -> None:
+    """Signal only our still-running leader's original process group."""
+    def members() -> list[int]:
+        owned = []
+        for path in Path("/proc").glob("[0-9]*/stat"):
+            try:
+                stat = path.read_text().rpartition(")")[2].split()
+                if int(stat[2]) != process.pid or stat[0] == "Z":
+                    continue
+                if (int(stat[3]) != process.pid or int(stat[19]) < int(expected_start)
+                        or path.stat().st_uid != os.getuid()):
+                    raise RuntimeError("child group ownership changed; refusing signal")
+                if path.parent.name == str(process.pid) and stat[19] != expected_start:
+                    raise RuntimeError("child PID was reused; refusing signal")
+                owned.append(int(path.parent.name))
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+        return owned
+
+    for kind, grace in ((signal.SIGINT, 30), (signal.SIGTERM, 10), (signal.SIGKILL, 10)):
+        if not members():
+            process.poll()
+            return
+        try:
+            os.killpg(process.pid, kind)
+        except ProcessLookupError:
+            return
+        deadline = time.monotonic() + grace
+        while time.monotonic() < deadline:
+            if not members():
+                process.poll()
+                return
+            time.sleep(0.2)
+    raise RuntimeError("our timed-out experiment could not be terminated")
+
+
+def run_job(job: dict, *, card: int, chips: dict[int, int], state: dict) -> dict:
+    source_sha = check_sources(SOURCE, MANIFEST)
+    versions = package_versions()
+    if versions != json.loads((TASK / "ready_gate.json").read_text())["package_versions"]:
+        raise ValueError("inference package versions changed after software verification")
+    bootstrap_sha = hashlib.sha256((SOURCE / ".tmp/import_bootstrap/sitecustomize.py").read_bytes()).hexdigest()
+    if bootstrap_sha != json.loads((TASK / "ready_gate.json").read_text())["startup_bootstrap_sha256"]:
+        raise ValueError("snapshot startup bootstrap changed")
+    config = json.loads((SOURCE / job["config"]).read_text())
+    weights = json.loads((TASK / "weights_state.json").read_text())[config["model_id"]]
+    if weights["revision"] != config["model_revision"]:
+        raise ValueError("model revision changed after artifact fingerprint")
+    model_directory = SOURCE / config["local_model_path"]
+    def check_weights() -> None:
+        for name, expected in weights["files"].items():
+            stat = (model_directory / name).stat()
+            if [stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns] != expected:
+                raise ValueError("model artifact identity changed; a new fingerprint/run is required")
+    check_weights()
+    selected = chips if job["tp_size"] == 2 else {0: chips[0]}
+    result_dir = SOURCE / "results/raw/homework2_20261024" / job["name"]
+    if result_dir.exists():
+        raise FileExistsError(f"refusing to overwrite experiment: {job['name']}")
+    command = [str(SOURCE / ".conda-env/bin/python"), str(SOURCE / "scripts/run_tp_matrix.py"),
+               "--config", str(SOURCE / job["config"]), "--protocol", str(SOURCE / job["protocol"]),
+               "--source-manifest", str(MANIFEST), "--npu-id", str(card),
+               "--chip-logic-ids", ",".join(f"{chip}:{logical}" for chip, logical in sorted(selected.items())),
+               "--profile-mode", job["profile_mode"], "--output-dir", str(result_dir)]
+    paths = [SOURCE / ".tmp/import_bootstrap", SOURCE / "python", SOURCE / "tokenspeed-kernel/python", SOURCE / "tokenspeed-kernel-npu/python",
+             SOURCE / "tokenspeed-scheduler/python", SOURCE]
+    environment = {
+        "ASCEND_RT_VISIBLE_DEVICES": ",".join(str(selected[chip]) for chip in sorted(selected)),
+        "TOKENSPEED_HW2_WORKSPACE": str(BASE),
+        "TOKENSPEED_SOURCE_SNAPSHOT": str(SOURCE),
+        "PYTHONPATH": ":".join(map(str, paths)),
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "OMP_NUM_THREADS": "1",
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
+        "TOKENSPEED_NPU_PROFILER_LEVEL": "Level1" if job["profile_mode"] == "all-batches" else "Level0",
+        "TOKENSPEED_MAMBA_SSM_DTYPE": "float32",
+        "TRITON_CACHE_DIR": str(SOURCE / ".cache/triton"),
+        "TORCHINDUCTOR_CACHE_DIR": str(SOURCE / ".cache/torchinductor"),
+    }
+    activation = f"source {shlex.quote(str(SOURCE / 'scripts/use_project_env.sh'))}\n"
+    activation += "\n".join(f"export {key}={shlex.quote(value)}" for key, value in environment.items())
+    activation += "\nexec " + shlex.join(command)
+    receipt = {"job": job, "npu_id": card, "chip_logic_ids": selected,
+               "source_manifest_sha256": source_sha, "command": command,
+               "startup_bootstrap_sha256": bootstrap_sha,
+               "package_versions": versions,
+               "precision_environment": {"TOKENSPEED_MAMBA_SSM_DTYPE": "float32"},
+               "started_utc": datetime.now(timezone.utc).isoformat(), "status": "running"}
+    state["current"] = receipt
+    write_state(state)
+    with (TASK / f"{job['name']}.driver.log").open("x") as log:
+        process = subprocess.Popen(["bash", "--noprofile", "--norc", "-c", activation],
+                                   cwd=SOURCE, stdout=log, stderr=subprocess.STDOUT,
+                                   start_new_session=True)
+        stat = Path(f"/proc/{process.pid}/stat").read_text().rpartition(")")[2].split()
+        start_ticks = stat[19]
+        receipt["pid"] = process.pid
+        write_state(state)
+        try:
+            receipt["exit_code"] = process.wait(timeout=job["budget_seconds"])
+        except subprocess.TimeoutExpired:
+            receipt["timed_out"] = True
+            terminate_owned_group(process, expected_start=start_ticks)
+            receipt["exit_code"] = process.returncode
+        # Engine normally tears its children down; clean only our own group if
+        # a startup failure or abrupt leader exit left descendants behind.
+        terminate_owned_group(process, expected_start=start_ticks)
+    receipt["ended_utc"] = datetime.now(timezone.utc).isoformat()
+    check_weights()
+    receipt["model_artifact_manifest_sha256"] = hashlib.sha256((SOURCE / "docs/evidence/homework2_20261023/model_artifacts.json").read_bytes()).hexdigest()
+    receipt["model_artifacts_unchanged"] = True
+    receipt["source_unchanged"] = check_sources(SOURCE, MANIFEST) == source_sha
+    run_path = result_dir / "run.json"
+    run = json.loads(run_path.read_text()) if run_path.is_file() else {}
+    result_dir.mkdir(parents=True, exist_ok=True)
+    release = {"run_json_sha256": hashlib.sha256(run_path.read_bytes()).hexdigest() if run_path.is_file() else None,
+               "source_manifest_sha256": source_sha, "child_exit_code": receipt["exit_code"],
+               "devices_released": False, "after_mapping": "driver_after_mapping.txt", "after_processes": {},
+               "npu_id": card, "chip_logic_ids": selected, "pid": process.pid}
+    try:
+        mapping = subprocess.check_output(["npu-smi", "info", "-m"], text=True, timeout=15)
+        (result_dir / release["after_mapping"]).write_text(mapping)
+        validate_target(parse_mapping(mapping), npu_id=card, chip_logic_ids=selected, tp_size=job["tp_size"])
+        for chip in selected:
+            name = f"driver_after_processes_chip{chip}.txt"
+            release["after_processes"][chip] = name
+            for attempt in range(10):
+                response = subprocess.check_output(["npu-smi", "info", "-t", "proc-mem", "-i", str(card)], text=True, timeout=15)
+                (result_dir / name).write_text(response)
+                try:
+                    require_idle(response, npu_id=card, chip_id=chip)
+                    break
+                except ValueError:
+                    if attempt == 9:
+                        raise
+                    time.sleep(1)
+        release["devices_released"] = True
+    except (ValueError, subprocess.SubprocessError) as error:
+        release["error"] = f"{type(error).__name__}: {error}"
+    release["observed_after_exit_utc"] = datetime.now(timezone.utc).isoformat()
+    (result_dir / "device_release.json").write_text(json.dumps(release, indent=2))
+    receipt["device_release"] = release
+    receipt["status"] = "passed" if receipt["exit_code"] == 0 and run.get("status") == "passed" and release["devices_released"] else "failed"
+    receipt["run_present"] = bool(run)
+    receipt["run_error"] = run.get("error")
+    (TASK / f"{job['name']}.receipt.json").write_text(json.dumps(receipt, indent=2))
+    return receipt
+
+
+def refresh_comparisons(state: dict) -> None:
+    from benchmarks.course_project.tp_comparison import compare_runs
+    for model, left_name, right_name in (
+        ("0.8b", "matrix_0.8b_tp1", "matrix_0.8b_tp2"),
+        ("4b", "matrix_4b_tp1", "matrix_4b_tp2"),
+        ("9b", "matrix_9b_tp1", "matrix_9b_tp2"),
+        ("27b", "matrix_27b_tp1", "matrix_27b_tp2"),
+        ("27b_memory095", "matrix_27b_tp1_memory095", "matrix_27b_tp2_memory095"),
+    ):
+        if left_name not in state["finished"] or right_name not in state["finished"]:
+            continue
+        paths = [SOURCE / "results/raw/homework2_20261024" / name / "run.json" for name in (left_name, right_name)]
+        comparison = compare_runs(*paths)
+        state["comparisons"][model] = {key: comparison[key] for key in ("execution_valid", "sequence_agreement", "hbm_coverage_complete", "evidence_complete")}
+        (TASK / f"comparison_{model}.json").write_text(json.dumps(comparison, indent=2))
+
+
+def main() -> None:
+    TASK.mkdir(parents=True, exist_ok=True)
+    with (TASK / "queue.lock").open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        queue_path = SOURCE / "configs/homework2/queue.json"
+        gate = json.loads((TASK / "ready_gate.json").read_text())
+        source_sha = check_sources(SOURCE, MANIFEST)
+        if not (gate["server_cpu_tests_exit"] == gate["precommit_exit"] == 0
+                and gate["source_manifest_sha256"] == source_sha
+                and gate["queue_sha256"] == hashlib.sha256(queue_path.read_bytes()).hexdigest()
+                and gate["driver_sha256"] == hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+                and gate["startup_bootstrap_sha256"] == hashlib.sha256((SOURCE / ".tmp/import_bootstrap/sitecustomize.py").read_bytes()).hexdigest()
+                and gate["model_artifact_manifest_sha256"] == hashlib.sha256((SOURCE / "docs/evidence/homework2_20261023/model_artifacts.json").read_bytes()).hexdigest()):
+            raise ValueError("queue is not armed for this tested source and exact driver")
+        jobs = json.loads(queue_path.read_text())["jobs"]
+        state = {"status": "waiting_for_idle_pair", "finished": {}, "comparisons": {}, "groups": {},
+                 "started_utc": datetime.now(timezone.utc).isoformat(), "source_manifest_sha256": source_sha}
+        deadline = time.monotonic() + 7 * 24 * 3600
+        while len(state["finished"]) < len(jobs) and time.monotonic() < deadline:
+            if (TASK / "stop-queue").exists():
+                state["status"] = "stopped_by_workspace_marker"
+                write_state(state)
+                return
+            pairs = free_pairs()
+            state["last_free_pairs"] = sorted(pairs)
+            selected_job = None
+            for job in jobs:
+                if job["name"] in state["finished"]:
+                    continue
+                if any(name not in state["finished"] for name in job["after"]):
+                    continue
+                if job["requires_4b_agreement"]:
+                    comparison = state["comparisons"].get("4b")
+                    if comparison is None:
+                        continue
+                    if not (comparison["execution_valid"] and comparison["sequence_agreement"] is True):
+                        state["finished"][job["name"]] = {"status": "skipped", "reason": "4B parallel correctness has not passed"}
+                        continue
+                if job["only_if_27b_tp1_failed"] and state["finished"].get("matrix_27b_tp1", {}).get("status") == "passed":
+                    state["finished"][job["name"]] = {"status": "skipped", "reason": "default TP1 already produced a baseline"}
+                    continue
+                card = state["groups"].get(job["group"])
+                if card is None and pairs:
+                    card = min(pairs)
+                if card in pairs:
+                    selected_job = (job, card, pairs[card])
+                    break
+            if selected_job is None:
+                state["status"] = "waiting_for_idle_pair"
+                write_state(state)
+                time.sleep(30)
+                continue
+            job, card, chips = selected_job
+            state["groups"][job["group"]] = card
+            state["status"] = "running"
+            result = run_job(job, card=card, chips=chips, state=state)
+            state["finished"][job["name"]] = result
+            state["current"] = None
+            refresh_comparisons(state)
+            write_state(state)
+        state["status"] = "finished_with_unreviewed_results" if len(state["finished"]) == len(jobs) else "waiting_deadline_expired"
+        write_state(state)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except BaseException as error:
+        (TASK / "queue_failure.json").write_text(json.dumps({"type": type(error).__name__, "error": str(error), "timestamp": datetime.now(timezone.utc).isoformat()}, indent=2))
+        raise
