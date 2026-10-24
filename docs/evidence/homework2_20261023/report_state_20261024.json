@@ -10,7 +10,7 @@
   "source_files": 1531,
   "runtime_base_commit": "536e54c034c2aeecb5213375593a919046fc623d",
   "source_files_changed_by_report": false,
-  "new_npu_results_in_report": false,
+  "new_npu_results_in_report": true,
   "homework2_complete": false,
   "submission_ready": false,
   "historical_results": [
@@ -39,5 +39,42 @@
       "protocol": "8 fixed inputs, 64 output tokens; independent HF NPU BF16 reference"
     }
   ],
-  "authorship": "AI-assisted actual execution; member roles describe deliverable responsibility, not personal hours or fabricated execution"
+  "authorship": "AI-assisted actual execution; member roles describe deliverable responsibility, not personal hours or fabricated execution",
+  "report_hardware_cutoff_utc": "2026-10-24T14:05:28.862883+00:00",
+  "supplemental_tp1_formal_requests": 768,
+  "supplemental_tp2_formal_requests": 64,
+  "shared_tp2_performance_eligible": false,
+  "shared_tp2_results": {
+    "0.8b": {
+      "execution_valid": true,
+      "exact_match_requests": 16,
+      "formal_requests": 16,
+      "sequence_agreement": true
+    },
+    "4b": {
+      "execution_valid": true,
+      "exact_match_requests": 8,
+      "formal_requests": 16,
+      "sequence_agreement": false
+    },
+    "9b": {
+      "execution_valid": true,
+      "exact_match_requests": 8,
+      "formal_requests": 16,
+      "sequence_agreement": false
+    },
+    "27b": {
+      "execution_valid": true,
+      "exact_match_requests": 16,
+      "formal_requests": 16,
+      "sequence_agreement": true
+    }
+  },
+  "numerical_diagnosis": "eager full logits and 65 layer boundaries collected; differences unresolved, original graph failures preserved",
+  "numerical_diagnosis_complete_as_capture": true,
+  "numerical_correctness_all_models_passed": false,
+  "layerwise_norm_weights_match_cpu": true,
+  "runtime_source_files_changed": false,
+  "diagnostic_cutoff_utc": "2026-10-24T14:44:37.466814+00:00",
+  "first_layer_checkpoint_and_hccl_checks": "both models: all 30 parameter checks exact; actual reduced operands equal bf16-rounded local-partial sums"
 }
