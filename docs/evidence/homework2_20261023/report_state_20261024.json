@@ -1,0 +1,43 @@
+{
+  "report_kind": "homework2 task-structured interim report, not submission-ready",
+  "queue_sample_updated_utc": "2026-10-24T10:59:26.681268+00:00",
+  "queue_status": "waiting_for_idle_pair",
+  "queue_driver_alive": true,
+  "current_job": null,
+  "finished_jobs": {},
+  "comparisons": {},
+  "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "source_files": 1531,
+  "runtime_base_commit": "536e54c034c2aeecb5213375593a919046fc623d",
+  "source_files_changed_by_report": false,
+  "new_npu_results_in_report": false,
+  "homework2_complete": false,
+  "submission_ready": false,
+  "historical_results": [
+    {
+      "section": "2.2, 4.1",
+      "model": "4B",
+      "evidence": "docs/evidence/course_final_20261018/tp4b_tp{1_baseline,2}/audit.json",
+      "source_files": 1415,
+      "source_manifest_sha256": "d05a47d932b519b6e50ed0c668725935d93b744fffffa68e95f37a0227f6c6ea",
+      "protocol": "2 sessions x 16 turns x 8 output tokens; session arms reported"
+    },
+    {
+      "section": "4.3",
+      "model": "27B",
+      "evidence": "docs/evidence/native_performance_20261018/27b/audit.json",
+      "source_files": 1409,
+      "source_manifest_sha256": "2c9e47616eb3c460a740e2542e776ab655934a9ad7ed0ac0c1401a008a97d712",
+      "protocol": "2 sessions x 16 turns x 8 output tokens; session arms reported"
+    },
+    {
+      "section": "2.2",
+      "model": "27B",
+      "evidence": "docs/project/final_source_27b_correctness_20261015.md",
+      "source_files": 1396,
+      "source_manifest_sha256": "f44d5c85b1d9bfe30d3e04177fa6d4b5daf773564ee0a5611c07179fa2acb34e",
+      "protocol": "8 fixed inputs, 64 output tokens; independent HF NPU BF16 reference"
+    }
+  ],
+  "authorship": "AI-assisted actual execution; member roles describe deliverable responsibility, not personal hours or fabricated execution"
+}
