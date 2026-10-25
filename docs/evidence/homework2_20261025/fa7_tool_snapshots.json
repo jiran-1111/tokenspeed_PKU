@@ -1,0 +1,20 @@
+{
+  "fa7_capture_r1": {
+    "files": 14,
+    "manifest_sha256": "4baeb21202817630f146b2ecf74f121f0f859f7ac90e0404b94080cfc44a3778",
+    "archive_sha256": "0965f9507841f0aa7c51c0237088425e4530da1178155cb26d486e2ccb22a92f",
+    "exact_tested_bytes": true
+  },
+  "fa7_capture_r2": {
+    "files": 16,
+    "manifest_sha256": "c7c63e5cbada7e0d4803fc77f8ce9fcb153efde3d8c3b820e1e2f82769e280e9",
+    "archive_sha256": "c03a8eb518a30f299f8465e34c121d131fcbdeeb0e06ff4ff51db2cd50598783",
+    "exact_tested_bytes": true
+  },
+  "fa7_analysis_r1": {
+    "files": 6,
+    "manifest_sha256": "e4f0e6f581355eff49d2f33f1ac10b2f2db0c0b4093ab26f1622895ad38329f7",
+    "archive_sha256": "8b4c3d17595262b4eba9a878e032e2f6e9b6ef9bbb6c0d40c12bb9b4fc97192a",
+    "exact_tested_bytes": true
+  }
+}
