@@ -1,0 +1,58 @@
+[
+  {
+    "id": "0.8b_tp1_matrix",
+    "config": "configs/homework2/qwen35_0.8b_tp1.yaml",
+    "protocol": "matrix_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "0.8b_tp2_matrix",
+    "config": "configs/homework2/qwen35_0.8b_tp2.yaml",
+    "protocol": "matrix_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "27b_tp2_matrix",
+    "config": "configs/homework2/candidates/qwen35_27b_tp2_memory095.yaml",
+    "protocol": "matrix_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "0.8b_chunk4096",
+    "config": "configs/homework2/qwen35_0.8b_tp2.yaml",
+    "protocol": "strategy_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "0.8b_chunk512",
+    "config": "effective_qwen35_0.8b_tp2_chunk512.json",
+    "protocol": "strategy_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "0.8b_tp2_profile",
+    "config": "configs/homework2/qwen35_0.8b_tp2.yaml",
+    "protocol": "profile_protocol.json",
+    "profile_mode": "all-batches",
+    "correctness_job": "0.8b_tp2_matrix"
+  },
+  {
+    "id": "0.8b_chunk4096_profile",
+    "config": "configs/homework2/qwen35_0.8b_tp2.yaml",
+    "protocol": "strategy_profile_protocol.json",
+    "profile_mode": "all-batches",
+    "correctness_job": "0.8b_chunk4096"
+  },
+  {
+    "id": "0.8b_chunk512_profile",
+    "config": "effective_qwen35_0.8b_tp2_chunk512.json",
+    "protocol": "strategy_profile_protocol.json",
+    "profile_mode": "all-batches",
+    "correctness_job": "0.8b_chunk512"
+  }
+]

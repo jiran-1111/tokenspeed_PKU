@@ -1,0 +1,251 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import hashlib
+import importlib
+import json
+import sys
+import unittest
+from decimal import Decimal
+from pathlib import Path
+
+TASK = Path(__file__).resolve().parent
+sys.path.insert(0, str(TASK))
+
+
+def encoded(value):
+    return json.dumps(value, ensure_ascii=False).encode("utf-8")
+
+
+class SharedNativeTraceTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(
+            (TASK / "shared_native_trace.py").is_file(), "native assembler missing"
+        )
+        self.native_trace = importlib.import_module("shared_native_trace")
+        self.cpu = [
+            {"ph": "M", "name": "process_name", "pid": 10, "args": {"name": "Python"}},
+            {
+                "ph": "X",
+                "name": "aten::cpu_op",
+                "pid": 10,
+                "tid": 1,
+                "ts": 100,
+                "dur": 10,
+            },
+        ]
+        self.native = [
+            {
+                "ph": "M",
+                "name": "process_name",
+                "pid": 30,
+                "args": {"name": "Ascend Hardware"},
+            },
+            {
+                "ph": "M",
+                "name": "thread_name",
+                "pid": 30,
+                "tid": 91,
+                "args": {"name": "Stream 91"},
+            },
+            {"ph": "X", "name": "MatMul", "pid": 30, "tid": 91, "ts": 103, "dur": 5},
+            {
+                "ph": "X",
+                "name": "HW2_SYNC|rank=0|seq=1|mono=100000|epoch=900000",
+                "pid": 40,
+                "tid": 1,
+                "ts": 100,
+                "dur": 10,
+            },
+        ]
+
+    def test_array_and_object_inputs_preserve_all_events_and_provenance(self):
+        for cpu_object in (False, True):
+            for native_object in (False, True):
+                with self.subTest(cpu_object=cpu_object, native_object=native_object):
+                    cpu = encoded(
+                        {"traceEvents": self.cpu, "displayTimeUnit": "us"}
+                        if cpu_object
+                        else self.cpu
+                    )
+                    native = encoded(
+                        {"meta": {"nested": [1, 2]}, "traceEvents": self.native}
+                        if native_object
+                        else self.native
+                    )
+                    canonical, provenance = self.native_trace.assemble(cpu, native)
+                    self.assertEqual(
+                        json.loads(canonical), {"traceEvents": self.cpu + self.native}
+                    )
+                    self.assertEqual(
+                        provenance["cpu_prepare_sha256"],
+                        hashlib.sha256(cpu).hexdigest(),
+                    )
+                    self.assertEqual(
+                        provenance["native_trace_sha256"],
+                        hashlib.sha256(native).hexdigest(),
+                    )
+                    self.assertEqual(
+                        provenance["canonical_sha256"],
+                        hashlib.sha256(canonical).hexdigest(),
+                    )
+                    self.assertEqual(provenance["cpu_event_count"], len(self.cpu))
+                    self.assertEqual(provenance["native_event_count"], len(self.native))
+                    self.assertEqual(
+                        provenance["canonical_event_count"],
+                        len(self.cpu) + len(self.native),
+                    )
+                    self.assertFalse(provenance["prepared_array_was_open"])
+                    self.assertFalse(provenance["raw_inputs_rewritten"])
+                    self.assertEqual(provenance["native_stream_x_event_count"], 1)
+                    self.assertEqual(provenance["native_sync_x_marker_count"], 1)
+
+    def test_only_intentionally_open_cpu_array_at_eof_can_be_completed(self):
+        cpu, native = encoded(self.cpu)[:-1], encoded(self.native)
+        original_cpu, original_native = bytes(cpu), bytes(native)
+        canonical, provenance = self.native_trace.assemble(cpu, native)
+        self.assertTrue(provenance["prepared_array_was_open"])
+        self.assertEqual(json.loads(canonical)["traceEvents"], self.cpu + self.native)
+        self.assertEqual(cpu, original_cpu)
+        self.assertEqual(native, original_native)
+        self.assertEqual(
+            provenance["cpu_prepare_sha256"], hashlib.sha256(original_cpu).hexdigest()
+        )
+
+    def test_mid_document_damage_and_incomplete_objects_are_not_repaired(self):
+        broken = [
+            b'[{"name": "unterminated',
+            b'[{"name": "x"',
+            b"[{},BROKEN]",
+            encoded({"traceEvents": self.cpu})[:-1],
+            encoded(self.cpu)[:-1] + b"garbage",
+            encoded(self.cpu)[:-1] + b",",
+        ]
+        for cpu in broken:
+            with self.subTest(cpu=cpu), self.assertRaises(ValueError):
+                self.native_trace.assemble(cpu, encoded(self.native))
+
+    def test_native_must_be_directly_complete_even_with_valid_cpu_prepare(self):
+        with self.assertRaisesRegex(ValueError, "native"):
+            self.native_trace.assemble(
+                encoded(self.cpu)[:-1], encoded(self.native)[:-1]
+            )
+
+    def test_open_prepare_requires_literal_array_start_and_decoded_eof_position(self):
+        cpu = encoded(self.cpu + [{"name": "中文", "ph": "i", "pid": 10, "tid": 1}])[
+            :-1
+        ]
+        canonical, provenance = self.native_trace.assemble(cpu, encoded(self.native))
+        self.assertTrue(provenance["prepared_array_was_open"])
+        self.assertEqual(
+            json.loads(canonical)["traceEvents"][len(self.cpu)]["name"], "中文"
+        )
+        for prefix in (b" ", b"\xef\xbb\xbf"):
+            with self.subTest(prefix=prefix), self.assertRaises(ValueError):
+                self.native_trace.assemble(prefix + cpu, encoded(self.native))
+
+    def test_duplicate_events_and_identical_metadata_are_never_removed(self):
+        cpu = self.cpu + [self.native[0], self.native[1], self.cpu[1]]
+        native = self.native + [self.native[0], self.native[-1]]
+        canonical, provenance = self.native_trace.assemble(
+            encoded(cpu), encoded(native)
+        )
+        self.assertEqual(json.loads(canonical)["traceEvents"], cpu + native)
+        self.assertEqual(provenance["canonical_event_count"], len(cpu + native))
+        self.assertEqual(provenance["native_sync_x_marker_count"], 2)
+
+    def test_conflicting_process_or_thread_name_metadata_is_rejected(self):
+        conflicts = [
+            {
+                "ph": "M",
+                "name": "process_name",
+                "pid": 30,
+                "args": {"name": "Other Hardware"},
+            },
+            {
+                "ph": "M",
+                "name": "thread_name",
+                "pid": 30,
+                "tid": 91,
+                "args": {"name": "Thread 91"},
+            },
+        ]
+        for conflict in conflicts:
+            with self.subTest(conflict=conflict["name"]), self.assertRaisesRegex(
+                ValueError, "conflict"
+            ):
+                self.native_trace.assemble(
+                    encoded(self.cpu + [conflict]), encoded(self.native)
+                )
+        with self.assertRaisesRegex(ValueError, "conflict"):
+            self.native_trace.assemble(
+                encoded(self.cpu), encoded(self.native + conflicts[:1])
+            )
+
+    def test_native_requires_own_hardware_process_corresponding_stream_x_and_sync_x(
+        self,
+    ):
+        variants = [
+            self.native[1:],
+            [self.native[0], *self.native[2:]],
+            self.native[:2] + self.native[3:],
+            self.native[:-1],
+        ]
+        for native in variants:
+            with self.subTest(native=native), self.assertRaises(ValueError):
+                self.native_trace.assemble(encoded(self.cpu), encoded(native))
+        marker_not_x = self.native[:-1] + [{**self.native[-1], "ph": "i"}]
+        with self.assertRaises(ValueError):
+            self.native_trace.assemble(encoded(self.cpu), encoded(marker_not_x))
+
+    def test_cpu_hardware_metadata_does_not_substitute_for_native_evidence(self):
+        with self.assertRaises(ValueError):
+            self.native_trace.assemble(
+                encoded(self.cpu + self.native[:2]), encoded(self.native[2:])
+            )
+
+    def test_exact_number_literals_and_unicode_survive_canonical_assembly(self):
+        cpu = b'[{"ph":"X","name":"literal [ ] } \\"traceEvents\\"","pid":10,"tid":1,"ts":1792051077986574.428,"dur":0.001}]'
+        native = encoded(
+            {
+                "before": "string with } and [",
+                "traceEvents": self.native,
+                "after": {"nested": ["untouched top-level context"]},
+            }
+        )
+        canonical, _ = self.native_trace.assemble(cpu, native)
+        self.assertIn(b"1792051077986574.428", canonical)
+        event = json.loads(canonical, parse_float=Decimal)["traceEvents"][0]
+        self.assertEqual(event["ts"], Decimal("1792051077986574.428"))
+        self.assertEqual(event["dur"], Decimal("0.001"))
+
+    def test_invalid_event_shapes_and_non_json_numbers_are_rejected(self):
+        for cpu in (
+            b"[null]",
+            b'{"traceEvents":{}}',
+            b'[{"ts":NaN}]',
+            b'[{"ts":Infinity}]',
+        ):
+            with self.subTest(cpu=cpu), self.assertRaises(ValueError):
+                self.native_trace.assemble(cpu, encoded(self.native))
+
+
+if __name__ == "__main__":
+    unittest.main()

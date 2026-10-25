@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "frozen_core_files": 1531,
+  "root_repo_report_identical": true,
+  "all_report_links_exist": true,
+  "all_report_tables_checked": true,
+  "exact_tool_snapshot_bytes_verified": true,
+  "raw_archives_verified": 4,
+  "report_sha256": "88b0ce317ecef29d41df3cec60033d0595c8ef3418e9b4fc18075419b9022fa1",
+  "final_analysis_manifest_sha256": "725bfa01c4188681a6a38077b708da0d1b161b965a34be9635255eb471605868",
+  "pdf_sha256": "bf50edbcac24736092c501364022435b6600ed7b96a13a08b28122ed1a997488",
+  "pdf_pages": 8,
+  "all_pages_rendered_and_visually_reviewed": true
+}

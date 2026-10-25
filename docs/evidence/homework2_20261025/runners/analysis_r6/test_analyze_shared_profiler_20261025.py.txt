@@ -1,0 +1,466 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import hashlib
+import importlib
+import json
+import os
+import sys
+import tempfile
+import unittest
+from decimal import Decimal
+from pathlib import Path
+
+TASK = Path(__file__).resolve().parent
+SOURCE = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"])
+sys.path.insert(0, str(TASK))
+PATTERN = "^HCCL_ALLREDUCE_TEST$"
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_json(path, value):
+    path.write_text(json.dumps(value, indent=2), encoding="utf-8")
+
+
+class AnalyzeSharedProfilerTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(
+            (TASK / "analyze_shared_profiler_20261025.py").is_file(),
+            "analysis driver missing",
+        )
+        self.driver = importlib.import_module("analyze_shared_profiler_20261025")
+        self.temporary = tempfile.TemporaryDirectory(dir=TASK)
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.run_dir, self.tools = self.root / "run", self.root / "tools"
+        self.run_dir.mkdir()
+        self.tools.mkdir()
+        (self.run_dir / "profile").mkdir()
+        (self.run_dir / "rank_forward_events").mkdir()
+        authorization = {
+            "shared_functional_only": False,
+            "performance_authorized": True,
+            "profiler_authorized": True,
+            "measurement_scope": "shared_background_observed",
+        }
+        write_json(self.tools / "authorization.json", authorization)
+        (self.tools / "shared_profile_clock.py").write_bytes(
+            (TASK / "shared_profile_clock.py").read_bytes()
+        )
+        protocol = {
+            "input_lengths": [128],
+            "concurrency": [1],
+            "max_new_tokens": 16,
+            "warmup_requests": 4,
+            "requests_per_cell": 4,
+            "repetitions": 1,
+        }
+        write_json(self.tools / "profile_protocol.json", protocol)
+        write_json(
+            self.tools / "tool_manifest.json",
+            {
+                name: sha(self.tools / name)
+                for name in (
+                    "authorization.json",
+                    "shared_profile_clock.py",
+                    "profile_protocol.json",
+                )
+            },
+        )
+        write_json(self.run_dir / "protocol.json", protocol)
+        core_sha = sha(SOURCE / "docs/evidence/homework2_20261023/source_manifest.json")
+        self.run = {
+            "status": "passed",
+            "shared_functional_only": False,
+            "shared_performance_authorized": True,
+            "measurement_scope": "shared_background_observed",
+            "normal_performance_eligible": False,
+            "profile_mode": "all-batches",
+            "profiler_level": "Level1",
+            "config": {"device": "npu", "tp_size": 2},
+            "protocol": protocol,
+            "protocol_sha256": sha(self.run_dir / "protocol.json"),
+            "source_manifest_sha256": core_sha,
+            "source_after_mismatches": [],
+            "runtime_origins_unchanged": True,
+            "sampler_errors": [],
+            "foreign_processes": [],
+            "guard": {
+                "resource_mode": "shared_measurement_authorized",
+                "violations": [],
+                "own_children_released": True,
+                "sources_unchanged": True,
+                "sources_sha": core_sha,
+                "sources_after_sha": core_sha,
+                "authorization_sha256": sha(self.tools / "authorization.json"),
+                "tool_manifest_sha256": sha(self.tools / "tool_manifest.json"),
+                "tools_after_sha256": sha(self.tools / "tool_manifest.json"),
+            },
+            "profile": {
+                "controls": [
+                    {
+                        "action": "start",
+                        "acknowledged": True,
+                        "before_perf_counter_ns": 900_000,
+                        "after_perf_counter_ns": 1_000_000,
+                    },
+                    {
+                        "action": "stop",
+                        "acknowledged": True,
+                        "before_perf_counter_ns": 2_000_000,
+                        "after_perf_counter_ns": 2_100_000,
+                    },
+                ],
+                "traces": [],
+            },
+            "batches": [
+                {
+                    "phase": "warmup",
+                    "input_length": 128,
+                    "concurrency": 1,
+                    "repetition": 0,
+                    "started_ns": 1_010_000,
+                    "finished_ns": 1_190_000,
+                    "wall_ns": 180_000,
+                    "status": "passed",
+                    "requests": 4,
+                    "output_tokens": 64,
+                },
+                {
+                    "phase": "formal",
+                    "input_length": 128,
+                    "concurrency": 1,
+                    "repetition": 1,
+                    "started_ns": 1_200_000,
+                    "finished_ns": 1_800_000,
+                    "wall_ns": 600_000,
+                    "status": "passed",
+                    "requests": 4,
+                    "output_tokens": 64,
+                },
+            ],
+        }
+        for rank in (0, 1):
+            self.make_trace(rank)
+        self.save_run()
+
+    def save_run(self):
+        write_json(self.run_dir / "run.json", self.run)
+
+    def make_trace(self, rank):
+        offset = 1_792_051_077_000_000_000 + rank * 1_000_000
+        events, markers = [], []
+        for seq, start in [(1, 500_000), (2, 1_250_000), (3, 1_650_000)]:
+            name = f"HW2_SYNC|rank={rank}|seq={seq}|mono={start}|epoch={offset + start}"
+            event = {
+                "name": name,
+                "rank": rank,
+                "seq": seq,
+                "pid": rank + 10,
+                **{f"m{i}": start + delta for i, delta in enumerate((0, 10, 100, 110))},
+                **{
+                    f"epoch{i}": offset + start + delta
+                    for i, delta in enumerate((0, 10, 100, 110))
+                },
+            }
+            events.append(event)
+            if seq > 1:
+                markers.append(
+                    {
+                        "ph": "X",
+                        "name": name,
+                        "pid": 10,
+                        "tid": 1,
+                        "ts": str(Decimal(offset + start + 5) / 1000),
+                        "dur": "0.100",
+                    }
+                )
+        metadata = [
+            {"ph": "M", "name": "process_name", "pid": 10, "args": {"name": "Python"}},
+            {
+                "ph": "M",
+                "name": "process_name",
+                "pid": 30,
+                "args": {"name": "Ascend Hardware"},
+            },
+            *[
+                {
+                    "ph": "M",
+                    "name": "thread_name",
+                    "pid": 30,
+                    "tid": tid,
+                    "args": {"name": f"Stream {40 + tid}"},
+                }
+                for tid in (1, 2)
+            ],
+        ]
+        native_start = Decimal(offset + 1_200_000) / 1000
+
+        def task(name, start, duration, *, pid=30, tid=1, args=None):
+            return {
+                "ph": "X",
+                "name": name,
+                "ts": str(native_start + start),
+                "dur": str(duration),
+                "pid": pid,
+                "tid": tid,
+                "args": {"Task Type": "AI_CORE"} if args is None else args,
+            }
+
+        tasks = [
+            task("MatMul", 100, 100),
+            task("Vector", 150, 100, tid=2),
+            task("HCCL_ALLREDUCE_TEST", 200, 150, tid=2),
+            task("Unclassified DMA", 400, 50, args={}),
+            task("aclrtSynchronizeStream", 0, 600, pid=10),
+        ]
+        trace_path = self.run_dir / "profile" / f"hw2-TP{rank}.trace.json"
+        write_json(trace_path, {"traceEvents": metadata + markers + tasks})
+        log_path = (
+            self.run_dir
+            / "rank_forward_events"
+            / f"rank{rank}_pid{rank + 10}.forward.jsonl"
+        )
+        log_path.write_text(
+            "".join(json.dumps(event) + "\n" for event in events), encoding="utf-8"
+        )
+        self.run["profile"]["traces"].append(
+            {
+                "path": trace_path.relative_to(self.run_dir).as_posix(),
+                "rank": rank,
+                "sha256": sha(trace_path),
+            }
+        )
+
+    def analyze(self):
+        return self.driver.analyze_run(
+            self.run_dir,
+            source_root=SOURCE,
+            tools_dir=self.tools,
+            clock_tolerance_ns=0,
+            collective_patterns=[PATTERN],
+        )
+
+    def mutate_trace(self, rank, update, *, update_sha=True):
+        item = self.run["profile"]["traces"][rank]
+        path = self.run_dir / item["path"]
+        trace = json.loads(path.read_text())
+        update(trace["traceEvents"])
+        write_json(path, trace)
+        if update_sha:
+            item["sha256"] = sha(path)
+        self.save_run()
+
+    def test_rank_local_formal_unions_exclude_warmup_and_keep_unknown_and_host_wait(
+        self,
+    ):
+        report = self.analyze()
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(len(report["formal_windows"]), 1)
+        window = report["formal_windows"][0]
+        for rank in ("0", "1"):
+            metrics = window["ranks"][rank]
+            self.assertEqual(metrics["window_duration_us"], 600)
+            self.assertEqual(metrics["device_compute_busy_us"], 150)
+            self.assertEqual(metrics["device_collective_busy_us"], 150)
+            self.assertEqual(metrics["compute_collective_overlap_us"], 50)
+            self.assertEqual(metrics["compute_or_collective_busy_us"], 250)
+            self.assertEqual(metrics["uncovered_compute_or_collective_us"], 350)
+            self.assertEqual(metrics["host_wait_busy_us"], 600)
+            self.assertEqual(metrics["unknown_busy_us"], 50)
+            self.assertEqual(report["rank_clocks"][rank]["anchor_count"], 2)
+            self.assertEqual(
+                window["anchor_coverage"][rank]["contained_anchor_count"], 2
+            )
+        self.assertNotEqual(
+            window["native_window_us"]["0"], window["native_window_us"]["1"]
+        )
+        self.assertNotIn("wall_time_us", report)
+        self.assertEqual(
+            report["provenance"]["source_manifest_sha256"],
+            self.run["source_manifest_sha256"],
+        )
+        self.assertEqual(
+            report["provenance"]["raw_traces"]["0"]["sha256"],
+            self.run["profile"]["traces"][0]["sha256"],
+        )
+
+    def test_trace_hash_mismatch_retains_failure_and_no_formal_windows(self):
+        self.mutate_trace(1, lambda events: events.pop(), update_sha=False)
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(any("SHA" in str(error) for error in report["errors"]))
+
+    def test_old_functional_scope_cannot_be_upgraded(self):
+        self.run["shared_functional_only"] = True
+        self.save_run()
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(
+            any(
+                "authoriz" in str(error) or "functional" in str(error)
+                for error in report["errors"]
+            )
+        )
+
+    def test_missing_marker_or_drifting_rank_never_emits_formal_window(self):
+        self.mutate_trace(
+            1,
+            lambda events: events.__setitem__(
+                slice(None),
+                [
+                    event
+                    for event in events
+                    if not event.get("name", "").startswith("HW2_SYNC|rank=1|seq=3|")
+                ],
+            ),
+        )
+        report = self.analyze()
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(any("marker" in str(error) for error in report["errors"]))
+
+    def test_clock_drift_rejected_independently_of_hash_verification(self):
+        def drift(events):
+            marker = next(
+                event
+                for event in events
+                if event.get("name", "").startswith("HW2_SYNC|rank=1|seq=3|")
+            )
+            marker["ts"] = str(Decimal(marker["ts"]) + 100)
+
+        self.mutate_trace(1, drift)
+        report = self.analyze()
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(
+            any(
+                "offset" in str(error) or "drift" in str(error)
+                for error in report["errors"]
+            )
+        )
+
+    def test_wrong_rank_annotation_rejects_whole_formal_analysis(self):
+        def wrong_rank(events):
+            marker = next(
+                event
+                for event in events
+                if event.get("name", "").startswith("HW2_SYNC|rank=1|")
+            )
+            marker["name"] = marker["name"].replace("rank=1|", "rank=0|")
+
+        self.mutate_trace(1, wrong_rank)
+        report = self.analyze()
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(any("wrong rank" in str(error) for error in report["errors"]))
+
+    def test_malformed_metadata_retains_failure_report_instead_of_raising(self):
+        def malformed(events):
+            metadata = next(
+                event
+                for event in events
+                if event.get("ph") == "M" and event.get("pid") == 30
+            )
+            del metadata["args"]
+
+        self.mutate_trace(0, malformed)
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertTrue(report["errors"])
+
+    def test_collective_pattern_matching_cpu_wait_cannot_be_device_communication(self):
+        report = self.driver.analyze_run(
+            self.run_dir,
+            source_root=SOURCE,
+            tools_dir=self.tools,
+            clock_tolerance_ns=0,
+            collective_patterns=["^aclrtSynchronizeStream$"],
+        )
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(
+            report["formal_windows"][0]["ranks"]["0"]["device_collective_busy_us"], 0
+        )
+        self.assertEqual(
+            report["formal_windows"][0]["ranks"]["0"]["host_wait_busy_us"], 600
+        )
+
+    def test_changed_authorization_tool_cannot_pass_receipt_verification(self):
+        path = self.tools / "authorization.json"
+        authorization = json.loads(path.read_text())
+        authorization["profiler_authorized"] = False
+        write_json(path, authorization)
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(
+            any("authorization" in str(error) for error in report["errors"])
+        )
+
+    def test_unconfirmed_hardware_lanes_keep_partial_metrics_and_fail_analysis(self):
+        def remove_lane_confirmation(events):
+            for event in events:
+                if (
+                    event.get("ph") == "M"
+                    and event.get("name") == "process_name"
+                    and event.get("pid") == 30
+                ):
+                    event["args"]["name"] = "Unconfirmed Hardware"
+
+        self.mutate_trace(0, remove_lane_confirmation)
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        metrics = report["formal_windows"][0]["ranks"]["0"]
+        self.assertEqual(metrics["device_compute_busy_us"], 0)
+        self.assertGreater(metrics["unknown_busy_us"], 0)
+
+    def test_cli_writes_failure_json_and_refuses_existing_output(self):
+        self.run["profile"]["controls"][1]["acknowledged"] = False
+        self.save_run()
+        output = self.root / "failure.json"
+        args = [
+            "--run-dir",
+            str(self.run_dir),
+            "--source-root",
+            str(SOURCE),
+            "--tools-dir",
+            str(self.tools),
+            "--clock-tolerance-ns",
+            "0",
+            "--collective-pattern",
+            PATTERN,
+            "--output",
+            str(output),
+        ]
+        self.assertEqual(self.driver.main(args), 1)
+        report = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["formal_windows"], [])
+        original = output.read_bytes()
+        with self.assertRaises(SystemExit):
+            self.driver.main(args)
+        self.assertEqual(output.read_bytes(), original)
+
+
+if __name__ == "__main__":
+    unittest.main()

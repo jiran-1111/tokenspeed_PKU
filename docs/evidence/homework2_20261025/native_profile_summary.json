@@ -1,0 +1,1403 @@
+{
+  "all_passed": true,
+  "measurement_scope": "shared_background_observed",
+  "exclusive": false,
+  "analyses": {
+    "0.8b_tp2_profile": {
+      "status": "passed",
+      "full_analysis_sha256": "760968028612525dfe0e9e7c537cb22cf204e3e6d04eb7b762bd0a74e22e12b5",
+      "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+      "analysis_driver_sha256": "005c08c4e207a010bec75dd875ad6cb7207f3d9ac80fdea9ebdd6b306dfc1809",
+      "raw_traces": {
+        "0": {
+          "sha256": "a54cfa4769e8e37e96350bf370d3916a548ddd262525313971b9e6c9e4af2545"
+        },
+        "1": {
+          "sha256": "36ced83798d05bf3e77ca8dc7b8bbe2eddb48d7877fdba3c342e1b154944cbb3"
+        }
+      },
+      "rank_clocks": {
+        "0": {
+          "status": "verified",
+          "anchor_count": 26,
+          "offset_bounds_ns": [
+            1791009758227618310,
+            1791009758227636500
+          ],
+          "uncertainty_ns": 9095
+        },
+        "1": {
+          "status": "verified",
+          "anchor_count": 26,
+          "offset_bounds_ns": [
+            1791009758227618560,
+            1791009758227636050
+          ],
+          "uncertainty_ns": 8745
+        }
+      },
+      "native_derivations": {
+        "0": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "96cd6281a8edb0e7eb436bad27f2147e268a8664c77a3c5a9097436e45659da1",
+          "native_trace_sha256": "4507a3fe27f2fbf769c5f0a44ee21913bbd0561cc56286dfe2c1b3532479b800",
+          "canonical_sha256": "a54cfa4769e8e37e96350bf370d3916a548ddd262525313971b9e6c9e4af2545",
+          "cpu_event_count": 748466,
+          "native_event_count": 6136093,
+          "canonical_event_count": 6884559,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 3208318,
+          "native_sync_x_marker_count": 26,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        },
+        "1": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "83fe43bac36e39758f030beffa1faea236d7c62b9324be10078d6616354d73d2",
+          "native_trace_sha256": "71125ba66264056777d556dc5506f4e508e89ae5c00b8e3ba827cb92628db9fa",
+          "canonical_sha256": "36ced83798d05bf3e77ca8dc7b8bbe2eddb48d7877fdba3c342e1b154944cbb3",
+          "cpu_event_count": 567093,
+          "native_event_count": 6183728,
+          "canonical_event_count": 6750821,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 3254963,
+          "native_sync_x_marker_count": 26,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        }
+      },
+      "formal_windows": [
+        {
+          "batch": {
+            "input_length": 128,
+            "concurrency": 1,
+            "repetition": 1,
+            "started_ns": 1903851762507210,
+            "finished_ns": 1903853011807170,
+            "wall_ns": 1249299960
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 4,
+              "perf_counter_span_ns": [
+                1903851770637470,
+                1903852804953500
+              ],
+              "offset_uncertainty_ns": 9095
+            },
+            "1": {
+              "contained_anchor_count": 4,
+              "perf_counter_span_ns": [
+                1903851770788650,
+                1903852799685730
+              ],
+              "offset_uncertainty_ns": 8745
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792913609990134.615",
+              "1792913611239434.575"
+            ],
+            "1": [
+              "1792913609990134.515",
+              "1792913611239434.475"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 1249299.96,
+              "complete_event_count": 5890546,
+              "event_counts_within_window": {
+                "device_compute": 57044,
+                "device_collective": 3468,
+                "host_wait": 192,
+                "host_other": 125391,
+                "unknown": 804796
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 125391,
+                "CPU lane and explicit synchronization API name": 192,
+                "no confirmed hardware Stream or CPU lane evidence": 269908,
+                "hardware Stream and explicit collective name pattern": 3468,
+                "hardware task has no supported compute/collective classification": 534544,
+                "hardware Stream and known compute Task Type": 57044,
+                "collective-looking device name has no confirmed pattern": 344
+              },
+              "device_compute_busy_us": 684729.56,
+              "device_collective_busy_us": 621486.52,
+              "host_wait_busy_us": 483111.86,
+              "host_other_busy_us": 345339.71,
+              "unknown_busy_us": 1249299.96,
+              "compute_collective_overlap_us": 409661.96,
+              "compute_only_us": 275067.6,
+              "collective_only_us": 211824.56,
+              "compute_or_collective_busy_us": 896554.12,
+              "uncovered_compute_or_collective_us": 352745.84,
+              "unknown_task_type_counts": {
+                "untyped": 269908,
+                "EVENT_RECORD": 1143,
+                "EVENT_WAIT": 703,
+                "AI_VECTOR_CORE": 344,
+                "NOTIFY_RECORD": 6706,
+                "NOTIFY_WAIT": 10013,
+                "NOTIFY_RECORD_SQE": 27628,
+                "NOTIFY_WAIT_SQE": 58699,
+                "SDMA_SQE": 27268,
+                "WRITE_VALUE_SQE": 25792,
+                "PROFILER_TRACE_EX": 195,
+                "MODEL_EXECUTE": 60,
+                "CAPTURE_WAIT": 343224,
+                "CAPTURE_RECORD": 15300,
+                "EVENT_RESET": 360,
+                "NOP": 1443,
+                "MEM_WRITE_VALUE": 15300,
+                "PLACE_HOLDER_SQE": 2,
+                "PCIE_DMA_SQE": 708
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 269908,
+                "hardware task has no supported compute/collective classification": 534544,
+                "collective-looking device name has no confirmed pattern": 344
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 1249299.96,
+              "complete_event_count": 5756187,
+              "event_counts_within_window": {
+                "device_compute": 57013,
+                "device_collective": 3470,
+                "host_wait": 192,
+                "host_other": 124901,
+                "unknown": 798921
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 124901,
+                "CPU lane and explicit synchronization API name": 192,
+                "no confirmed hardware Stream or CPU lane evidence": 267649,
+                "hardware Stream and explicit collective name pattern": 3470,
+                "hardware task has no supported compute/collective classification": 530928,
+                "hardware Stream and known compute Task Type": 57013,
+                "collective-looking device name has no confirmed pattern": 344
+              },
+              "device_compute_busy_us": 687433.02075,
+              "device_collective_busy_us": 531541.7155,
+              "host_wait_busy_us": 485436.84,
+              "host_other_busy_us": 343619.445,
+              "unknown_busy_us": 1249299.96,
+              "compute_collective_overlap_us": 377019.68675,
+              "compute_only_us": 310413.334,
+              "collective_only_us": 154522.02875,
+              "compute_or_collective_busy_us": 841955.0495,
+              "uncovered_compute_or_collective_us": 407344.9105,
+              "unknown_task_type_counts": {
+                "untyped": 267649,
+                "NOTIFY_WAIT": 10022,
+                "NOTIFY_WAIT_SQE": 57817,
+                "CAPTURE_WAIT": 341755,
+                "CAPTURE_RECORD": 15292,
+                "NOTIFY_RECORD": 6706,
+                "SDMA_SQE": 27295,
+                "NOTIFY_RECORD_SQE": 26330,
+                "WRITE_VALUE_SQE": 25761,
+                "EVENT_RESET": 360,
+                "NOP": 1454,
+                "MEM_WRITE_VALUE": 15300,
+                "AI_VECTOR_CORE": 344,
+                "EVENT_RECORD": 1141,
+                "EVENT_WAIT": 720,
+                "PROFILER_TRACE_EX": 205,
+                "MODEL_EXECUTE": 60,
+                "PLACE_HOLDER_SQE": 2,
+                "PCIE_DMA_SQE": 708
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 267649,
+                "hardware task has no supported compute/collective classification": 530928,
+                "collective-looking device name has no confirmed pattern": 344
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[128]": 4
+            },
+            "1": {
+              "[128]": 4
+            }
+          }
+        },
+        {
+          "batch": {
+            "input_length": 128,
+            "concurrency": 4,
+            "repetition": 1,
+            "started_ns": 1903853660484380,
+            "finished_ns": 1903854230628080,
+            "wall_ns": 570143700
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 2,
+              "perf_counter_span_ns": [
+                1903853669626090,
+                1903853926577140
+              ],
+              "offset_uncertainty_ns": 9095
+            },
+            "1": {
+              "contained_anchor_count": 2,
+              "perf_counter_span_ns": [
+                1903853668461560,
+                1903853908119140
+              ],
+              "offset_uncertainty_ns": 8745
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792913611888111.785",
+              "1792913612458255.485"
+            ],
+            "1": [
+              "1792913611888111.685",
+              "1792913612458255.385"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 570143.7,
+              "complete_event_count": 5890546,
+              "event_counts_within_window": {
+                "device_compute": 17545,
+                "device_collective": 969,
+                "host_wait": 53,
+                "host_other": 50536,
+                "unknown": 234386
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 50536,
+                "CPU lane and explicit synchronization API name": 53,
+                "no confirmed hardware Stream or CPU lane evidence": 76497,
+                "hardware Stream and explicit collective name pattern": 969,
+                "hardware task has no supported compute/collective classification": 157813,
+                "hardware Stream and known compute Task Type": 17545,
+                "collective-looking device name has no confirmed pattern": 76
+              },
+              "device_compute_busy_us": 385965.02,
+              "device_collective_busy_us": 154504.3,
+              "host_wait_busy_us": 209425.07,
+              "host_other_busy_us": 168168.17,
+              "unknown_busy_us": 570143.7,
+              "compute_collective_overlap_us": 126838.78,
+              "compute_only_us": 259126.24,
+              "collective_only_us": 27665.52,
+              "compute_or_collective_busy_us": 413630.54,
+              "uncovered_compute_or_collective_us": 156513.16,
+              "unknown_task_type_counts": {
+                "untyped": 76497,
+                "EVENT_RECORD": 433,
+                "EVENT_WAIT": 281,
+                "AI_VECTOR_CORE": 76,
+                "NOTIFY_RECORD": 1774,
+                "NOTIFY_WAIT": 2657,
+                "NOTIFY_RECORD_SQE": 7338,
+                "NOTIFY_WAIT_SQE": 15577,
+                "SDMA_SQE": 7045,
+                "WRITE_VALUE_SQE": 6851,
+                "PROFILER_TRACE_EX": 95,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 107446,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 371,
+                "MEM_WRITE_VALUE": 3825,
+                "PLACE_HOLDER_SQE": 1,
+                "PCIE_DMA_SQE": 189
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 76497,
+                "hardware task has no supported compute/collective classification": 157813,
+                "collective-looking device name has no confirmed pattern": 76
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 570143.7,
+              "complete_event_count": 5756187,
+              "event_counts_within_window": {
+                "device_compute": 17530,
+                "device_collective": 969,
+                "host_wait": 53,
+                "host_other": 50383,
+                "unknown": 240421
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 50383,
+                "CPU lane and explicit synchronization API name": 53,
+                "no confirmed hardware Stream or CPU lane evidence": 75754,
+                "hardware Stream and explicit collective name pattern": 969,
+                "hardware task has no supported compute/collective classification": 164591,
+                "hardware Stream and known compute Task Type": 17530,
+                "collective-looking device name has no confirmed pattern": 76
+              },
+              "device_compute_busy_us": 387347.64025,
+              "device_collective_busy_us": 196539.42875,
+              "host_wait_busy_us": 259532.24,
+              "host_other_busy_us": 139367.12,
+              "unknown_busy_us": 570143.7,
+              "compute_collective_overlap_us": 109306.863,
+              "compute_only_us": 278040.77725,
+              "collective_only_us": 87232.56575,
+              "compute_or_collective_busy_us": 474580.206,
+              "uncovered_compute_or_collective_us": 95563.494,
+              "unknown_task_type_counts": {
+                "untyped": 75754,
+                "NOTIFY_WAIT": 2651,
+                "NOTIFY_WAIT_SQE": 15317,
+                "CAPTURE_WAIT": 114919,
+                "CAPTURE_RECORD": 3819,
+                "NOTIFY_RECORD": 1773,
+                "SDMA_SQE": 7042,
+                "WRITE_VALUE_SQE": 6835,
+                "NOTIFY_RECORD_SQE": 6919,
+                "MEM_WRITE_VALUE": 3825,
+                "EVENT_RECORD": 439,
+                "EVENT_WAIT": 287,
+                "AI_VECTOR_CORE": 76,
+                "PROFILER_TRACE_EX": 97,
+                "MODEL_EXECUTE": 15,
+                "EVENT_RESET": 90,
+                "NOP": 373,
+                "PLACE_HOLDER_SQE": 1,
+                "PCIE_DMA_SQE": 189
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 75754,
+                "hardware task has no supported compute/collective classification": 164591,
+                "collective-looking device name has no confirmed pattern": 76
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[128]": 1,
+              "[384]": 1
+            },
+            "1": {
+              "[128]": 1,
+              "[384]": 1
+            }
+          }
+        },
+        {
+          "batch": {
+            "input_length": 2048,
+            "concurrency": 1,
+            "repetition": 1,
+            "started_ns": 1903857916280550,
+            "finished_ns": 1903861591018750,
+            "wall_ns": 3674738200
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 4,
+              "perf_counter_span_ns": [
+                1903857925875690,
+                1903860807781110
+              ],
+              "offset_uncertainty_ns": 9095
+            },
+            "1": {
+              "contained_anchor_count": 4,
+              "perf_counter_span_ns": [
+                1903857925712240,
+                1903860801198510
+              ],
+              "offset_uncertainty_ns": 8745
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792913616143907.955",
+              "1792913619818646.155"
+            ],
+            "1": [
+              "1792913616143907.855",
+              "1792913619818646.055"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 3674738.2,
+              "complete_event_count": 5890546,
+              "event_counts_within_window": {
+                "device_compute": 57068,
+                "device_collective": 3468,
+                "host_wait": 192,
+                "host_other": 126225,
+                "unknown": 809901
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 126225,
+                "CPU lane and explicit synchronization API name": 192,
+                "no confirmed hardware Stream or CPU lane evidence": 269859,
+                "hardware Stream and explicit collective name pattern": 3468,
+                "hardware task has no supported compute/collective classification": 539698,
+                "hardware Stream and known compute Task Type": 57068,
+                "collective-looking device name has no confirmed pattern": 344
+              },
+              "device_compute_busy_us": 3246550.4,
+              "device_collective_busy_us": 535768.14,
+              "host_wait_busy_us": 2791314.4,
+              "host_other_busy_us": 456968.49,
+              "unknown_busy_us": 3674738.2,
+              "compute_collective_overlap_us": 439952.22,
+              "compute_only_us": 2806598.18,
+              "collective_only_us": 95815.92,
+              "compute_or_collective_busy_us": 3342366.32,
+              "uncovered_compute_or_collective_us": 332371.88,
+              "unknown_task_type_counts": {
+                "untyped": 269859,
+                "EVENT_RECORD": 1143,
+                "EVENT_WAIT": 736,
+                "AI_VECTOR_CORE": 344,
+                "NOTIFY_RECORD": 6700,
+                "NOTIFY_WAIT": 10018,
+                "NOTIFY_RECORD_SQE": 27520,
+                "NOTIFY_WAIT_SQE": 58677,
+                "SDMA_SQE": 27244,
+                "WRITE_VALUE_SQE": 25792,
+                "PROFILER_TRACE_EX": 213,
+                "MODEL_EXECUTE": 60,
+                "CAPTURE_WAIT": 348462,
+                "CAPTURE_RECORD": 15300,
+                "EVENT_RESET": 360,
+                "NOP": 1464,
+                "MEM_WRITE_VALUE": 15300,
+                "PLACE_HOLDER_SQE": 1,
+                "PCIE_DMA_SQE": 708
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 269859,
+                "hardware task has no supported compute/collective classification": 539698,
+                "collective-looking device name has no confirmed pattern": 344
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 3674738.2,
+              "complete_event_count": 5756187,
+              "event_counts_within_window": {
+                "device_compute": 56901,
+                "device_collective": 3455,
+                "host_wait": 192,
+                "host_other": 125723,
+                "unknown": 812185
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 125723,
+                "CPU lane and explicit synchronization API name": 192,
+                "no confirmed hardware Stream or CPU lane evidence": 267193,
+                "hardware Stream and explicit collective name pattern": 3455,
+                "hardware task has no supported compute/collective classification": 544648,
+                "hardware Stream and known compute Task Type": 56901,
+                "collective-looking device name has no confirmed pattern": 344
+              },
+              "device_compute_busy_us": 3252292.81075,
+              "device_collective_busy_us": 512161.28725,
+              "host_wait_busy_us": 2857243.05,
+              "host_other_busy_us": 420344.64,
+              "unknown_busy_us": 3674738.2,
+              "compute_collective_overlap_us": 389566.11125,
+              "compute_only_us": 2862726.6995,
+              "collective_only_us": 122595.176,
+              "compute_or_collective_busy_us": 3374887.98675,
+              "uncovered_compute_or_collective_us": 299850.21325,
+              "unknown_task_type_counts": {
+                "untyped": 267193,
+                "NOTIFY_WAIT": 9980,
+                "NOTIFY_WAIT_SQE": 57729,
+                "CAPTURE_WAIT": 355793,
+                "CAPTURE_RECORD": 15244,
+                "NOTIFY_RECORD": 6668,
+                "SDMA_SQE": 27217,
+                "NOTIFY_RECORD_SQE": 26345,
+                "WRITE_VALUE_SQE": 25712,
+                "EVENT_WAIT": 732,
+                "EVENT_RESET": 358,
+                "NOP": 1431,
+                "MEM_WRITE_VALUE": 15300,
+                "AI_VECTOR_CORE": 344,
+                "EVENT_RECORD": 1166,
+                "PROFILER_TRACE_EX": 203,
+                "MODEL_EXECUTE": 60,
+                "PLACE_HOLDER_SQE": 2,
+                "PCIE_DMA_SQE": 708
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 267193,
+                "hardware task has no supported compute/collective classification": 544648,
+                "collective-looking device name has no confirmed pattern": 344
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[2048]": 4
+            },
+            "1": {
+              "[2048]": 4
+            }
+          }
+        },
+        {
+          "batch": {
+            "input_length": 2048,
+            "concurrency": 4,
+            "repetition": 1,
+            "started_ns": 1903864714434860,
+            "finished_ns": 1903867804047660,
+            "wall_ns": 3089612800
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 3,
+              "perf_counter_span_ns": [
+                1903864724802020,
+                1903866953486490
+              ],
+              "offset_uncertainty_ns": 9095
+            },
+            "1": {
+              "contained_anchor_count": 3,
+              "perf_counter_span_ns": [
+                1903864723591040,
+                1903866954509260
+              ],
+              "offset_uncertainty_ns": 8745
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792913622942062.265",
+              "1792913626031675.065"
+            ],
+            "1": [
+              "1792913622942062.165",
+              "1792913626031674.965"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 3089612.8,
+              "complete_event_count": 5890546,
+              "event_counts_within_window": {
+                "device_compute": 19184,
+                "device_collective": 1071,
+                "host_wait": 55,
+                "host_other": 69036,
+                "unknown": 244407
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 69036,
+                "CPU lane and explicit synchronization API name": 55,
+                "no confirmed hardware Stream or CPU lane evidence": 82360,
+                "hardware Stream and explicit collective name pattern": 1071,
+                "hardware task has no supported compute/collective classification": 161931,
+                "hardware Stream and known compute Task Type": 19184,
+                "collective-looking device name has no confirmed pattern": 116
+              },
+              "device_compute_busy_us": 2945496.18,
+              "device_collective_busy_us": 183436.86,
+              "host_wait_busy_us": 2591564.08,
+              "host_other_busy_us": 249916.785,
+              "unknown_busy_us": 3087251.485,
+              "compute_collective_overlap_us": 147254.5,
+              "compute_only_us": 2798241.68,
+              "collective_only_us": 36182.36,
+              "compute_or_collective_busy_us": 2981678.54,
+              "uncovered_compute_or_collective_us": 107934.26,
+              "unknown_task_type_counts": {
+                "untyped": 82360,
+                "EVENT_RECORD": 605,
+                "EVENT_WAIT": 395,
+                "AI_VECTOR_CORE": 116,
+                "PROFILER_TRACE_EX": 159,
+                "NOTIFY_RECORD": 1882,
+                "NOTIFY_WAIT": 2811,
+                "NOTIFY_RECORD_SQE": 7798,
+                "NOTIFY_WAIT_SQE": 16489,
+                "SDMA_SQE": 7427,
+                "WRITE_VALUE_SQE": 7254,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 108788,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 367,
+                "MEM_WRITE_VALUE": 3825,
+                "PCIE_DMA_SQE": 201
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 82360,
+                "hardware task has no supported compute/collective classification": 161931,
+                "collective-looking device name has no confirmed pattern": 116
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 3089612.8,
+              "complete_event_count": 5756187,
+              "event_counts_within_window": {
+                "device_compute": 19118,
+                "device_collective": 1071,
+                "host_wait": 55,
+                "host_other": 68871,
+                "unknown": 246247
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 68871,
+                "CPU lane and explicit synchronization API name": 55,
+                "no confirmed hardware Stream or CPU lane evidence": 81465,
+                "hardware Stream and explicit collective name pattern": 1071,
+                "hardware task has no supported compute/collective classification": 164666,
+                "hardware Stream and known compute Task Type": 19118,
+                "collective-looking device name has no confirmed pattern": 116
+              },
+              "device_compute_busy_us": 2956478.4775,
+              "device_collective_busy_us": 169425.214,
+              "host_wait_busy_us": 2595110.58,
+              "host_other_busy_us": 259314.02,
+              "unknown_busy_us": 3089612.8,
+              "compute_collective_overlap_us": 134939.57975,
+              "compute_only_us": 2821538.89775,
+              "collective_only_us": 34485.63425,
+              "compute_or_collective_busy_us": 2990964.11175,
+              "uncovered_compute_or_collective_us": 98648.68825,
+              "unknown_task_type_counts": {
+                "untyped": 81465,
+                "NOTIFY_WAIT": 2809,
+                "NOTIFY_WAIT_SQE": 16251,
+                "CAPTURE_WAIT": 112301,
+                "EVENT_WAIT": 390,
+                "EVENT_RESET": 90,
+                "NOP": 354,
+                "CAPTURE_RECORD": 3819,
+                "NOTIFY_RECORD": 1875,
+                "SDMA_SQE": 7423,
+                "NOTIFY_RECORD_SQE": 7319,
+                "WRITE_VALUE_SQE": 7238,
+                "MEM_WRITE_VALUE": 3825,
+                "EVENT_RECORD": 601,
+                "AI_VECTOR_CORE": 116,
+                "PROFILER_TRACE_EX": 155,
+                "MODEL_EXECUTE": 15,
+                "PCIE_DMA_SQE": 201
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 81465,
+                "hardware task has no supported compute/collective classification": 164666,
+                "collective-looking device name has no confirmed pattern": 116
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[2048]": 2,
+              "[4096]": 1
+            },
+            "1": {
+              "[2048]": 2,
+              "[4096]": 1
+            }
+          }
+        }
+      ],
+      "device_collective_name_inventory_includes_warmup": {
+        "0": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "131072"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "2"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "2097152"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "248320"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "262144"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "3"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "372480"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "393216"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "4194304"
+          }
+        ],
+        "1": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "131072"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "2"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "2097152"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "248320"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "262144"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "3"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "372480"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "393216"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "4194304"
+          }
+        ]
+      }
+    },
+    "0.8b_chunk4096_profile": {
+      "status": "passed",
+      "full_analysis_sha256": "e113207dfe4a03bc91de80ff3e0263abce84795559cb3822a9fd01c07f7e80fc",
+      "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+      "analysis_driver_sha256": "005c08c4e207a010bec75dd875ad6cb7207f3d9ac80fdea9ebdd6b306dfc1809",
+      "raw_traces": {
+        "0": {
+          "sha256": "4a318b98284e41a6b9403839f090c6b0b6f8c43c84782079b326b437f7e2c7c2"
+        },
+        "1": {
+          "sha256": "daf8575c4a3bdacaea8450247c56c444af9b900ba258661ba8b2f3b333bc9489"
+        }
+      },
+      "rank_clocks": {
+        "0": {
+          "status": "verified",
+          "anchor_count": 5,
+          "offset_bounds_ns": [
+            1791009758227617810,
+            1791009758227638800
+          ],
+          "uncertainty_ns": 10495
+        },
+        "1": {
+          "status": "verified",
+          "anchor_count": 5,
+          "offset_bounds_ns": [
+            1791009758227616730,
+            1791009758227640210
+          ],
+          "uncertainty_ns": 11740
+        }
+      },
+      "native_derivations": {
+        "0": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "f28466164e225be25bf60e7732ed2508b29c6dcdde47ba16cf39fa04290c27a9",
+          "native_trace_sha256": "57d841f9dbcbbf4400b630bcd0cf8527cd79d06d26ea271d137a65a0ce4eadcc",
+          "canonical_sha256": "4a318b98284e41a6b9403839f090c6b0b6f8c43c84782079b326b437f7e2c7c2",
+          "cpu_event_count": 296691,
+          "native_event_count": 918456,
+          "canonical_event_count": 1215147,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 383847,
+          "native_sync_x_marker_count": 5,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        },
+        "1": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "e97f6b27ff8ee9de9fbdf9862b527900e1dd5449b6e1affbd93c6a9e80edc126",
+          "native_trace_sha256": "b86bbb3cde23508b30eb50f7a42ff76333883d6d94a69ad251e85295e1da55cc",
+          "canonical_sha256": "daf8575c4a3bdacaea8450247c56c444af9b900ba258661ba8b2f3b333bc9489",
+          "cpu_event_count": 191693,
+          "native_event_count": 918014,
+          "canonical_event_count": 1109707,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 381885,
+          "native_sync_x_marker_count": 5,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        }
+      },
+      "formal_windows": [
+        {
+          "batch": {
+            "input_length": 2048,
+            "concurrency": 4,
+            "repetition": 1,
+            "started_ns": 1904342346349600,
+            "finished_ns": 1904345416839610,
+            "wall_ns": 3070490010
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 2,
+              "perf_counter_span_ns": [
+                1904342359824730,
+                1904343905032040
+              ],
+              "offset_uncertainty_ns": 10495
+            },
+            "1": {
+              "contained_anchor_count": 2,
+              "perf_counter_span_ns": [
+                1904342358864750,
+                1904343908977530
+              ],
+              "offset_uncertainty_ns": 11740
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792914100573977.905",
+              "1792914103644467.915"
+            ],
+            "1": [
+              "1792914100573978.07",
+              "1792914103644468.08"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 3070490.01,
+              "complete_event_count": 946295,
+              "event_counts_within_window": {
+                "device_compute": 17555,
+                "device_collective": 969,
+                "host_wait": 53,
+                "host_other": 50588,
+                "unknown": 234857
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 50588,
+                "CPU lane and explicit synchronization API name": 53,
+                "no confirmed hardware Stream or CPU lane evidence": 76146,
+                "hardware Stream and explicit collective name pattern": 969,
+                "hardware task has no supported compute/collective classification": 158673,
+                "hardware Stream and known compute Task Type": 17555,
+                "collective-looking device name has no confirmed pattern": 38
+              },
+              "device_compute_busy_us": 2933120.16,
+              "device_collective_busy_us": 153665.66,
+              "host_wait_busy_us": 2662443.97,
+              "host_other_busy_us": 219933.575,
+              "unknown_busy_us": 3067828.705,
+              "compute_collective_overlap_us": 119853.24,
+              "compute_only_us": 2813266.92,
+              "collective_only_us": 33812.42,
+              "compute_or_collective_busy_us": 2966932.58,
+              "uncovered_compute_or_collective_us": 103557.43,
+              "unknown_task_type_counts": {
+                "untyped": 76146,
+                "EVENT_RECORD": 439,
+                "EVENT_WAIT": 286,
+                "AI_VECTOR_CORE": 38,
+                "PROFILER_TRACE_EX": 104,
+                "NOTIFY_RECORD": 1775,
+                "NOTIFY_WAIT": 2656,
+                "NOTIFY_RECORD_SQE": 6974,
+                "NOTIFY_WAIT_SQE": 15643,
+                "SDMA_SQE": 7020,
+                "WRITE_VALUE_SQE": 6851,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 108620,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 361,
+                "MEM_WRITE_VALUE": 3825,
+                "PCIE_DMA_SQE": 189
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 76146,
+                "hardware task has no supported compute/collective classification": 158673,
+                "collective-looking device name has no confirmed pattern": 38
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 3070490.01,
+              "complete_event_count": 839929,
+              "event_counts_within_window": {
+                "device_compute": 17555,
+                "device_collective": 969,
+                "host_wait": 53,
+                "host_other": 50436,
+                "unknown": 234242
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 50436,
+                "CPU lane and explicit synchronization API name": 53,
+                "no confirmed hardware Stream or CPU lane evidence": 75824,
+                "hardware Stream and explicit collective name pattern": 969,
+                "hardware task has no supported compute/collective classification": 158380,
+                "hardware Stream and known compute Task Type": 17555,
+                "collective-looking device name has no confirmed pattern": 38
+              },
+              "device_compute_busy_us": 2932561.27675,
+              "device_collective_busy_us": 155612.892,
+              "host_wait_busy_us": 2636742.56,
+              "host_other_busy_us": 253609.87,
+              "unknown_busy_us": 3070053.482,
+              "compute_collective_overlap_us": 126739.34975,
+              "compute_only_us": 2805821.927,
+              "collective_only_us": 28873.54225,
+              "compute_or_collective_busy_us": 2961434.819,
+              "uncovered_compute_or_collective_us": 109055.191,
+              "unknown_task_type_counts": {
+                "untyped": 75824,
+                "EVENT_RECORD": 436,
+                "EVENT_WAIT": 279,
+                "AI_VECTOR_CORE": 38,
+                "NOTIFY_RECORD": 1776,
+                "NOTIFY_WAIT": 2658,
+                "NOTIFY_RECORD_SQE": 6994,
+                "SDMA_SQE": 7033,
+                "NOTIFY_WAIT_SQE": 15303,
+                "WRITE_VALUE_SQE": 6851,
+                "PROFILER_TRACE_EX": 107,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 108632,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 367,
+                "MEM_WRITE_VALUE": 3825,
+                "PCIE_DMA_SQE": 189
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 75824,
+                "hardware task has no supported compute/collective classification": 158380,
+                "collective-looking device name has no confirmed pattern": 38
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[4096]": 2
+            },
+            "1": {
+              "[4096]": 2
+            }
+          }
+        }
+      ],
+      "device_collective_name_inventory_includes_warmup": {
+        "0": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "2"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "2097152"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "248320"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "4194304"
+          }
+        ],
+        "1": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "2"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "2097152"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "248320"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "4194304"
+          }
+        ]
+      }
+    },
+    "0.8b_chunk512_profile": {
+      "status": "passed",
+      "full_analysis_sha256": "565dcc83d2741595460d66cb0410706d6cec7c982a1d53efbe2114c1eb4711de",
+      "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+      "analysis_driver_sha256": "005c08c4e207a010bec75dd875ad6cb7207f3d9ac80fdea9ebdd6b306dfc1809",
+      "raw_traces": {
+        "0": {
+          "sha256": "45fc03f95081cd0f950f7b37ab3263038be828397c947554447e3084d8ed70f8"
+        },
+        "1": {
+          "sha256": "e70ed25149d8ed61980a40a30dc9b820b552a46019a68771ab56cda41589420e"
+        }
+      },
+      "rank_clocks": {
+        "0": {
+          "status": "verified",
+          "anchor_count": 32,
+          "offset_bounds_ns": [
+            1791009758227618260,
+            1791009758227636740
+          ],
+          "uncertainty_ns": 9240
+        },
+        "1": {
+          "status": "verified",
+          "anchor_count": 32,
+          "offset_bounds_ns": [
+            1791009758227618200,
+            1791009758227634160
+          ],
+          "uncertainty_ns": 7980
+        }
+      },
+      "native_derivations": {
+        "0": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "377a486122d548018e0a90f966d0fc1c9a938189a819f76f4ad365943d917307",
+          "native_trace_sha256": "c8bfa46ea92a2b8bf739630be3741e579bdabb67bb9aba46604ca1a107313bb0",
+          "canonical_sha256": "45fc03f95081cd0f950f7b37ab3263038be828397c947554447e3084d8ed70f8",
+          "cpu_event_count": 416840,
+          "native_event_count": 1734950,
+          "canonical_event_count": 2151790,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 511823,
+          "native_sync_x_marker_count": 32,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        },
+        "1": {
+          "raw_inputs_rewritten": false,
+          "prepared_array_was_open": true,
+          "cpu_prepare_sha256": "69c648d87b277bf295955a1fad304a310251d8e8621860dc7db3c25b9550905a",
+          "native_trace_sha256": "5060e1126ec4e8efe25ff079f1e0104d49200fc17cc3ef33d37263bf4c92320e",
+          "canonical_sha256": "e70ed25149d8ed61980a40a30dc9b820b552a46019a68771ab56cda41589420e",
+          "cpu_event_count": 365860,
+          "native_event_count": 1759433,
+          "canonical_event_count": 2125293,
+          "native_hardware_process_count": 1,
+          "native_stream_x_event_count": 536109,
+          "native_sync_x_marker_count": 32,
+          "event_order": "all CPU events followed by all native events; no pruning or deduplication"
+        }
+      },
+      "formal_windows": [
+        {
+          "batch": {
+            "input_length": 2048,
+            "concurrency": 4,
+            "repetition": 1,
+            "started_ns": 1904468305746690,
+            "finished_ns": 1904472042425220,
+            "wall_ns": 3736678530
+          },
+          "anchor_coverage": {
+            "0": {
+              "contained_anchor_count": 16,
+              "perf_counter_span_ns": [
+                1904468315766190,
+                1904471752533190
+              ],
+              "offset_uncertainty_ns": 9240
+            },
+            "1": {
+              "contained_anchor_count": 16,
+              "perf_counter_span_ns": [
+                1904468314502620,
+                1904471752221250
+              ],
+              "offset_uncertainty_ns": 7980
+            }
+          },
+          "native_window_us": {
+            "0": [
+              "1792914226533374.19",
+              "1792914230270052.72"
+            ],
+            "1": [
+              "1792914226533372.87",
+              "1792914230270051.4"
+            ]
+          },
+          "ranks": {
+            "0": {
+              "rank": 0,
+              "window_duration_us": 3736678.53,
+              "complete_event_count": 1665135,
+              "event_counts_within_window": {
+                "device_compute": 39917,
+                "device_collective": 2397,
+                "host_wait": 93,
+                "host_other": 303683,
+                "unknown": 353136
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 303683,
+                "CPU lane and explicit synchronization API name": 93,
+                "no confirmed hardware Stream or CPU lane evidence": 156968,
+                "hardware Stream and explicit collective name pattern": 2397,
+                "hardware task has no supported compute/collective classification": 195482,
+                "hardware Stream and known compute Task Type": 39917,
+                "collective-looking device name has no confirmed pattern": 686
+              },
+              "device_compute_busy_us": 3277180.84,
+              "device_collective_busy_us": 328863.7,
+              "host_wait_busy_us": 484142.84,
+              "host_other_busy_us": 2122040.52,
+              "unknown_busy_us": 3733585.73,
+              "compute_collective_overlap_us": 242829.3,
+              "compute_only_us": 3034351.54,
+              "collective_only_us": 86034.4,
+              "compute_or_collective_busy_us": 3363215.24,
+              "uncovered_compute_or_collective_us": 373463.29,
+              "unknown_task_type_counts": {
+                "untyped": 156968,
+                "EVENT_RECORD": 2629,
+                "EVENT_WAIT": 1722,
+                "AI_VECTOR_CORE": 686,
+                "NOTIFY_RECORD": 3208,
+                "NOTIFY_WAIT": 4788,
+                "NOTIFY_RECORD_SQE": 13209,
+                "NOTIFY_WAIT_SQE": 28480,
+                "SDMA_SQE": 12730,
+                "WRITE_VALUE_SQE": 12493,
+                "PROFILER_TRACE_EX": 818,
+                "PLACE_HOLDER_SQE": 2,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 106914,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 377,
+                "MEM_WRITE_VALUE": 3825,
+                "PCIE_DMA_SQE": 357
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 156968,
+                "hardware task has no supported compute/collective classification": 195482,
+                "collective-looking device name has no confirmed pattern": 686
+              }
+            },
+            "1": {
+              "rank": 1,
+              "window_duration_us": 3736678.53,
+              "complete_event_count": 1638450,
+              "event_counts_within_window": {
+                "device_compute": 39917,
+                "device_collective": 2397,
+                "host_wait": 93,
+                "host_other": 303430,
+                "unknown": 364727
+              },
+              "classification_reasons": {
+                "CPU process or CPU category; includes enqueue/API work": 303430,
+                "CPU lane and explicit synchronization API name": 93,
+                "no confirmed hardware Stream or CPU lane evidence": 156571,
+                "hardware Stream and explicit collective name pattern": 2397,
+                "hardware task has no supported compute/collective classification": 207470,
+                "hardware Stream and known compute Task Type": 39917,
+                "collective-looking device name has no confirmed pattern": 686
+              },
+              "device_compute_busy_us": 3275773.0,
+              "device_collective_busy_us": 420939.94925,
+              "host_wait_busy_us": 590556.91,
+              "host_other_busy_us": 2046927.58,
+              "unknown_busy_us": 3736011.335,
+              "compute_collective_overlap_us": 202764.17325,
+              "compute_only_us": 3073008.82675,
+              "collective_only_us": 218175.776,
+              "compute_or_collective_busy_us": 3493948.776,
+              "uncovered_compute_or_collective_us": 242729.754,
+              "unknown_task_type_counts": {
+                "untyped": 156571,
+                "EVENT_RECORD": 2630,
+                "EVENT_WAIT": 1733,
+                "AI_VECTOR_CORE": 686,
+                "NOTIFY_RECORD": 3202,
+                "NOTIFY_WAIT": 4776,
+                "NOTIFY_WAIT_SQE": 28040,
+                "SDMA_SQE": 12729,
+                "NOTIFY_RECORD_SQE": 13213,
+                "WRITE_VALUE_SQE": 12493,
+                "PROFILER_TRACE_EX": 766,
+                "PLACE_HOLDER_SQE": 1,
+                "MODEL_EXECUTE": 15,
+                "CAPTURE_WAIT": 119410,
+                "CAPTURE_RECORD": 3825,
+                "EVENT_RESET": 90,
+                "NOP": 365,
+                "MEM_WRITE_VALUE": 3825,
+                "PCIE_DMA_SQE": 357
+              },
+              "unknown_reasons": {
+                "no confirmed hardware Stream or CPU lane evidence": 156571,
+                "hardware task has no supported compute/collective classification": 207470,
+                "collective-looking device name has no confirmed pattern": 686
+              }
+            }
+          },
+          "forward_input_shapes": {
+            "0": {
+              "[512]": 16
+            },
+            "1": {
+              "[512]": 16
+            }
+          }
+        }
+      ],
+      "device_collective_name_inventory_includes_warmup": {
+        "0": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "524288"
+          }
+        ],
+        "1": [
+          {
+            "opName": "HcclBroadcast",
+            "dataType": "int32",
+            "count": "1"
+          },
+          {
+            "opName": "HcclAllGather",
+            "dataType": "bfp16",
+            "count": "124160"
+          },
+          {
+            "opName": "HcclAllreduce",
+            "dataType": "bfp16",
+            "count": "524288"
+          }
+        ]
+      }
+    }
+  },
+  "analysis_manifest_sha256": "725bfa01c4188681a6a38077b708da0d1b161b965a34be9635255eb471605868",
+  "capture_tool_manifest_sha256": "1d5b605634ad854e3d1d66eb0ac00116ae4e8dcac1c7d1d18cf48d73c4422241",
+  "limitations": [
+    "Only complete duration events are measured; raw and complete analysis files retain unknown events.",
+    "Host waits overlap device work and are not proven device idleness or pure HCCL waiting.",
+    "Separate rank windows are never summed into end-to-end wall time.",
+    "Profiler output16 timings are separate from output32 ordinary shared measurements."
+  ]
+}

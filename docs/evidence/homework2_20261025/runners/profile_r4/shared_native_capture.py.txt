@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Assemble retained official CANN output with its matching CPU prepare trace."""
+
+import hashlib
+import json
+import re
+from contextlib import contextmanager
+
+from benchmarks.course_project.tp_matrix import (
+    capture_profile as capture_engine_profile,
+)
+from shared_native_trace import assemble
+
+
+@contextmanager
+def capture_native_profile(engine, *, output_dir, tp_size, record):
+    """Keep originals; publish separately derived, source-linked trace artifacts."""
+    with capture_engine_profile(
+        engine, output_dir=output_dir, tp_size=tp_size, record=record
+    ):
+        yield
+    profile = record["profile"]
+    profile["engine_export_traces"] = list(profile["traces"])
+    profile["traces"] = []
+    profile["native_derivations"] = []
+    for rank in range(tp_size):
+        events = list(
+            (output_dir / "rank_forward_events").glob(f"rank{rank}_pid*.forward.jsonl")
+        )
+        if len(events) != 1:
+            raise ValueError("native capture must bind each rank to exactly one worker")
+        first = json.loads(events[0].read_text().splitlines()[0])
+        if first["rank"] != rank:
+            raise ValueError("rank forward identity differs")
+        pid = first["pid"]
+        folders = list(
+            (output_dir / "native_profiler_raw/profiling_data").glob(
+                f"*_{pid}_*_ascend_pt"
+            )
+        )
+        if len(folders) != 1:
+            raise ValueError(
+                "native profiler output does not uniquely match worker PID"
+            )
+        paths = [
+            path
+            for path in folders[0].glob(
+                "PROF_*/mindstudio_profiler_output/msprof_*.json"
+            )
+            if re.fullmatch(r"msprof_\d+\.json", path.name)
+        ]
+        if len(paths) != 1:
+            raise ValueError("one complete official CANN timeline is required per rank")
+        native_path = paths[0]
+        original = next(
+            trace for trace in profile["engine_export_traces"] if trace["rank"] == rank
+        )
+        cpu_path = output_dir / original["path"]
+        cpu_bytes = cpu_path.read_bytes()
+        if hashlib.sha256(cpu_bytes).hexdigest() != original["sha256"]:
+            raise ValueError("engine CPU prepare trace changed after export receipt")
+        canonical, provenance = assemble(cpu_bytes, native_path.read_bytes())
+        canonical_path = output_dir / "profile" / f"native-TP{rank}.trace.json"
+        with canonical_path.open("xb") as stream:
+            stream.write(canonical)
+        profile["native_derivations"].append(
+            dict(
+                provenance,
+                rank=rank,
+                cpu_prepare_path=cpu_path.relative_to(output_dir).as_posix(),
+                native_cann_path=native_path.relative_to(output_dir).as_posix(),
+                canonical_path=canonical_path.relative_to(output_dir).as_posix(),
+            )
+        )
+        profile["traces"].append(
+            {
+                "rank": rank,
+                "path": canonical_path.relative_to(output_dir).as_posix(),
+                "sha256": hashlib.sha256(canonical).hexdigest(),
+            }
+        )
+    profile["export_origin"] = (
+        "retained_official_cann_timeline_plus_original_cpu_prepare"
+    )
+    profile["engine_original_files_rewritten"] = False
+    profile["clock_alignment"] = "requires_independent_mstx_anchor_analysis"

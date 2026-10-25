@@ -1,0 +1,37 @@
+{
+  "measurement_r1": {
+    "manifest_sha256": "ef85c39fb076a2a814f95fa8dd72c24a0c70102fd6062dd57de0710a3ab80432",
+    "files": 21,
+    "all_published_files_equal_tested_bytes": true,
+    "storage": "Python source is stored as .py.txt with unchanged bytes; remove only the final .txt suffix when restoring the snapshot."
+  },
+  "hbm_r4": {
+    "manifest_sha256": "26603e55a6c0b7287cd961c657274fdc22fd07d443937ae01b081e1956e8fd65",
+    "files": 23,
+    "all_published_files_equal_tested_bytes": true,
+    "storage": "Python source is stored as .py.txt with unchanged bytes; remove only the final .txt suffix when restoring the snapshot."
+  },
+  "profile_r4": {
+    "manifest_sha256": "1d5b605634ad854e3d1d66eb0ac00116ae4e8dcac1c7d1d18cf48d73c4422241",
+    "files": 32,
+    "all_published_files_equal_tested_bytes": true,
+    "storage": "Python source is stored as .py.txt with unchanged bytes; remove only the final .txt suffix when restoring the snapshot."
+  },
+  "analysis_r6": {
+    "manifest_sha256": "ac41032d07a65d1cc91b4f5c014a9f3cbd7ab758867aaf883f875155a4bbc593",
+    "files": 13,
+    "all_published_files_equal_tested_bytes": true,
+    "storage": "Python source is stored as .py.txt with unchanged bytes; remove only the final .txt suffix when restoring the snapshot.",
+    "scope": "Historical limited classification: explicit coarse HCCL ranges only; graph replay tasks retained unknown. Superseded by R7 for report tables."
+  },
+  "analysis_r7": {
+    "manifest_sha256": "725bfa01c4188681a6a38077b708da0d1b161b965a34be9635255eb471605868",
+    "files": 14,
+    "all_published_files_equal_tested_bytes": true,
+    "archive_sha256": "4482f5450c3af9a352cfc97c0e146b428142a7dacc47bc897838f53e2991af9c",
+    "cpu_tests_local_and_server": 45,
+    "npu_execution": false,
+    "storage": "ZIP preserves exact tested analysis bytes, including original whitespace. Extract into a new directory; verify analysis_manifest.json before use.",
+    "scope": "Final caller patterns include three exact verified graph collective kernels; fixed core timeline math unchanged."
+  }
+}

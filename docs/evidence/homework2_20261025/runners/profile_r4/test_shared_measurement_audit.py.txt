@@ -1,0 +1,524 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""CPU-only acceptance and refusal tests for saved shared measurements."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[2] / "delivery/homework2-20261023")
+)
+
+from shared_measurement_audit import SOURCE_MANIFEST_SHA256, audit_run
+
+
+def save(path: Path, value: object) -> str:
+    path.write_text(json.dumps(value), encoding="utf-8")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+class SharedMeasurementAuditTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="shared-audit-test-", dir=Path(__file__).parent
+        )
+        self.addCleanup(self.temporary.cleanup)
+        self.directory = Path(self.temporary.name)
+        self.path = self.directory / "run.json"
+        self.protocol = {
+            "input_lengths": [2, 4],
+            "concurrency": [1, 2],
+            "max_new_tokens": 2,
+            "warmup_requests": 2,
+            "requests_per_cell": 2,
+            "repetitions": 2,
+            "engine_port": 39280,
+            "hbm_interval_seconds": 0.25,
+            "seed_text": "seed",
+        }
+        inputs = {str(length): [7] * length for length in [2, 4]}
+        self.run = {
+            "status": "passed",
+            "shared_performance_authorized": True,
+            "shared_functional_only": False,
+            "normal_performance_eligible": False,
+            "measurement_scope": "shared_background_observed",
+            "profile_mode": "off",
+            "source_manifest_sha256": SOURCE_MANIFEST_SHA256,
+            "source_after_mismatches": [],
+            "runtime_origins_unchanged": True,
+            "foreign_processes": [],
+            "sampling_params": {
+                "temperature": 0,
+                "ignore_eos": True,
+                "stream_interval": 1,
+            },
+            "clock": {"name": "perf_counter_ns", "resolution_seconds": 1e-9},
+            "config": {
+                "tp_size": 2,
+                "model_id": "Qwen/Qwen3.5-0.8B",
+                "model_revision": "a" * 40,
+                "max_model_len": 32,
+                "max_num_seqs": 2,
+                "prefix_caching": False,
+                "disable_kvstore": True,
+                "device": "npu",
+            },
+            "protocol": self.protocol,
+            "inputs": inputs,
+            "device": {"npu_id": 1, "chip_logic_ids": {"0": 2, "1": 3}},
+            "engine_cli_args": [
+                "model",
+                "--sampling-backend",
+                "greedy",
+                "--world-size",
+                "2",
+                "--disable-prefix-caching",
+                "--disable-kvstore",
+            ],
+            "guard": {
+                "resource_mode": "shared_measurement_authorized",
+                "sources_unchanged": True,
+                "sources_sha": SOURCE_MANIFEST_SHA256,
+                "sources_after_sha": SOURCE_MANIFEST_SHA256,
+                "violations": [],
+                "own_children_released": True,
+                "parent_pid": 100,
+                "approved_background": {"0": {"90": [1000, "9"]}, "1": {}},
+                "background_samples": [],
+            },
+            "batches": [],
+            "hbm_samples": [],
+            "process_samples": [],
+            "sampler_errors": [],
+            "sampler_started_ns": 1,
+            "sampler_finished_ns": 10**12,
+        }
+        origins = {
+            "tokenspeed.runtime.entrypoints.engine": {
+                "path": "python/tokenspeed/runtime/entrypoints/engine.py",
+                "sha256": "b" * 64,
+            },
+            "tokenspeed_kernel": {
+                "path": "tokenspeed-kernel/python/tokenspeed_kernel/__init__.py",
+                "sha256": "c" * 64,
+            },
+            "tokenspeed_kernel_npu": {
+                "path": "tokenspeed-kernel-npu/python/tokenspeed_kernel_npu/__init__.py",
+                "sha256": "d" * 64,
+            },
+            "tokenspeed_scheduler": {
+                "path": "tokenspeed-scheduler/python/tokenspeed_scheduler/__init__.py",
+                "sha256": "e" * 64,
+            },
+            "tokenspeed_scheduler.tokenspeed_scheduler_ext": {
+                "basename": "tokenspeed_scheduler_ext.test.so",
+                "sha256": "f" * 64,
+            },
+        }
+        self.run["runtime_origins"] = origins
+        dependency_sha = save(
+            self.directory / "runtime_dependencies.json",
+            {"external_extensions": {"tokenspeed_scheduler_ext.test.so": "f" * 64}},
+        )
+        self.run.update(
+            runtime_dependencies_sha256=dependency_sha,
+            runtime_dependencies_after_sha256=dependency_sha,
+        )
+        (self.directory / "before_mapping.txt").write_text(
+            "1 0 2 2 Ascend910\n1 1 3 3 Ascend910\n", encoding="utf-8"
+        )
+        self.requests: list[dict] = []
+        events: dict[int, list[dict]] = {0: [], 1: []}
+        for length in self.protocol["input_lengths"]:
+            for concurrency in self.protocol["concurrency"]:
+                for phase, repetition in [("warmup", 0), ("formal", 1), ("formal", 2)]:
+                    start = (len(self.run["batches"]) + 1) * 100_000_000
+                    batch = {
+                        "phase": phase,
+                        "repetition": repetition,
+                        "input_length": length,
+                        "concurrency": concurrency,
+                        "status": "passed",
+                        "requests": 2,
+                        "output_tokens": 4,
+                        "started_ns": start,
+                        "finished_ns": start + 10_000_000,
+                        "wall_ns": 10_000_000,
+                        "output_tokens_per_second": 400.0,
+                    }
+                    self.run["batches"].append(batch)
+                    for index in range(2):
+                        started = start + index * 1000
+                        self.requests.append(
+                            {
+                                **{
+                                    k: batch[k]
+                                    for k in [
+                                        "phase",
+                                        "repetition",
+                                        "input_length",
+                                        "concurrency",
+                                    ]
+                                },
+                                "request_index": index,
+                                "status": "passed",
+                                "error": None,
+                                "input_ids": inputs[str(length)],
+                                "output_ids": [8, 9],
+                                "started_ns": started,
+                                "finished_ns": started + 3_000_000,
+                                "chunks": [
+                                    {
+                                        "observed_ns": started + 1_000_000,
+                                        "output_tokens": 1,
+                                    },
+                                    {
+                                        "observed_ns": started + 2_000_000,
+                                        "output_tokens": 1,
+                                    },
+                                ],
+                                "ttft_ms": 1.0,
+                                "e2e_ms": 3.0,
+                                "inter_chunk_ms": [1.0],
+                            }
+                        )
+                    raw_name = f"npu_smi_{len(self.run['hbm_samples']):05d}.txt"
+                    raw = (
+                        "| 1 Ascend910 | OK | 0 |\n| 0 2 | 0000:99:00.0 | 100 / 1000 |\n"
+                        "| 1 Ascend910 | OK | 0 |\n| 1 3 | 0000:9B:00.0 | 200 / 1000 |\n"
+                        "| NPU Chip | Process id | Process name | Process memory(MB) |\n+---+\n"
+                        "| 1 0 | 90 | service | 10 |\n| 1 0 | 101 | worker | 20 |\n"
+                        "| 1 1 | 102 | worker | 20 |\n+---+\n"
+                    )
+                    (self.directory / raw_name).write_text(raw, encoding="utf-8")
+                    chips = {
+                        "0": {"used_mb": 100, "capacity_mb": 1000},
+                        "1": {"used_mb": 200, "capacity_mb": 1000},
+                    }
+                    self.run["hbm_samples"].append(
+                        {
+                            "started_ns": start + 100,
+                            "finished_ns": start + 900,
+                            "raw_table": raw_name,
+                            "chips": chips,
+                        }
+                    )
+                    self.run["process_samples"].append(
+                        {
+                            "observed_ns": start + 500,
+                            "root_pid": 100,
+                            "raw_table": raw_name,
+                            "chips": {
+                                "0": {
+                                    "pids": [90, 101],
+                                    "approved_background_pids": [90],
+                                    "foreign_pids": [],
+                                    "unknown_pids": [],
+                                    "parents": {"101": 100},
+                                },
+                                "1": {
+                                    "pids": [102],
+                                    "approved_background_pids": [],
+                                    "foreign_pids": [],
+                                    "unknown_pids": [],
+                                    "parents": {"102": 100},
+                                },
+                            },
+                        }
+                    )
+                    self.run["guard"]["background_samples"].append(
+                        {
+                            "label": "monitor",
+                            "observed_ns": start + 500,
+                            "raw_table": raw_name,
+                            "pids": {"0": [90, 101], "1": [102]},
+                            "identities": {
+                                "90": [1000, "9"],
+                                "101": [1000, "10"],
+                                "102": [1000, "11"],
+                            },
+                            "owned_pids": [101, 102],
+                            "exited_during_query": [],
+                            "memory": chips,
+                        }
+                    )
+                    for rank in (0, 1):
+                        events[rank].append(
+                            {
+                                "rank": rank,
+                                "pid": 101 + rank,
+                                "forward_call": len(events[rank]) + 1,
+                                "input_shape": [length],
+                                "observed_ns": start + 2_000_000,
+                            }
+                        )
+        event_dir = self.directory / "rank_forward_events"
+        event_dir.mkdir()
+        for rank, rows in events.items():
+            (event_dir / f"rank{rank}_pid{101 + rank}.forward.jsonl").write_text(
+                "\n".join(map(json.dumps, rows)) + "\n", encoding="utf-8"
+            )
+        save(
+            self.directory / "shared_release.json",
+            {
+                "own_contexts_released": True,
+                "background": self.run["guard"]["approved_background"],
+                "after_pids": {"0": [90], "1": []},
+                "after_identities": {"90": [1000, "9"]},
+            },
+        )
+        self.write()
+
+    def write(self) -> None:
+        for name in ("config", "protocol", "inputs"):
+            self.run[f"{name}_sha256"] = save(
+                self.directory / f"{name}.json", self.run[name]
+            )
+        (self.directory / "requests.jsonl").write_text(
+            "\n".join(map(json.dumps, self.requests)) + "\n", encoding="utf-8"
+        )
+        (self.directory / "hbm_samples.jsonl").write_text(
+            "\n".join(map(json.dumps, self.run["hbm_samples"])) + "\n", encoding="utf-8"
+        )
+        save(self.path, self.run)
+
+    def audit(self) -> dict:
+        self.write()
+        return audit_run(self.path, expected_tp=2, expected_protocol=self.protocol)
+
+    def test_valid_shared_matrix_has_all_cells_and_recomputed_metrics(self) -> None:
+        result = self.audit()
+        self.assertEqual(result["execution_errors"], [])
+        self.assertTrue(result["shared_performance_valid"])
+        self.assertFalse(result["exclusive"])
+        self.assertFalse(result["normal_performance_eligible"])
+        self.assertTrue(result["hbm_coverage_complete"])
+        self.assertEqual(len(result["cells"]), 4)
+        cell = result["cells"][0]
+        self.assertEqual(
+            cell["throughput"], {"min": 400.0, "median": 400.0, "max": 400.0}
+        )
+        self.assertEqual(cell["ttft_ms"], {"mean": 1.0, "p50": 1.0, "p95": 1.0})
+        self.assertEqual(cell["formal_request_count"], 4)
+        self.assertEqual(result["profiler"]["status"], "not_requested")
+
+    def test_old_functional_run_cannot_be_upgraded(self) -> None:
+        self.run.pop("shared_performance_authorized")
+        self.run.pop("measurement_scope")
+        self.run["shared_functional_only"] = True
+        self.run["guard"]["resource_mode"] = "shared_functional_only"
+        result = self.audit()
+        self.assertFalse(result["shared_performance_valid"])
+        self.assertGreaterEqual(len(result["execution_errors"]), 3)
+
+    def test_tp1_on_selected_chip_has_one_real_rank(self) -> None:
+        self.run["config"]["tp_size"] = 1
+        self.run["engine_cli_args"][
+            self.run["engine_cli_args"].index("--world-size") + 1
+        ] = "1"
+        self.run["device"]["chip_logic_ids"].pop("1")
+        self.run["guard"]["approved_background"].pop("1")
+        for sample in self.run["guard"]["background_samples"]:
+            sample["pids"].pop("1")
+        for sample in self.run["process_samples"] + self.run["hbm_samples"]:
+            sample["chips"].pop("1")
+        release = json.loads(
+            (self.directory / "shared_release.json").read_text(encoding="utf-8")
+        )
+        release["background"].pop("1")
+        release["after_pids"].pop("1")
+        save(self.directory / "shared_release.json", release)
+        (self.directory / "rank_forward_events/rank1_pid102.forward.jsonl").unlink()
+        self.write()
+        result = audit_run(self.path, expected_tp=1, expected_protocol=self.protocol)
+        self.assertTrue(result["shared_performance_valid"], result["execution_errors"])
+        self.assertTrue(result["hbm_coverage_complete"], result["hbm_errors"])
+        self.assertEqual(set(result["rank_forward_events"]), {"0"})
+
+    def test_missing_cell_and_short_input_rejected_together(self) -> None:
+        self.requests = [
+            row
+            for row in self.requests
+            if (row["input_length"], row["concurrency"]) != (4, 2)
+        ]
+        self.requests[0]["input_ids"] = [7]
+        result = self.audit()
+        self.assertFalse(result["shared_performance_valid"])
+        self.assertTrue(
+            any("input IDs" in error for error in result["execution_errors"])
+        )
+        self.assertTrue(
+            any("requests" in error for error in result["execution_errors"])
+        )
+        self.assertEqual(len(result["cells"]), 4)
+
+    def test_resource_violation_and_cleanup_failures_are_retained(self) -> None:
+        self.run["guard"]["violations"] = [
+            {"type": "ValueError", "message": "unexpected process"}
+        ]
+        self.run["guard"]["own_children_released"] = False
+        result = self.audit()
+        self.assertFalse(result["execution_valid"])
+        self.assertTrue(
+            any("violations" in error for error in result["execution_errors"])
+        )
+        self.assertTrue(any("cleanup" in error for error in result["execution_errors"]))
+
+    def test_missing_hbm_does_not_destroy_valid_execution_or_become_zero(self) -> None:
+        self.run["hbm_samples"] = []
+        self.run["sampler_errors"] = [{"error": "missing sample"}]
+        result = self.audit()
+        self.assertTrue(result["execution_valid"], result["execution_errors"])
+        self.assertTrue(result["shared_performance_valid"])
+        self.assertFalse(result["hbm_coverage_complete"])
+        self.assertFalse(result["evidence_complete"])
+        self.assertTrue(result["hbm_errors"])
+        self.assertIsNone(result["batches"][0]["hbm_observed_max_mb_per_chip"])
+
+    def test_failed_request_and_wrong_rank_source_rejected(self) -> None:
+        self.requests[0]["status"] = "failed"
+        self.requests[0]["error"] = "synthetic failure"
+        (self.directory / "rank_forward_events/rank1_pid102.forward.jsonl").unlink()
+        result = self.audit()
+        self.assertFalse(result["execution_valid"])
+        self.assertTrue(
+            any("failed request" in error for error in result["execution_errors"])
+        )
+        self.assertTrue(any("rank" in error for error in result["execution_errors"]))
+
+    def test_profiler_capture_is_separate_from_performance(self) -> None:
+        self.run["profile_mode"] = "all-batches"
+        self.run["profile"] = {
+            "controls": [
+                {"action": action, "acknowledged": True} for action in ("start", "stop")
+            ],
+            "traces": [],
+        }
+        profile = self.directory / "profile"
+        profile.mkdir()
+        for rank in (0, 1):
+            trace = profile / f"hw2-TP{rank}.trace.json"
+            sha = save(trace, {"traceEvents": []})
+            self.run["profile"]["traces"].append(
+                {
+                    "path": trace.relative_to(self.directory).as_posix(),
+                    "rank": rank,
+                    "sha256": sha,
+                }
+            )
+        result = self.audit()
+        self.assertTrue(result["execution_valid"], result["execution_errors"])
+        self.assertFalse(result["shared_performance_valid"])
+        self.assertTrue(result["shared_profiler_valid"])
+        self.assertEqual(result["profiler"]["status"], "valid_capture")
+
+    def test_native_root_array_trace_is_accepted(self) -> None:
+        self.run["profile_mode"] = "all-batches"
+        self.run["profile"] = {
+            "controls": [
+                {"action": action, "acknowledged": True} for action in ("start", "stop")
+            ],
+            "traces": [],
+        }
+        profile = self.directory / "profile"
+        profile.mkdir()
+        for rank in (0, 1):
+            trace = profile / f"hw2-TP{rank}.trace.json"
+            sha = save(trace, [])
+            self.run["profile"]["traces"].append(
+                {
+                    "path": trace.relative_to(self.directory).as_posix(),
+                    "rank": rank,
+                    "sha256": sha,
+                }
+            )
+        result = self.audit()
+        self.assertTrue(result["execution_valid"], result["execution_errors"])
+        self.assertFalse(result["shared_performance_valid"])
+        self.assertTrue(result["shared_profiler_valid"])
+        self.assertEqual(result["profiler"]["status"], "valid_capture")
+
+    def test_mapping_and_extra_round_log_are_verified(self) -> None:
+        (self.directory / "before_mapping.txt").write_text(
+            "1 0 4 4 Ascend910\n1 1 3 3 Ascend910\n", encoding="utf-8"
+        )
+        (self.directory / "rounds.jsonl").write_text("{}\n", encoding="utf-8")
+        result = self.audit()
+        self.assertFalse(result["execution_valid"])
+        self.assertTrue(any("mapping" in error for error in result["execution_errors"]))
+        self.assertTrue(any("rounds" in error for error in result["execution_errors"]))
+
+    def test_missing_hbm_file_is_independent_of_execution(self) -> None:
+        self.write()
+        (self.directory / "hbm_samples.jsonl").unlink()
+        result = audit_run(self.path, expected_tp=2, expected_protocol=self.protocol)
+        self.assertTrue(result["execution_valid"], result["execution_errors"])
+        self.assertFalse(result["hbm_coverage_complete"])
+        self.assertTrue(result["hbm_errors"])
+        self.assertTrue(
+            all(
+                batch["hbm_observed_max_mb_per_chip"] is None
+                for batch in result["batches"]
+            )
+        )
+
+    def test_declared_protocol_and_round_order_cannot_be_reduced(self) -> None:
+        expected = dict(self.protocol, repetitions=3)
+        self.run["batches"][0], self.run["batches"][1] = (
+            self.run["batches"][1],
+            self.run["batches"][0],
+        )
+        self.write()
+        result = audit_run(self.path, expected_tp=2, expected_protocol=expected)
+        self.assertFalse(result["execution_valid"])
+        self.assertTrue(
+            any("predeclared protocol" in error for error in result["execution_errors"])
+        )
+        self.assertTrue(
+            any("batch order" in error for error in result["execution_errors"])
+        )
+
+    def test_bad_profiler_capture_does_not_gain_performance_status(self) -> None:
+        self.run["profile_mode"] = "all-batches"
+        result = self.audit()
+        self.assertTrue(result["execution_valid"], result["execution_errors"])
+        self.assertFalse(result["shared_performance_valid"])
+        self.assertFalse(result["shared_profiler_valid"])
+        self.assertEqual(result["profiler"]["status"], "invalid_capture")
+        self.assertTrue(result["profiler"]["errors"])
+
+    def test_malformed_run_fails_closed(self) -> None:
+        self.run["guard"] = []
+        self.write()
+        result = audit_run(self.path, expected_tp=2)
+        self.assertFalse(result["execution_valid"])
+        self.assertTrue(result["execution_errors"])
+
+
+if __name__ == "__main__":
+    unittest.main()

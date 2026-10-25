@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Profiler-only setup: explicit MSTX and retained native input data."""
+
+
+def configure_profiler(original):
+    def create(backend, *, activities, with_stack, record_shapes):
+        if not backend.is_npu:
+            return original(
+                backend,
+                activities=activities,
+                with_stack=with_stack,
+                record_shapes=record_shapes,
+            )
+        experimental = backend.profiler._ExperimentalConfig(
+            profiler_level=backend.profiler.ProfilerLevel.Level1,
+            aic_metrics=backend.profiler.AiCMetrics.PipeUtilization,
+            mstx=True,
+            data_simplification=False,
+        )
+        return backend.profiler.profile(
+            activities=[
+                backend.activity_map[name]
+                for name in activities
+                if name in backend.activity_map
+            ],
+            with_stack=with_stack,
+            record_shapes=record_shapes,
+            profile_memory="MEM" in activities,
+            experimental_config=experimental,
+        )
+
+    return create

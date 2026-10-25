@@ -1,0 +1,29 @@
+{
+  "new_hardware": {
+    "archive_sha256": "038802764c99b4e3924d54bc638633305e46f90c1b369d0ecc548bc055dc0ed9",
+    "files": 4905,
+    "jobs": 16,
+    "all_file_hashes_match": true,
+    "raw_successes_and_failures_present": true
+  },
+  "precision_candidates_hf10": {
+    "archive_sha256": "549e7f7808e9b4a4c1c510920e6589c3de894c659dd402995ccc3934b2621533",
+    "files": 1102,
+    "all_file_hashes_match": true,
+    "scope": "all completed R5-R9 precision variants/failures and independent HF R10 tensors/tools/analyses"
+  },
+  "capacity_hf11": {
+    "archive_sha256": "a178633c49830e7ea5ef896f7389e3de11f18af5fd87e4ae83b4fa0063c7e9fb",
+    "files": 271,
+    "all_file_hashes_match": true,
+    "scope": "full diagnostic tensors, CPU references, rejected R1 and accepted R2, tools and analysis"
+  },
+  "timeline_analyses": {
+    "archive_sha256": "a65e46f01342552577456d0e1b70f4e0ef9616702fdc166947aa1b5e7eb664ca",
+    "files": 102,
+    "bytes": 228148110,
+    "original_inputs_unchanged": true,
+    "historical_and_final_analyses_retained": true,
+    "all_file_hashes_match": true
+  }
+}

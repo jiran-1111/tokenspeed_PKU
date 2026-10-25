@@ -1,0 +1,261 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""External, profiling-only rank clock anchors; no runtime source modification."""
+
+from __future__ import annotations
+
+import functools
+import json
+import os
+import re
+import time
+from collections.abc import Callable, Sequence
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, InvalidOperation
+from pathlib import Path
+from typing import Any
+
+_NAME = re.compile(r"HW2_SYNC\|rank=(\d+)\|seq=(\d+)\|mono=(\d+)\|epoch=(\d+)")
+
+
+def observe_profiled_forward(
+    original: Callable, emit: Callable[[dict], None]
+) -> Callable:
+    """Annotate every real forward, preserving its arguments, return and exception.
+
+    Install this wrapper only for independent profiling jobs. Each event brackets
+    annotation entry and exit with perf_counter_ns and epoch samples. An emitter
+    failure propagates after a successful forward, but cannot mask its exception.
+    """
+    counts: dict[int, int] = {}
+
+    @functools.wraps(original)
+    def forward(instance: Any, *args: Any, **kwargs: Any) -> Any:
+        import torch
+
+        rank = instance.global_rank
+        counts[rank] = counts.get(rank, 0) + 1
+        seq = counts[rank]
+        m0, epoch0 = time.perf_counter_ns(), time.time_ns()
+        name = f"HW2_SYNC|rank={rank}|seq={seq}|mono={m0}|epoch={epoch0}"
+        m1 = m2 = epoch1 = epoch2 = None
+        failure: BaseException | None = None
+        try:
+            with torch.profiler.record_function(name):
+                m1, epoch1 = time.perf_counter_ns(), time.time_ns()
+                try:
+                    return original(instance, *args, **kwargs)
+                finally:
+                    m2, epoch2 = time.perf_counter_ns(), time.time_ns()
+        except BaseException as error:
+            failure = error
+            raise
+        finally:
+            m3, epoch3 = time.perf_counter_ns(), time.time_ns()
+            event = {
+                "name": name,
+                "rank": rank,
+                "pid": os.getpid(),
+                "seq": seq,
+                "forward_call": seq,
+                "observed_ns": m3,
+                "m0": m0,
+                "m1": m1,
+                "m2": m2,
+                "m3": m3,
+                "epoch0": epoch0,
+                "epoch1": epoch1,
+                "epoch2": epoch2,
+                "epoch3": epoch3,
+                "status": "passed" if failure is None else "failed",
+            }
+            try:
+                input_ids = args[1] if len(args) > 1 else kwargs.get("input_ids")
+                event["input_shape"] = (
+                    [int(value) for value in input_ids.shape]
+                    if input_ids is not None
+                    else None
+                )
+                emit(event)
+            except BaseException:
+                if failure is None:
+                    raise
+
+    return forward
+
+
+def _decimal_ns(value: object, *, label: str) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, (int, float, str, Decimal)):
+        raise ValueError(f"{label} must be a finite nonnegative microsecond value")
+    try:
+        number = Decimal(str(value))
+    except InvalidOperation as error:
+        raise ValueError(
+            f"{label} must be a finite nonnegative microsecond value"
+        ) from error
+    if not number.is_finite() or number < 0:
+        raise ValueError(f"{label} must be a finite nonnegative microsecond value")
+    return number * 1000
+
+
+def align_trace(
+    trace: Path | dict | list,
+    events: Sequence[dict],
+    *,
+    rank: int,
+    tolerance_ns: int,
+) -> dict:
+    """Intersect rank-native annotation clock offsets; never infer a formal window.
+
+    ``events`` must already be restricted to the acknowledged capture interval;
+    startup forwards outside that interval have no captured annotation. Paths
+    load numeric JSON with Decimal. Pass parsed traces with Decimal or string
+    timestamps to retain precision at epoch scale. Missing, duplicate, wrong-rank
+    or inconsistent anchors raise ValueError, so callers cannot use a fallback
+    offset as if verified. At least two anchors are required to check drift.
+
+    Entry offset lies in [trace_start-m1, trace_start-m0]; exit offset lies in
+    [trace_end-m3, trace_end-m2]. The explicit tolerance widens each interval.
+    Returned integer bounds are their common intersection, and uncertainty
+    bounds the selected integer center. Clock verification is rank-local and
+    does not establish device activity, cross-rank synchronization or wall time.
+    """
+    if type(rank) is not int or rank < 0:
+        raise ValueError("rank must be a nonnegative integer")
+    if type(tolerance_ns) is not int or tolerance_ns < 0:
+        raise ValueError("tolerance_ns must be a nonnegative integer")
+    if len(events) < 2:
+        raise ValueError("multiple anchors (at least two) are required")
+    if isinstance(trace, Path):
+        trace = json.loads(trace.read_text(encoding="utf-8-sig"), parse_float=Decimal)
+    trace_events = trace.get("traceEvents") if isinstance(trace, dict) else trace
+    if not isinstance(trace_events, list) or any(
+        not isinstance(item, dict) for item in trace_events
+    ):
+        raise ValueError("trace must contain a traceEvents list")
+    markers: dict[str, list[dict]] = {}
+    for marker in trace_events:
+        name = marker.get("name", "")
+        if (
+            marker.get("ph") != "X"
+            or not isinstance(name, str)
+            or not name.startswith("HW2_SYNC|")
+        ):
+            continue
+        match = _NAME.fullmatch(name)
+        if match is None:
+            raise ValueError("invalid HW2_SYNC marker name")
+        if int(match[1]) != rank:
+            raise ValueError("trace contains wrong rank marker")
+        markers.setdefault(name, []).append(marker)
+    anchors, bounds, seen_names, seen_sequences = [], [], set(), set()
+    epoch_offsets: list[int] = []
+    for event in events:
+        name = event.get("name")
+        match = _NAME.fullmatch(name) if isinstance(name, str) else None
+        if match is None:
+            raise ValueError("invalid event marker name")
+        event_rank, seq, named_mono, named_epoch = map(int, match.groups())
+        if event_rank != rank or event.get("rank") != rank:
+            raise ValueError("event marker rank mismatch")
+        if (
+            event.get("seq") != seq
+            or seq < 1
+            or named_mono != event.get("m0")
+            or named_epoch != event.get("epoch0")
+        ):
+            raise ValueError("event marker name disagrees with logged clock bounds")
+        if name in seen_names or seq in seen_sequences:
+            raise ValueError("duplicate event marker or sequence")
+        seen_names.add(name)
+        seen_sequences.add(seq)
+        clocks = [event.get(f"m{index}") for index in range(4)]
+        epochs = [event.get(f"epoch{index}") for index in range(4)]
+        if any(type(value) is not int or value < 0 for value in [*clocks, *epochs]):
+            raise ValueError(
+                "event clock bounds require nonnegative integer nanoseconds"
+            )
+        if clocks != sorted(clocks):
+            raise ValueError("event clock bounds are out of order")
+        matches = markers.get(name, [])
+        if len(matches) != 1:
+            raise ValueError(f"marker must occur exactly once in rank trace: {name}")
+        marker = matches[0]
+        start = _decimal_ns(marker.get("ts"), label="marker ts")
+        end = start + _decimal_ns(marker.get("dur"), label="marker dur")
+        entry_bounds = [start - clocks[1], start - clocks[0]]
+        exit_bounds = [end - clocks[3], end - clocks[2]]
+        bounds.extend([entry_bounds, exit_bounds])
+        epoch_offsets.extend(epoch - mono for epoch, mono in zip(epochs, clocks))
+        anchors.append(
+            {
+                "name": name,
+                "seq": seq,
+                "perf_counter_span_ns": [clocks[0], clocks[3]],
+                "trace_span_us": [str(start / 1000), str(end / 1000)],
+                "entry_offset_bounds_ns": [str(value) for value in entry_bounds],
+                "exit_offset_bounds_ns": [str(value) for value in exit_bounds],
+            }
+        )
+    lower = int(
+        (max(bound[0] for bound in bounds) - tolerance_ns).to_integral_value(
+            rounding=ROUND_CEILING
+        )
+    )
+    upper = int(
+        (min(bound[1] for bound in bounds) + tolerance_ns).to_integral_value(
+            rounding=ROUND_FLOOR
+        )
+    )
+    if lower > upper:
+        raise ValueError(
+            "annotation offset bounds have no intersection; clock drift or invalid markers"
+        )
+    ordered = sorted(anchors, key=lambda item: item["seq"])
+    if any(
+        left["perf_counter_span_ns"][1] > right["perf_counter_span_ns"][0]
+        for left, right in zip(ordered, ordered[1:])
+    ):
+        raise ValueError("forward sequence and clock bounds are out of order")
+    center = (lower + upper) // 2
+    return {
+        "rank": rank,
+        "status": "verified",
+        "method": "rank-local record_function entry/exit brackets",
+        "tolerance_ns": tolerance_ns,
+        "offset_ns": center,
+        "offset_bounds_ns": [lower, upper],
+        "uncertainty_ns": max(center - lower, upper - center),
+        "anchor_count": len(anchors),
+        "trace_marker_count": sum(len(values) for values in markers.values()),
+        "unselected_trace_marker_count": sum(len(values) for values in markers.values())
+        - len(anchors),
+        "sequence_span": [ordered[0]["seq"], ordered[-1]["seq"]],
+        "perf_counter_span_ns": [
+            ordered[0]["perf_counter_span_ns"][0],
+            ordered[-1]["perf_counter_span_ns"][1],
+        ],
+        "trace_span_us": [
+            ordered[0]["trace_span_us"][0],
+            ordered[-1]["trace_span_us"][1],
+        ],
+        "epoch_minus_perf_counter_ns_range": [min(epoch_offsets), max(epoch_offsets)],
+        "anchors": ordered,
+    }

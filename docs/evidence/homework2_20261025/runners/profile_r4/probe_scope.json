@@ -1,0 +1,8 @@
+{
+  "purpose": "diagnose CANN parse and validate NPU MSTX clock anchors before full recollection",
+  "original_failed_captures_preserved": true,
+  "math_core_unchanged": true,
+  "native_data_preserved": true,
+  "card_selection": "fresh mapping, conservative room, fewest protected PIDs; same card per cohort",
+  "acceptance": "unmodified JSON parses; both ranks have native compute/collectives and unique clock anchors"
+}

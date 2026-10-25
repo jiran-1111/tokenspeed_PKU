@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import unittest
+
+from owned_release_wait import wait_for_own_release
+
+
+class OwnedReleaseTests(unittest.TestCase):
+    def clock(self):
+        tick = [0.0]
+        return tick, lambda: tick[0], lambda delay: tick.__setitem__(0, tick[0] + delay)
+
+    def test_only_parent_is_accepted_immediately(self):
+        tick, clock, sleep = self.clock()
+        self.assertEqual(
+            wait_for_own_release(
+                lambda: {7}, parent_pid=7, timeout_seconds=2, clock=clock, sleep=sleep
+            ),
+            {7},
+        )
+        self.assertEqual(tick[0], 0)
+
+    def test_own_worker_must_actually_disappear(self):
+        _, clock, sleep = self.clock()
+        observations = iter(({7, 8}, {7, 8}, {7}))
+        self.assertEqual(
+            wait_for_own_release(
+                lambda: next(observations),
+                parent_pid=7,
+                timeout_seconds=2,
+                clock=clock,
+                sleep=sleep,
+            ),
+            {7},
+        )
+
+    def test_persistent_worker_is_rejected(self):
+        _, clock, sleep = self.clock()
+        with self.assertRaises(ValueError):
+            wait_for_own_release(
+                lambda: {7, 8},
+                parent_pid=7,
+                timeout_seconds=1,
+                clock=clock,
+                sleep=sleep,
+            )
+
+    def test_foreign_identity_or_other_snapshot_error_is_not_ignored(self):
+        _, clock, sleep = self.clock()
+
+        def rejected():
+            raise RuntimeError("unapproved background")
+
+        with self.assertRaisesRegex(RuntimeError, "unapproved background"):
+            wait_for_own_release(
+                rejected, parent_pid=7, timeout_seconds=2, clock=clock, sleep=sleep
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

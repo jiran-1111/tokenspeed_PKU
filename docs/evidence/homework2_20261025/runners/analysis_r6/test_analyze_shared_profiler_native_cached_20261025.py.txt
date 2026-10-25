@@ -1,0 +1,213 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import copy
+import importlib
+import json
+import os
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+TASK = Path(__file__).resolve().parent
+SOURCE = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"])
+sys.path.insert(0, str(TASK))
+
+
+class NativeCachedSharedProfilerTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(
+            (TASK / "analyze_shared_profiler_native_cached_20261025.py").is_file(),
+            "native cached driver missing",
+        )
+        self.driver = importlib.import_module(
+            "analyze_shared_profiler_native_cached_20261025"
+        )
+        fixture_tests = importlib.import_module("test_analyze_shared_profiler_20261025")
+        self.fixture = fixture_tests.AnalyzeSharedProfilerTests()
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+
+    def analyze(self):
+        return self.driver.analyze_run(
+            self.fixture.run_dir,
+            source_root=SOURCE,
+            tools_dir=self.fixture.tools,
+            clock_tolerance_ns=0,
+            collective_patterns=["^HCCL_ALLREDUCE_TEST$"],
+        )
+
+    def make_native(self):
+        assembler = importlib.import_module("shared_native_trace")
+        profile = self.fixture.run["profile"]
+        originals = copy.deepcopy(profile["traces"])
+        profile.update(
+            traces=[],
+            native_derivations=[],
+            engine_export_traces=originals,
+            export_origin="retained_official_cann_timeline_plus_original_cpu_prepare",
+            engine_original_files_rewritten=False,
+        )
+        for original in originals:
+            rank = original["rank"]
+            cpu_path = self.fixture.run_dir / original["path"]
+            events = json.loads(cpu_path.read_text())["traceEvents"]
+            cpu = [
+                event
+                for event in events
+                if event.get("pid") == 10
+                and not event.get("name", "").startswith("HW2_SYNC|")
+            ]
+            native = [event for event in events if event not in cpu]
+            cpu_bytes = json.dumps(cpu).encode()[:-1]
+            native_bytes = json.dumps(native).encode()
+            cpu_path.write_bytes(cpu_bytes)
+            original["sha256"] = self.driver._sha(cpu_path)
+            native_path = (
+                self.fixture.run_dir
+                / f"native_profiler_raw/rank{rank}/msprof_{rank}.json"
+            )
+            native_path.parent.mkdir(parents=True)
+            native_path.write_bytes(native_bytes)
+            canonical, provenance = assembler.assemble(cpu_bytes, native_bytes)
+            canonical_path = (
+                self.fixture.run_dir / f"profile/native-TP{rank}.trace.json"
+            )
+            canonical_path.write_bytes(canonical)
+            row = dict(
+                provenance,
+                rank=rank,
+                cpu_prepare_path=original["path"],
+                native_cann_path=native_path.relative_to(
+                    self.fixture.run_dir
+                ).as_posix(),
+                canonical_path=canonical_path.relative_to(
+                    self.fixture.run_dir
+                ).as_posix(),
+            )
+            profile["native_derivations"].append(row)
+            profile["traces"].append(
+                {
+                    "rank": rank,
+                    "path": row["canonical_path"],
+                    "sha256": provenance["canonical_sha256"],
+                }
+            )
+        self.fixture.save_run()
+
+    def assert_rejected(self):
+        self.fixture.save_run()
+        report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["formal_windows"], [])
+        self.assertTrue(report["errors"])
+        return report
+
+    def test_legacy_hw2_files_keep_previous_behavior(self):
+        self.assertEqual(self.analyze()["status"], "passed")
+
+    def test_valid_native_derivation_passes_with_metrics_and_one_core_load_per_rank(
+        self,
+    ):
+        self.make_native()
+        reads = []
+        original_module = self.driver._module
+
+        def instrument(path, name):
+            module = original_module(path, name)
+            if path.name == "tp_timeline.py":
+                loader = module._load_events
+
+                def counted(path):
+                    reads.append(path)
+                    return loader(path)
+
+                module._load_events = counted
+            return module
+
+        with patch.object(self.driver, "_module", side_effect=instrument):
+            report = self.analyze()
+        self.assertEqual(report["errors"], [])
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(len(reads), 2)
+        self.assertEqual(set(report["provenance"]["native_derivations"]), {"0", "1"})
+        for rank in ("0", "1"):
+            metrics = report["formal_windows"][0]["ranks"][rank]
+            self.assertEqual(metrics["compute_or_collective_busy_us"], 250)
+            self.assertEqual(metrics["compute_collective_overlap_us"], 50)
+            self.assertEqual(metrics["unknown_busy_us"], 50)
+
+    def test_native_name_without_derivation_is_not_accepted(self):
+        self.make_native()
+        del self.fixture.run["profile"]["native_derivations"]
+        self.assert_rejected()
+
+    def test_wrong_rank_or_duplicate_derivation_is_rejected(self):
+        self.make_native()
+        rows = self.fixture.run["profile"]["native_derivations"]
+        rows[0]["rank"] = 1
+        self.assert_rejected()
+        rows[0]["rank"] = 0
+        rows.append(copy.deepcopy(rows[0]))
+        self.assert_rejected()
+
+    def test_changed_original_input_sha_is_rejected(self):
+        self.make_native()
+        row = self.fixture.run["profile"]["native_derivations"][0]
+        path = self.fixture.run_dir / row["native_cann_path"]
+        path.write_bytes(path.read_bytes() + b"\n")
+        report = self.assert_rejected()
+        self.assertTrue(any("SHA" in str(error) for error in report["errors"]))
+
+    def test_rewrite_flags_and_origin_are_required(self):
+        self.make_native()
+        profile = self.fixture.run["profile"]
+        profile["engine_original_files_rewritten"] = True
+        self.assert_rejected()
+        profile["engine_original_files_rewritten"] = False
+        profile["native_derivations"][0]["raw_inputs_rewritten"] = True
+        self.assert_rejected()
+        profile["native_derivations"][0]["raw_inputs_rewritten"] = False
+        profile["export_origin"] = "unverified"
+        self.assert_rejected()
+
+    def test_cpu_input_cannot_be_rebound_to_other_rank(self):
+        self.make_native()
+        rows = self.fixture.run["profile"]["native_derivations"]
+        rows[0]["cpu_prepare_path"] = rows[1]["cpu_prepare_path"]
+        rows[0]["cpu_prepare_sha256"] = rows[1]["cpu_prepare_sha256"]
+        self.assert_rejected()
+
+    def test_counts_evidence_and_safe_paths_are_verified(self):
+        self.make_native()
+        row = self.fixture.run["profile"]["native_derivations"][0]
+        row["canonical_event_count"] += 1
+        self.assert_rejected()
+        row["canonical_event_count"] -= 1
+        row["native_sync_x_marker_count"] = 0
+        self.assert_rejected()
+        row["native_sync_x_marker_count"] = 2
+        row["native_cann_path"] = "../outside.json"
+        self.assert_rejected()
+
+
+if __name__ == "__main__":
+    unittest.main()

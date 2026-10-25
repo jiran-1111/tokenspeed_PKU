@@ -1,0 +1,22 @@
+{
+  "predeclared_date": "2026-10-25",
+  "input_lengths": [
+    128
+  ],
+  "concurrency": [
+    1,
+    4
+  ],
+  "max_new_tokens": 32,
+  "formal_requests_per_cell": 64,
+  "repetitions": 1,
+  "warmup_requests_per_cell": 4,
+  "rationale": "npu-smi queries may exceed short matrix batch windows; independent longer memory observation",
+  "original_matrix_samples_replaced": false,
+  "same_pinned_card_as_primary": false,
+  "shared_conditions": true,
+  "same_card_for_both_supplement_tps": true,
+  "reason_for_new_cohort": "protected background changed on original card; framework rejected free-memory imbalance, no bypass or signals to others",
+  "previous_failed_experiment_preserved": true,
+  "performance_baseline_replaced": false
+}

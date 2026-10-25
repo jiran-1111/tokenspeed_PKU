@@ -1,0 +1,599 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Analyze newly authorized shared TP2 captures on CPU, retaining failed audits.
+
+Example: python analyze_shared_profiler_20261025.py --run-dir RUN --source-root
+SOURCE --tools-dir FROZEN_TOOLS --clock-tolerance-ns 2000 --collective-pattern
+'VERIFIED_DEVICE_TASK_REGEX' --output NEW_REPORT.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import re
+from decimal import Decimal
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+CORE_SHA256 = "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3"
+TIMELINE_NAME = "benchmarks/course_project/tp_timeline.py"
+ARTIFACT_ERRORS = (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError)
+
+
+def _sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8-sig"), parse_float=Decimal)
+
+
+def _artifact(root: Path, name: str) -> Path:
+    relative = PurePosixPath(name)
+    path = (root / name).resolve()
+    if (
+        not name
+        or relative.is_absolute()
+        or ".." in relative.parts
+        or "\\" in name
+        or ":" in name
+        or not path.is_relative_to(root)
+    ):
+        raise ValueError("artifact path escapes its explicit root")
+    return path
+
+
+def _module(path: Path, name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def analyze_run(
+    run_dir: Path,
+    *,
+    source_root: Path,
+    tools_dir: Path,
+    clock_tolerance_ns: int,
+    collective_patterns: list[str],
+) -> dict:
+    """Return rank-local formal-window metrics or retained errors without fallback.
+
+    The frozen tool manifest and authorization must match the run guard receipts.
+    The unchanged core manifest and loaded timeline implementation are checked.
+    Every rank's captured clock evidence must align before any formal window is
+    emitted. Unknown events remain unknown, and no cross-rank wall time is made.
+    """
+    root, source, tools = (
+        Path(path).resolve() for path in (run_dir, source_root, tools_dir)
+    )
+    errors: list[dict] = []
+    provenance: dict = {
+        "analysis_driver_sha256": _sha(Path(__file__)),
+        "raw_traces": {},
+        "clock_event_files": {},
+    }
+    report = {
+        "schema_version": 1,
+        "status": "failed",
+        "run_dir": str(root),
+        "measurement_scope": "shared_background_observed",
+        "normal_performance_eligible": False,
+        "exclusive": False,
+        "aggregation": "independent rank-local formal clock windows; ranks are never summed into wall time",
+        "clock_tolerance_ns": clock_tolerance_ns,
+        "collective_patterns": collective_patterns,
+        "errors": errors,
+        "provenance": provenance,
+        "rank_clocks": {},
+        "formal_windows": [],
+        "limitations": [
+            "Shared background can change compute and bandwidth; results do not establish exclusive speed or causal communication overhead.",
+            "Uncovered time means no classified compute/collective was observed, not proven idle time or HCCL waiting.",
+            "Host waits may overlap device work. Collective task time is not pure network transfer time.",
+            "Native window endpoints are retained as exact decimal strings; imported timeline interval arithmetic uses Decimal before its numeric JSON output.",
+            "Saved unsigned evidence establishes internal consistency, not authenticated historical execution.",
+        ],
+    }
+
+    def check(condition: bool, stage: str, message: str) -> None:
+        if not condition:
+            errors.append({"stage": stage, "message": message})
+
+    def failure(stage: str, error: BaseException) -> None:
+        errors.append(
+            {"stage": stage, "error_type": type(error).__name__, "message": str(error)}
+        )
+
+    try:
+        run = _json(root / "run.json")
+        provenance["run_sha256"] = _sha(root / "run.json")
+        if not isinstance(run, dict):
+            raise ValueError("run.json must contain an object")
+        guard, protocol = run["guard"], run["protocol"]
+        check(
+            run.get("shared_functional_only") is False
+            and run.get("shared_performance_authorized") is True,
+            "authorization",
+            "new shared authorization required; old functional runs cannot be upgraded",
+        )
+        check(
+            run.get("measurement_scope") == "shared_background_observed"
+            and run.get("normal_performance_eligible") is False,
+            "authorization",
+            "shared measurement scope or eligibility differs",
+        )
+        check(
+            run.get("status") == "passed"
+            and run.get("profile_mode") == "all-batches"
+            and run.get("profiler_level") == "Level1",
+            "run",
+            "run must be a successful independent Level1 all-batches capture",
+        )
+        check(
+            run["config"].get("tp_size") == 2 and run["config"].get("device") == "npu",
+            "run",
+            "TP2 NPU capture required",
+        )
+        check(
+            guard.get("resource_mode") == "shared_measurement_authorized"
+            and guard.get("violations") == []
+            and guard.get("own_children_released") is True,
+            "guard",
+            "shared guard or own worker cleanup failed",
+        )
+        check(
+            run.get("runtime_origins_unchanged") is True
+            and run.get("sampler_errors") == []
+            and run.get("foreign_processes") == [],
+            "run",
+            "runtime, sampler or process audit failed",
+        )
+        check(
+            type(clock_tolerance_ns) is int and clock_tolerance_ns >= 0,
+            "clock",
+            "clock tolerance must be explicit nonnegative integer ns",
+        )
+        if not collective_patterns or any(
+            not isinstance(pattern, str) or not pattern
+            for pattern in collective_patterns
+        ):
+            raise ValueError(
+                "at least one explicit nonempty collective pattern is required"
+            )
+        patterns = [re.compile(pattern) for pattern in collective_patterns]
+    except ARTIFACT_ERRORS as error:
+        failure("run", error)
+        return report
+
+    try:
+        manifest_path = source / "docs/evidence/homework2_20261023/source_manifest.json"
+        core_sha = _sha(manifest_path)
+        core = _json(manifest_path)
+        provenance["source_manifest_sha256"] = core_sha
+        provenance["timeline_sha256"] = _sha(source / TIMELINE_NAME)
+        check(
+            core_sha
+            == CORE_SHA256
+            == run.get("source_manifest_sha256")
+            == guard.get("sources_sha")
+            == guard.get("sources_after_sha"),
+            "core",
+            "core source manifest SHA differs from the unchanged 1531-file source",
+        )
+        check(
+            guard.get("sources_unchanged") is True
+            and run.get("source_after_mismatches") == [],
+            "core",
+            "recorded source protection failed",
+        )
+        check(
+            core[TIMELINE_NAME] == provenance["timeline_sha256"],
+            "core",
+            "loaded timeline implementation SHA differs from fixed core",
+        )
+    except ARTIFACT_ERRORS as error:
+        failure("core", error)
+
+    try:
+        tool_manifest = _json(tools / "tool_manifest.json")
+        tool_sha = _sha(tools / "tool_manifest.json")
+        provenance["tool_manifest_sha256"] = tool_sha
+        check(
+            tool_sha
+            == guard.get("tool_manifest_sha256")
+            == guard.get("tools_after_sha256"),
+            "tools",
+            "tool manifest SHA differs from capture guard",
+        )
+        for name, expected in tool_manifest.items():
+            check(
+                _sha(_artifact(tools, name)) == expected,
+                "tools",
+                f"frozen tool SHA differs: {name}",
+            )
+        authorization_sha = _sha(tools / "authorization.json")
+        authorization = _json(tools / "authorization.json")
+        provenance["authorization_sha256"] = authorization_sha
+        provenance["clock_helper_sha256"] = _sha(tools / "shared_profile_clock.py")
+        check(
+            authorization_sha
+            == guard.get("authorization_sha256")
+            == tool_manifest.get("authorization.json"),
+            "authorization",
+            "authorization SHA differs",
+        )
+        check(
+            provenance["clock_helper_sha256"]
+            == tool_manifest.get("shared_profile_clock.py"),
+            "tools",
+            "clock helper is not pinned in tool manifest",
+        )
+        check(
+            authorization.get("shared_functional_only") is False
+            and authorization.get("performance_authorized") is True
+            and authorization.get("profiler_authorized") is True
+            and authorization.get("measurement_scope") == "shared_background_observed",
+            "authorization",
+            "frozen authorization does not permit new shared performance and profiling",
+        )
+        saved_protocol = root / "protocol.json"
+        check(
+            _sha(saved_protocol) == run.get("protocol_sha256")
+            and _json(saved_protocol) == protocol,
+            "protocol",
+            "saved protocol SHA/content differs",
+        )
+        pinned_protocols = [
+            tool_manifest[name]
+            for name in ("profile_protocol.json", "strategy_profile_protocol.json")
+            if name in tool_manifest
+        ]
+        check(
+            run.get("protocol_sha256") in pinned_protocols,
+            "protocol",
+            "capture protocol is not one of the frozen profiling protocols",
+        )
+    except ARTIFACT_ERRORS as error:
+        failure("tools/authorization", error)
+
+    paths: dict[int, Path] = {}
+    try:
+        traces = run["profile"]["traces"]
+        if len(traces) != 2 or {item["rank"] for item in traces} != {0, 1}:
+            raise ValueError(
+                "capture must contain exactly one trace for each of ranks 0 and 1"
+            )
+        for item in traces:
+            rank = item["rank"]
+            try:
+                path = _artifact(root, item["path"])
+                digest = _sha(path)
+                provenance["raw_traces"][str(rank)] = {
+                    "path": item["path"],
+                    "sha256": digest,
+                    "expected_sha256": item["sha256"],
+                }
+                check(
+                    path.name == f"hw2-TP{rank}.trace.json",
+                    f"rank{rank} trace",
+                    "rank trace filename differs",
+                )
+                check(
+                    digest == item["sha256"],
+                    f"rank{rank} trace",
+                    "raw trace SHA differs from captured record",
+                )
+                paths[rank] = path
+            except ARTIFACT_ERRORS as error:
+                failure(f"rank{rank} trace", error)
+    except ARTIFACT_ERRORS as error:
+        failure("traces", error)
+
+    try:
+        controls = run["profile"]["controls"]
+        if [item["action"] for item in controls] != ["start", "stop"] or not all(
+            item.get("acknowledged") is True for item in controls
+        ):
+            raise ValueError(
+                "capture start/stop must both be acknowledged exactly once"
+            )
+        clock_bounds = [
+            controls[0]["before_perf_counter_ns"],
+            controls[0]["after_perf_counter_ns"],
+            controls[1]["before_perf_counter_ns"],
+            controls[1]["after_perf_counter_ns"],
+        ]
+        if (
+            any(type(value) is not int or value < 0 for value in clock_bounds)
+            or clock_bounds != sorted(clock_bounds)
+            or clock_bounds[1] >= clock_bounds[2]
+        ):
+            raise ValueError("capture control perf_counter bounds are invalid")
+        capture_start, capture_stop = clock_bounds[1:3]
+        report["capture_window_perf_counter_ns"] = [capture_start, capture_stop]
+        formal = [batch for batch in run["batches"] if batch["phase"] == "formal"]
+        expected_keys = {
+            (length, concurrency, repetition)
+            for length in protocol["input_lengths"]
+            for concurrency in protocol["concurrency"]
+            for repetition in range(1, protocol["repetitions"] + 1)
+        }
+        actual_keys = [
+            (batch["input_length"], batch["concurrency"], batch["repetition"])
+            for batch in formal
+        ]
+        if set(actual_keys) != expected_keys or len(actual_keys) != len(expected_keys):
+            raise ValueError("formal batches do not exactly cover the frozen protocol")
+        for batch in formal:
+            start, stop = batch["started_ns"], batch["finished_ns"]
+            if (
+                type(start) is not int
+                or type(stop) is not int
+                or not capture_start <= start < stop <= capture_stop
+            ):
+                raise ValueError("formal batch falls outside acknowledged capture")
+            if (
+                batch.get("status") != "passed"
+                or batch.get("wall_ns") != stop - start
+                or batch.get("requests") != protocol["requests_per_cell"]
+                or batch.get("output_tokens")
+                != protocol["requests_per_cell"] * protocol["max_new_tokens"]
+            ):
+                raise ValueError(
+                    "formal batch status/count/wall evidence is incomplete"
+                )
+        report["excluded_warmup_batches"] = sum(
+            batch["phase"] == "warmup" for batch in run["batches"]
+        )
+    except ARTIFACT_ERRORS as error:
+        failure("capture/formal batches", error)
+
+    rank_events: dict[int, list[dict]] = {0: [], 1: []}
+    event_paths = sorted((root / "rank_forward_events").glob("*.forward.jsonl"))
+    for path in event_paths:
+        try:
+            provenance["clock_event_files"][path.name] = _sha(path)
+            for line in path.read_text(encoding="utf-8").splitlines():
+                event = json.loads(line)
+                if (
+                    type(event.get("rank")) is not int
+                    or event["rank"] not in rank_events
+                ):
+                    raise ValueError("clock event has an invalid rank")
+                if type(event.get("m0")) is not int or type(event.get("m3")) is not int:
+                    raise ValueError(
+                        "profiling clock event is missing integer m0/m3 bounds"
+                    )
+                rank_events[event["rank"]].append(event)
+        except ARTIFACT_ERRORS as error:
+            failure(f"clock events {path.name}", error)
+    if errors:
+        return report
+
+    try:
+        clock = _module(
+            tools / "shared_profile_clock.py", "_shared_capture_clock_analysis"
+        )
+    except (*ARTIFACT_ERRORS, ImportError, SyntaxError) as error:
+        failure("clock helper import", error)
+        return report
+    captured: dict[int, list[dict]] = {}
+    for rank in (0, 1):
+        try:
+            captured[rank] = [
+                event
+                for event in rank_events[rank]
+                if capture_start <= event["m0"] and event["m3"] <= capture_stop
+            ]
+            aligned = clock.align_trace(
+                paths[rank], captured[rank], rank=rank, tolerance_ns=clock_tolerance_ns
+            )
+            aligned["excluded_uncaptured_event_count"] = len(rank_events[rank]) - len(
+                captured[rank]
+            )
+            report["rank_clocks"][str(rank)] = aligned
+        except ARTIFACT_ERRORS as error:
+            failure(f"rank{rank} clock alignment", error)
+    if errors:
+        return report
+
+    try:
+        timeline = _module(
+            source / TIMELINE_NAME, "_fixed_shared_capture_timeline_analysis"
+        )
+    except (*ARTIFACT_ERRORS, ImportError, SyntaxError) as error:
+        failure("fixed timeline import", error)
+        return report
+    inventories: dict[str, dict] = {}
+    for rank, path in paths.items():
+        try:
+            events = _json(path)
+            events = events["traceEvents"] if isinstance(events, dict) else events
+            processes = {
+                event["pid"]: event["args"]["name"]
+                for event in events
+                if event.get("ph") == "M" and event.get("name") == "process_name"
+            }
+            threads = {
+                (event["pid"], event["tid"]): event["args"]["name"]
+                for event in events
+                if event.get("ph") == "M" and event.get("name") == "thread_name"
+            }
+            device_names = sorted(
+                {
+                    event["name"]
+                    for event in events
+                    if event.get("ph") == "X"
+                    and processes.get(event.get("pid")) == "Ascend Hardware"
+                    and re.fullmatch(
+                        r"Stream \d+",
+                        threads.get((event.get("pid"), event.get("tid")), ""),
+                    )
+                }
+            )
+            inventories[str(rank)] = {
+                "confirmed_device_task_names": device_names,
+                "collective_pattern_matches": {
+                    pattern: [name for name in device_names if regex.search(name)]
+                    for pattern, regex in zip(collective_patterns, patterns)
+                },
+            }
+        except ARTIFACT_ERRORS as error:
+            failure(f"rank{rank} hardware inventory", error)
+    report["hardware_task_inventory"] = inventories
+
+    for batch_index, batch in enumerate(formal):
+        window = {
+            "status": "passed",
+            "batch_index": batch_index,
+            "batch": {
+                name: batch[name]
+                for name in (
+                    "input_length",
+                    "concurrency",
+                    "repetition",
+                    "started_ns",
+                    "finished_ns",
+                    "wall_ns",
+                )
+            },
+            "native_window_us": {},
+            "anchor_coverage": {},
+            "ranks": {},
+        }
+        report["formal_windows"].append(window)
+        errors_before = len(errors)
+        native_windows = {}
+        for rank in (0, 1):
+            offset = report["rank_clocks"][str(rank)]["offset_ns"]
+            native_windows[rank] = tuple(
+                (Decimal(batch[name]) + offset) / 1000
+                for name in ("started_ns", "finished_ns")
+            )
+            window["native_window_us"][str(rank)] = [
+                str(value) for value in native_windows[rank]
+            ]
+            contained = [
+                event
+                for event in captured[rank]
+                if batch["started_ns"] <= event["m0"]
+                and event["m3"] <= batch["finished_ns"]
+            ]
+            check(
+                len(contained) >= 2,
+                f"formal{batch_index} rank{rank}",
+                "formal batch needs multiple contained rank clock anchors",
+            )
+            window["anchor_coverage"][str(rank)] = {
+                "contained_anchor_count": len(contained),
+                "perf_counter_span_ns": (
+                    [
+                        min(event["m0"] for event in contained),
+                        max(event["m3"] for event in contained),
+                    ]
+                    if contained
+                    else None
+                ),
+                "offset_uncertainty_ns": report["rank_clocks"][str(rank)][
+                    "uncertainty_ns"
+                ],
+            }
+        try:
+            metrics = timeline.analyze_tp_timeline(
+                paths,
+                windows_us=native_windows,
+                clock_ids={
+                    rank: f"rank{rank}:verified-record_function-perf_counter-brackets"
+                    for rank in (0, 1)
+                },
+                collective_name_patterns=collective_patterns,
+            )
+            window["ranks"] = metrics["ranks"]
+            for rank, value in metrics["ranks"].items():
+                check(
+                    value["event_counts_within_window"]["device_compute"] > 0,
+                    f"formal{batch_index} rank{rank}",
+                    "no confirmed hardware compute inside formal window",
+                )
+                check(
+                    value["event_counts_within_window"]["device_collective"] > 0,
+                    f"formal{batch_index} rank{rank}",
+                    "no collective pattern matched confirmed hardware tasks inside formal window",
+                )
+        except ARTIFACT_ERRORS as error:
+            failure(f"formal{batch_index} timeline", error)
+        if len(errors) != errors_before:
+            window["status"] = "failed"
+
+    expected_files = [
+        (path, provenance["raw_traces"][str(rank)]["sha256"])
+        for rank, path in paths.items()
+    ]
+    expected_files.append((root / "run.json", provenance["run_sha256"]))
+    expected_files.extend(
+        (path, provenance["clock_event_files"][path.name]) for path in event_paths
+    )
+    for path, expected in expected_files:
+        try:
+            check(
+                _sha(path) == expected,
+                "post-analysis",
+                f"raw evidence changed during analysis: {path.name}",
+            )
+        except ARTIFACT_ERRORS as error:
+            failure(f"post-analysis {path.name}", error)
+    report["status"] = "failed" if errors else "passed"
+    return report
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--tools-dir", type=Path, required=True)
+    parser.add_argument("--clock-tolerance-ns", type=int, required=True)
+    parser.add_argument("--collective-pattern", action="append", required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args(argv)
+    if args.output.exists():
+        parser.error(f"output already exists: {args.output}")
+    report = analyze_run(
+        args.run_dir,
+        source_root=args.source_root,
+        tools_dir=args.tools_dir,
+        clock_tolerance_ns=args.clock_tolerance_ns,
+        collective_patterns=args.collective_pattern,
+    )
+    with args.output.open("x", encoding="utf-8") as destination:
+        json.dump(report, destination, indent=2, ensure_ascii=False, allow_nan=False)
+        destination.write("\n")
+    print(args.output.resolve())
+    return 0 if report["status"] == "passed" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

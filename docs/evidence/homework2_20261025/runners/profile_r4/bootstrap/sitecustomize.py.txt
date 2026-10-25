@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Preserve frozen imports and record each rank's real model forward calls."""
+
+import builtins
+import json
+import os
+import runpy
+import sys
+from pathlib import Path
+
+source = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"]).resolve(strict=True)
+runpy.run_path(str(source / ".tmp/import_bootstrap/sitecustomize.py"))
+task = Path(os.environ["TOKENSPEED_HW2_SHARED_TASK"]).resolve(strict=True)
+sys.path.insert(0, str(task))
+if os.environ["TOKENSPEED_HW2_PROFILE_CLOCK"] == "1":
+    from shared_profile_clock import observe_profiled_forward as observe_forward
+else:
+    from shared_helpers import observe_forward
+
+original_import = builtins.__import__
+installed = False
+profiler_installed = False
+
+
+def emit(event):
+    output = Path(os.environ["TOKENSPEED_HW2_FORWARD_LOG_DIR"]).resolve()
+    assert output.is_relative_to(source)
+    output.mkdir(parents=True, exist_ok=True)
+    with (output / f"rank{event['rank']}_pid{event['pid']}.forward.jsonl").open(
+        "a"
+    ) as stream:
+        stream.write(json.dumps(event) + "\n")
+
+
+def monitored_import(name, globals=None, locals=None, fromlist=(), level=0):
+    global installed, profiler_installed
+    result = original_import(name, globals, locals, fromlist, level)
+    adapter = sys.modules.get("tokenspeed.runtime.engine.profiler_adapter")
+    if (
+        not profiler_installed
+        and adapter is not None
+        and "create_profiler" in adapter.__dict__
+    ):
+        profiler_installed = True
+        from shared_profiler_setup import configure_profiler
+
+        adapter.create_profiler = configure_profiler(adapter.create_profiler)
+    module = sys.modules.get("tokenspeed.runtime.execution.model_runner")
+    if not installed and module is not None and "ModelRunner" in module.__dict__:
+        installed = True
+        runner = module.__dict__["ModelRunner"]
+        runner.forward = observe_forward(runner.forward, emit)
+    if installed and profiler_installed:
+        builtins.__import__ = original_import
+    return result
+
+
+builtins.__import__ = monitored_import

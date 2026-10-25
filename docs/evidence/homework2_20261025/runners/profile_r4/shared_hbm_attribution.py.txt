@@ -1,0 +1,289 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Offline sampled shared-device HBM attribution; no hardware/process queries."""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+
+def parse_process_memory(
+    table: str, *, npu_id: int, chip_ids: set[int]
+) -> dict[int, dict[int, int]]:
+    """Read sampled PID -> process memory(MB) for each selected physical chip.
+
+    Accept only a complete npu-smi info process table. A missing selected-chip
+    row means no listed process only when that full table is valid. Process
+    names are checked structurally and discarded; argv/env are never accessed.
+    """
+    if (
+        type(npu_id) is not int
+        or npu_id < 0
+        or not chip_ids
+        or any(type(chip) is not int or chip not in {0, 1} for chip in chip_ids)
+    ):
+        raise ValueError("invalid target physical card/chips")
+    lines = [line.strip() for line in table.splitlines() if line.strip()]
+    header = ["NPU Chip", "Process id", "Process name", "Process memory(MB)"]
+    headers = [
+        index
+        for index, line in enumerate(lines)
+        if line.startswith("|")
+        and line.endswith("|")
+        and [re.sub(r"\s+", " ", part.strip()) for part in line[1:-1].split("|")]
+        == header
+    ]
+    if len(headers) != 1:
+        raise ValueError("missing or ambiguous process table header")
+    body = lines[headers[0] + 1 :]
+    if len(body) < 3 or not all(
+        re.fullmatch(r"\+[+=-]+\+", line) for line in (body[0], body[-1])
+    ):
+        raise ValueError("incomplete process table")
+    values = {chip: {} for chip in chip_ids}
+    seen, empty, content = set(), False, False
+    for line in body[1:-1]:
+        if re.fullmatch(r"\+[+=-]+\+", line):
+            continue
+        if re.fullmatch(r"\|\s*No running processes found\.?\s*\|", line):
+            if content:
+                raise ValueError("ambiguous empty process table")
+            empty, content = True, True
+            continue
+        if empty or not (line.startswith("|") and line.endswith("|")):
+            raise ValueError("unknown process table row")
+        columns = [part.strip() for part in line[1:-1].split("|")]
+        location = re.fullmatch(r"(\d+)\s+(\d+)", columns[0])
+        if (
+            len(columns) != 4
+            or location is None
+            or re.fullmatch(r"[1-9]\d*", columns[1]) is None
+            or not columns[2]
+            or re.fullmatch(r"\d+", columns[3]) is None
+        ):
+            raise ValueError("invalid process table row")
+        card, chip = map(int, location.groups())
+        pid, memory_mb = int(columns[1]), int(columns[3])
+        if chip not in {0, 1} or (card, chip, pid) in seen:
+            raise ValueError("duplicate or invalid process table location")
+        seen.add((card, chip, pid))
+        content = True
+        if card == npu_id and chip in values:
+            values[chip][pid] = memory_mb
+    if not content:
+        raise ValueError("process table has no process or explicit empty status")
+    return values
+
+
+SAMPLED_METRICS = (
+    "sampled_total_chip_used_mb",
+    "sampled_chip_capacity_mb",
+    "sampled_process_total_mb",
+    "sampled_own_process_mb",
+    "sampled_background_process_mb",
+    "sampled_unknown_process_mb",
+    "sampled_unattributed_mb",
+)
+
+
+def _entry(mapping: object, key: int) -> object:
+    return (
+        mapping.get(str(key), mapping.get(key)) if isinstance(mapping, dict) else None
+    )
+
+
+def _pid_set(values: object) -> set[int] | None:
+    if not isinstance(values, list) or any(
+        type(pid) is not int or pid < 1 for pid in values
+    ):
+        return None
+    return set(values) if len(set(values)) == len(values) else None
+
+
+def _identity(value: object) -> tuple[int, str] | None:
+    if (
+        isinstance(value, (list, tuple))
+        and len(value) == 2
+        and type(value[0]) is int
+        and value[0] >= 0
+        and isinstance(value[1], str)
+        and re.fullmatch(r"\d+", value[1])
+    ):
+        return value[0], value[1]
+    return None
+
+
+def analyze_guard_samples(run: dict, run_dir: Path | str) -> dict:
+    """Return per-guard sampled attribution and min/max ranges, preserving gaps.
+
+    Each raw table is joined only to its own guard observation's owned_pids,
+    listed pids, identities and exited_during_query. Separate process_samples,
+    adjacent observations and unions of previous PIDs are never used. Background
+    attribution additionally requires the same sample's identity to match the
+    approved baseline; unresolved listed processes are reported as unknown.
+
+    Whole-chip totals come from that same guard observation's memory field.
+    Unattributed is whole-chip used minus all listed process memory, including
+    unknown processes. This residual is not an estimate of model memory. npu-smi
+    fields and PID checks are sequential observations, not an atomic snapshot;
+    min/max describe sampled ranges and cannot establish an instantaneous peak.
+    Missing measurements are None and excluded from ranges, with counts retained.
+    """
+    device = run.get("device", {})
+    targets = device.get("chip_logic_ids", {})
+    try:
+        chips = {int(chip) for chip in targets}
+    except (TypeError, ValueError) as error:
+        raise ValueError("invalid target physical card/chips") from error
+    npu_id = device.get("npu_id")
+    if (
+        type(npu_id) is not int
+        or npu_id < 0
+        or not chips
+        or chips - {0, 1}
+        or len(chips) != len(targets)
+    ):
+        raise ValueError("invalid target physical card/chips")
+    root = Path(run_dir).resolve()
+    guard = run.get("guard", {})
+    records = []
+    for index, sample in enumerate(guard.get("background_samples", [])):
+        issues = []
+        raw_name = sample.get("raw_table")
+        processes = None
+        if not isinstance(raw_name, str) or not raw_name:
+            issues.append("invalid_raw_table_path")
+        else:
+            raw_path = (root / raw_name).resolve()
+            if not raw_path.is_relative_to(root) or raw_path.suffix != ".txt":
+                issues.append("invalid_raw_table_path")
+            else:
+                try:
+                    table = raw_path.read_text(encoding="utf-8")
+                    processes = parse_process_memory(
+                        table, npu_id=npu_id, chip_ids=chips
+                    )
+                except (OSError, UnicodeError):
+                    issues.append("unreadable_raw_table")
+                except ValueError:
+                    issues.append("invalid_process_table")
+        owned = _pid_set(sample.get("owned_pids"))
+        exited = _pid_set(sample.get("exited_during_query"))
+        if owned is None:
+            issues.append("missing_or_invalid_owned_pids")
+        if exited is None:
+            issues.append("missing_or_invalid_exited_pids")
+        record = {
+            "sample_index": index,
+            "observed_ns": sample.get("observed_ns"),
+            "label": sample.get("label"),
+            "raw_table": raw_name,
+            "issues": issues,
+            "chips": {},
+        }
+        for chip in sorted(chips):
+            values = dict.fromkeys(SAMPLED_METRICS)
+            memory = _entry(sample.get("memory"), chip)
+            if isinstance(memory, dict):
+                used, capacity = memory.get("used_mb"), memory.get("capacity_mb")
+                if (
+                    type(used) is int
+                    and type(capacity) is int
+                    and 0 <= used <= capacity
+                    and capacity > 0
+                ):
+                    values["sampled_total_chip_used_mb"] = used
+                    values["sampled_chip_capacity_mb"] = capacity
+            if values["sampled_total_chip_used_mb"] is None:
+                issues.append(f"chip_{chip}_missing_or_invalid_total")
+            if processes is not None:
+                pid_memory = processes[chip]
+                process_total = sum(pid_memory.values())
+                values["sampled_process_total_mb"] = process_total
+                recorded_pids = _pid_set(_entry(sample.get("pids"), chip))
+                matched = recorded_pids is not None and recorded_pids == set(pid_memory)
+                baseline = _entry(guard.get("approved_background"), chip)
+                identities = sample.get("identities")
+                background_known = isinstance(baseline, dict) and isinstance(
+                    identities, dict
+                )
+                own_pids, background_pids = set(), set()
+                if matched and exited is not None:
+                    if owned is not None:
+                        own_pids = (set(pid_memory) & owned) - exited
+                        values["sampled_own_process_mb"] = sum(
+                            pid_memory[pid] for pid in own_pids
+                        )
+                    if background_known:
+                        background_pids = {
+                            pid
+                            for pid in pid_memory
+                            if pid not in own_pids
+                            and pid not in exited
+                            and _identity(_entry(identities, pid)) is not None
+                            and _identity(_entry(identities, pid))
+                            == _identity(_entry(baseline, pid))
+                        }
+                        values["sampled_background_process_mb"] = sum(
+                            pid_memory[pid] for pid in background_pids
+                        )
+                else:
+                    issues.append(f"chip_{chip}_pid_metadata_mismatch")
+                unknown_pids = set(pid_memory) - own_pids - background_pids
+                values["sampled_unknown_process_mb"] = sum(
+                    pid_memory[pid] for pid in unknown_pids
+                )
+                values["sampled_process_memory_mb"] = {
+                    str(pid): memory for pid, memory in sorted(pid_memory.items())
+                }
+                values["sampled_owned_pids"] = sorted(own_pids)
+                values["sampled_background_pids"] = sorted(background_pids)
+                values["sampled_unknown_pids"] = sorted(unknown_pids)
+                if values["sampled_total_chip_used_mb"] is not None:
+                    residual = values["sampled_total_chip_used_mb"] - process_total
+                    values["sampled_unattributed_mb"] = residual
+                    if residual < 0:
+                        issues.append(f"chip_{chip}_process_sum_exceeds_chip_total")
+            record["chips"][str(chip)] = values
+        records.append(record)
+    ranges = {}
+    for chip in sorted(chips):
+        ranges[str(chip)] = {}
+        for metric in SAMPLED_METRICS:
+            values = [sample["chips"][str(chip)][metric] for sample in records]
+            known = [value for value in values if value is not None]
+            ranges[str(chip)][metric] = {
+                "sample_count": len(known),
+                "missing_sample_count": len(values) - len(known),
+                "min": min(known) if known else None,
+                "max": max(known) if known else None,
+            }
+    return {
+        "measurement": "sampled_shared_device_observations",
+        "limitations": (
+            "Sequential sampled observations; ranges are not instantaneous "
+            "peaks or exact model HBM."
+        ),
+        "npu_id": npu_id,
+        "samples": records,
+        "sampled_ranges_mb": ranges,
+    }

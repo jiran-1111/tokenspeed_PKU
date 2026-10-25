@@ -1,0 +1,183 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import importlib
+import os
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+TASK = Path(__file__).resolve().parent
+SOURCE = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"])
+sys.path.insert(0, str(TASK))
+
+
+class CachedSharedProfilerTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(
+            (TASK / "analyze_shared_profiler_cached_20261025.py").is_file(),
+            "cached driver missing",
+        )
+        self.cached = importlib.import_module("analyze_shared_profiler_cached_20261025")
+        existing_tests = importlib.import_module(
+            "test_analyze_shared_profiler_20261025"
+        )
+        self.fixture = existing_tests.AnalyzeSharedProfilerTests()
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+
+    def analyze(self):
+        return self.cached.analyze_run(
+            self.fixture.run_dir,
+            source_root=SOURCE,
+            tools_dir=self.fixture.tools,
+            clock_tolerance_ns=0,
+            collective_patterns=["^HCCL_ALLREDUCE_TEST$"],
+        )
+
+    def test_cached_metrics_equal_original_with_each_rank_parsed_only_once(self):
+        baseline = self.fixture.analyze()
+        reads = []
+        original_module = self.cached._module
+
+        def instrument_module(path, name):
+            module = original_module(path, name)
+            if path.name == "tp_timeline.py":
+                original_loader = module._load_events
+
+                def counted_loader(trace_path):
+                    reads.append(trace_path.resolve())
+                    return original_loader(trace_path)
+
+                module._load_events = counted_loader
+            return module
+
+        with patch.object(self.cached, "_module", side_effect=instrument_module):
+            cached = self.analyze()
+        self.assertEqual(cached["status"], "passed")
+        for expected, actual in zip(
+            baseline["formal_windows"], cached["formal_windows"]
+        ):
+            for rank in ("0", "1"):
+                self.assertIn(
+                    "verified-host-annotation", actual["ranks"][rank]["clock_id"]
+                )
+                expected["ranks"][rank]["clock_id"] = actual["ranks"][rank]["clock_id"]
+        self.assertEqual(cached["formal_windows"], baseline["formal_windows"])
+        self.assertEqual(
+            cached["hardware_task_inventory"], baseline["hardware_task_inventory"]
+        )
+        self.assertEqual(cached["rank_clocks"], baseline["rank_clocks"])
+        self.assertEqual(len(reads), 2)
+        self.assertEqual(len(set(reads)), 2)
+        self.assertEqual(cached["cache_mode"], "validated_once_per_rank")
+        self.assertEqual(set(cached["provenance"]["trace_cache"]), {"0", "1"})
+        for rank in ("0", "1"):
+            self.assertEqual(
+                cached["provenance"]["trace_cache"][rank]["sha256"],
+                cached["provenance"]["raw_traces"][rank]["sha256"],
+            )
+            self.assertEqual(
+                cached["provenance"]["trace_cache"][rank]["original_load_events_calls"],
+                1,
+            )
+
+    def test_cache_rejects_unknown_path_even_if_bytes_match(self):
+        path = self.fixture.run_dir / self.fixture.run["profile"]["traces"][0]["path"]
+        source = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"])
+        timeline = self.cached._module(
+            source / self.cached.TIMELINE_NAME, "_cache_test_timeline"
+        )
+        cache = self.cached.ValidatedTraceCache(
+            timeline._load_events, {path: self.cached._sha(path)}
+        )
+        unknown = self.fixture.root / "unverified.json"
+        unknown.write_bytes(path.read_bytes())
+        with self.assertRaisesRegex(ValueError, "unverified|unknown"):
+            cache.read(unknown)
+
+    def test_cache_rechecks_file_sha_before_every_reuse(self):
+        path = self.fixture.run_dir / self.fixture.run["profile"]["traces"][0]["path"]
+        source = Path(os.environ["TOKENSPEED_SOURCE_SNAPSHOT"])
+        timeline = self.cached._module(
+            source / self.cached.TIMELINE_NAME, "_cache_mutation_test_timeline"
+        )
+        reads = []
+
+        def load(trace_path):
+            reads.append(trace_path)
+            return timeline._load_events(trace_path)
+
+        cache = self.cached.ValidatedTraceCache(load, {path: self.cached._sha(path)})
+        first = cache.read(path)
+        for _ in range(4):
+            self.assertIs(cache.read(path), first)
+        path.write_bytes(path.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ValueError, "SHA|changed"):
+            cache.read(path)
+        self.assertEqual(len(reads), 1)
+
+    def test_driver_preserves_clock_failure_and_no_formal_window(self):
+        def remove_last_marker(events):
+            events[:] = [
+                event
+                for event in events
+                if not event.get("name", "").startswith("HW2_SYNC|rank=1|seq=3|")
+            ]
+
+        self.fixture.mutate_trace(1, remove_last_marker)
+        cached = self.analyze()
+        self.assertEqual(cached["status"], "failed")
+        self.assertEqual(cached["formal_windows"], [])
+        self.assertTrue(any("marker" in str(error) for error in cached["errors"]))
+
+    def test_driver_rejects_changed_trace_during_window_analysis(self):
+        original_module = self.cached._module
+
+        def instrument_module(path, name):
+            module = original_module(path, name)
+            if path.name == "tp_timeline.py":
+                original_analyze = module.analyze_tp_timeline
+
+                def changed_trace(*args, **kwargs):
+                    trace = (
+                        self.fixture.run_dir
+                        / self.fixture.run["profile"]["traces"][0]["path"]
+                    )
+                    trace.write_bytes(trace.read_bytes() + b"\n")
+                    return original_analyze(*args, **kwargs)
+
+                module.analyze_tp_timeline = changed_trace
+            return module
+
+        with patch.object(self.cached, "_module", side_effect=instrument_module):
+            report = self.analyze()
+        self.assertEqual(report["status"], "failed")
+        self.assertTrue(
+            any(
+                "SHA" in str(error) or "changed" in str(error)
+                for error in report["errors"]
+            )
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

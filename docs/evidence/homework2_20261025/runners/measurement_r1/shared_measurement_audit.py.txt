@@ -1,0 +1,900 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Audit new authorized shared measurements on CPU; never upgrade old runs.
+
+The frozen collector stores rounds as run.json['batches']; rounds.jsonl is
+optional and, when present, must agree exactly. HBM completeness is reported
+separately from execution. No isolated-hardware performance claim is emitted.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import re
+from pathlib import Path, PurePosixPath
+from statistics import fmean, median
+from typing import Any
+
+from benchmarks.course_project.native_performance import parse_target_hbm
+from benchmarks.course_project.tp_devices import (
+    is_descendant,
+    parse_mapping,
+    target_process_pids,
+    validate_target,
+)
+from benchmarks.course_project.tp_matrix import validate_protocol
+
+SOURCE_MANIFEST_SHA256 = (
+    "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3"
+)
+_FIELDS = ("phase", "input_length", "concurrency", "repetition")
+_RUNTIME_MODULES = {
+    "tokenspeed.runtime.entrypoints.engine",
+    "tokenspeed_kernel",
+    "tokenspeed_kernel_npu",
+    "tokenspeed_scheduler",
+    "tokenspeed_scheduler.tokenspeed_scheduler_ext",
+}
+_ARTIFACT_ERRORS = (
+    OSError,
+    KeyError,
+    TypeError,
+    ValueError,
+    IndexError,
+    AttributeError,
+)
+
+
+def _sha(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _ids(value: object) -> bool:
+    return isinstance(value, list) and all(
+        type(item) is int and item >= 0 for item in value
+    )
+
+
+def _time(value: object) -> bool:
+    return type(value) is int and value > 0
+
+
+def _close(value: object, expected: float) -> bool:
+    return (
+        type(value) in (int, float)
+        and math.isfinite(value)
+        and math.isclose(value, expected, rel_tol=1e-9, abs_tol=1e-6)
+    )
+
+
+def _key(row: dict, *, request: bool = False) -> tuple:
+    result = tuple(
+        row[name] for name in _FIELDS + (("request_index",) if request else ())
+    )
+    if not isinstance(result[0], str) or any(
+        type(item) is not int for item in result[1:]
+    ):
+        raise ValueError("invalid batch/request key")
+    return result
+
+
+def _json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _jsonl(path: Path) -> list[dict]:
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    if not all(isinstance(row, dict) for row in rows):
+        raise ValueError(f"{path.name} must contain objects")
+    return rows
+
+
+def _artifact(root: Path, name: str) -> Path:
+    relative = PurePosixPath(name)
+    if (
+        not name
+        or relative.is_absolute()
+        or ".." in relative.parts
+        or "\\" in name
+        or ":" in name
+    ):
+        raise ValueError("artifact path escapes run directory")
+    path = (root / name).resolve()
+    if not path.is_relative_to(root.resolve()):
+        raise ValueError("artifact path escapes run directory")
+    return path
+
+
+def _distribution(values: list[float]) -> dict | None:
+    """Same linear P95 interpolation and pooled-request TTFT as tp_comparison."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * 0.95
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    return {
+        "mean": fmean(values),
+        "p50": median(values),
+        "p95": ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower),
+    }
+
+
+def audit_run(
+    path: Path, *, expected_tp: int, expected_protocol: dict | None = None
+) -> dict:
+    """Return all observed cells/errors; validity never implies exclusive speed.
+
+    expected_protocol should be the protocol pinned before collection. It prevents
+    an otherwise internally consistent, reduced protocol from passing unnoticed.
+    """
+    if type(expected_tp) is not int or expected_tp not in (1, 2):
+        raise ValueError("expected_tp must be 1 or 2")
+    path = Path(path)
+    if path.is_dir():
+        path /= "run.json"
+    root = path.parent
+    errors: list[str] = []
+    hbm_errors: list[str] = []
+    batches: list[dict] = []
+    cells: list[dict] = []
+    result = {
+        "path": str(path),
+        "exclusive": False,
+        "normal_performance_eligible": False,
+        "performance_valid": False,
+        "measurement_scope": "shared_background_observed",
+        "execution_errors": errors,
+        "hbm_errors": hbm_errors,
+        "batches": batches,
+        "cells": cells,
+        "execution_valid": False,
+        "shared_performance_valid": False,
+        "shared_profiler_valid": False,
+        "hbm_coverage_complete": False,
+        "evidence_complete": False,
+        "profiler": {"status": "not_requested", "valid": False, "errors": []},
+        "limitations": [
+            "Shared background can affect compute and bandwidth; these observations do not establish exclusive-hardware speed, memory requirements, or causal communication overhead.",
+            "Unsigned saved artifacts establish internal consistency, not authenticated historical execution.",
+        ],
+    }
+
+    def check(condition: bool, message: str) -> None:
+        if not condition:
+            errors.append(message)
+
+    try:
+        run = _json(path)
+        if not isinstance(run, dict):
+            raise ValueError("run.json must contain an object")
+        config, protocol, inputs, guard = (
+            run[name] for name in ("config", "protocol", "inputs", "guard")
+        )
+        if not all(
+            isinstance(value, dict) for value in (config, protocol, inputs, guard)
+        ):
+            raise ValueError("config, protocol, inputs and guard must contain objects")
+        check(
+            run.get("shared_performance_authorized") is True,
+            "shared performance was not explicitly authorized in this new run",
+        )
+        check(
+            run.get("shared_functional_only") is False,
+            "old functional-only results cannot be upgraded",
+        )
+        check(
+            run.get("normal_performance_eligible") is False,
+            "shared run must remain ineligible for normal performance",
+        )
+        check(
+            run.get("measurement_scope") == "shared_background_observed",
+            "measurement_scope is not shared_background_observed",
+        )
+        check(run.get("status") == "passed", "run status is not passed")
+        check(
+            guard.get("resource_mode") == "shared_measurement_authorized",
+            "guard resource_mode does not authorize shared measurement",
+        )
+        check(guard.get("violations") == [], "guard violations are present or missing")
+        check(
+            guard.get("own_children_released") is True,
+            "own worker cleanup was not verified",
+        )
+        check(
+            run.get("source_manifest_sha256") == SOURCE_MANIFEST_SHA256,
+            "source manifest is not the unchanged 1531-file core",
+        )
+        check(
+            guard.get("sources_unchanged") is True
+            and guard.get("sources_sha") == SOURCE_MANIFEST_SHA256
+            and guard.get("sources_after_sha") == SOURCE_MANIFEST_SHA256
+            and run.get("source_after_mismatches") == [],
+            "source protection or source identity failed",
+        )
+        check(
+            config.get("tp_size") == expected_tp and config.get("device") == "npu",
+            "unexpected TP/device configuration",
+        )
+        check(
+            isinstance(config.get("model_id"), str)
+            and bool(config["model_id"])
+            and re.fullmatch(r"[0-9a-f]{40}", config.get("model_revision", ""))
+            is not None,
+            "model identity or revision invalid",
+        )
+        check(
+            config.get("prefix_caching") is False
+            and config.get("disable_kvstore") is True,
+            "prefix caching/KVStore must be disabled",
+        )
+        check(
+            run.get("sampling_params")
+            == {"temperature": 0, "ignore_eos": True, "stream_interval": 1},
+            "sampling_params differ from fixed greedy collection",
+        )
+        cli = run.get("engine_cli_args", [])
+        check(
+            isinstance(cli, list)
+            and "--sampling-backend" in cli
+            and cli[cli.index("--sampling-backend") + 1] == "greedy"
+            and "--world-size" in cli
+            and cli[cli.index("--world-size") + 1] == str(expected_tp)
+            and "--disable-prefix-caching" in cli
+            and "--disable-kvstore" in cli,
+            "Engine arguments differ from fixed greedy/TP/cache options",
+        )
+        check(
+            run.get("foreign_processes") == [],
+            "foreign or unknown process observations are present",
+        )
+        clock = run.get("clock", {})
+        check(
+            clock.get("name") == "perf_counter_ns"
+            and type(clock.get("resolution_seconds")) in (int, float)
+            and math.isfinite(clock["resolution_seconds"])
+            and clock["resolution_seconds"] > 0,
+            "monotonic clock invalid",
+        )
+        for name, value in (
+            ("config", config),
+            ("protocol", protocol),
+            ("inputs", inputs),
+        ):
+            try:
+                saved = _artifact(root, f"{name}.json").read_bytes()
+                check(
+                    hashlib.sha256(saved).hexdigest() == run.get(f"{name}_sha256")
+                    and json.loads(saved) == value,
+                    f"saved {name} JSON/SHA differs",
+                )
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"unreadable {name}: {error}")
+        if expected_protocol is not None:
+            check(
+                protocol == expected_protocol,
+                "protocol differs from the predeclared protocol",
+            )
+        validate_protocol(protocol, max_model_len=config["max_model_len"])
+        check(
+            config["max_num_seqs"] >= max(protocol["concurrency"]),
+            "configuration cannot cover concurrency",
+        )
+        check(
+            set(inputs) == {str(length) for length in protocol["input_lengths"]},
+            "input length keys differ",
+        )
+        for length in protocol["input_lengths"]:
+            check(
+                _ids(inputs.get(str(length))) and len(inputs[str(length)]) == length,
+                f"invalid input IDs/length {length}",
+            )
+
+        try:
+            dependency_raw = _artifact(root, "runtime_dependencies.json").read_bytes()
+            dependency_sha = hashlib.sha256(dependency_raw).hexdigest()
+            dependencies = json.loads(dependency_raw)
+            check(
+                dependency_sha
+                == run.get("runtime_dependencies_sha256")
+                == run.get("runtime_dependencies_after_sha256"),
+                "runtime dependencies changed or SHA differs",
+            )
+            origins = run.get("runtime_origins", {})
+            check(
+                run.get("runtime_origins_unchanged") is True
+                and set(origins) == _RUNTIME_MODULES,
+                "runtime origins changed or required modules missing",
+            )
+            for module, origin in origins.items():
+                check(
+                    _sha(origin.get("sha256")), f"invalid runtime origin SHA: {module}"
+                )
+                if set(origin) == {"path", "sha256"}:
+                    _artifact(root, origin["path"])
+                elif set(origin) == {"basename", "sha256"}:
+                    name = origin["basename"]
+                    check(
+                        module == "tokenspeed_scheduler.tokenspeed_scheduler_ext"
+                        and name.startswith("tokenspeed_scheduler_ext.")
+                        and Path(name).name == name
+                        and Path(name).suffix in {".so", ".pyd"}
+                        and dependencies["external_extensions"].get(name)
+                        == origin["sha256"],
+                        "external scheduler origin is not pinned",
+                    )
+                else:
+                    errors.append(f"ambiguous runtime origin: {module}")
+        except _ARTIFACT_ERRORS as error:
+            errors.append(f"runtime provenance invalid: {error}")
+
+        target = {
+            str(chip): logical
+            for chip, logical in run["device"]["chip_logic_ids"].items()
+        }
+        npu_id = run["device"]["npu_id"]
+        check(
+            type(npu_id) is int
+            and npu_id >= 0
+            and len(target) == expected_tp
+            and set(target) <= {"0", "1"}
+            and all(
+                type(logical) is int and logical >= 0 for logical in target.values()
+            ),
+            "target TP mapping invalid",
+        )
+        try:
+            validate_target(
+                parse_mapping(
+                    _artifact(root, "before_mapping.txt").read_text(encoding="utf-8")
+                ),
+                npu_id=npu_id,
+                chip_logic_ids={int(chip): logical for chip, logical in target.items()},
+                tp_size=expected_tp,
+            )
+        except _ARTIFACT_ERRORS as error:
+            errors.append(f"target mapping invalid: {error}")
+
+        baseline = guard.get("approved_background", {})
+        check(set(baseline) == set(target), "approved background target chips differ")
+        background_samples = guard.get("background_samples", [])
+        check(bool(background_samples), "background observations missing")
+        for number, sample in enumerate(background_samples):
+            try:
+                check(
+                    set(sample["pids"]) == set(target),
+                    f"background target chips differ {number}",
+                )
+                raw_pids = target_process_pids(
+                    _artifact(root, sample["raw_table"]).read_text(encoding="utf-8"),
+                    npu_id=npu_id,
+                    chip_ids={int(chip) for chip in target},
+                )
+                for chip, pids in sample["pids"].items():
+                    check(
+                        set(pids) == raw_pids[int(chip)],
+                        f"background raw PID set differs {number}/{chip}",
+                    )
+                    for pid in pids:
+                        if str(pid) in baseline.get(chip, {}):
+                            check(
+                                sample["identities"].get(str(pid))
+                                == baseline[chip][str(pid)],
+                                f"background identity changed {number}/{chip}",
+                            )
+                        else:
+                            check(
+                                pid in sample["owned_pids"]
+                                or pid in sample.get("exited_during_query", []),
+                                f"unapproved background process {number}/{chip}",
+                            )
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"malformed background sample {number}: {error}")
+        try:
+            release = _json(_artifact(root, "shared_release.json"))
+            check(
+                release.get("own_contexts_released") is True,
+                "post-exit own context cleanup failed",
+            )
+            check(
+                release.get("background") == baseline
+                and set(release["after_pids"]) == set(target),
+                "post-exit background/target differs",
+            )
+            for chip, pids in release["after_pids"].items():
+                check(
+                    all(
+                        str(pid) in baseline.get(chip, {})
+                        and release["after_identities"].get(str(pid))
+                        == baseline[chip][str(pid)]
+                        for pid in pids
+                    ),
+                    "post-exit unknown or own contexts remain",
+                )
+        except _ARTIFACT_ERRORS as error:
+            errors.append(f"post-exit own context cleanup evidence invalid: {error}")
+
+        expected: dict[tuple, int] = {}
+        for length in protocol["input_lengths"]:
+            for concurrency in protocol["concurrency"]:
+                expected[("warmup", length, concurrency, 0)] = protocol[
+                    "warmup_requests"
+                ]
+                for repetition in range(1, protocol["repetitions"] + 1):
+                    expected[("formal", length, concurrency, repetition)] = protocol[
+                        "requests_per_cell"
+                    ]
+        rows = _jsonl(_artifact(root, "requests.jsonl"))
+        indexed: dict[tuple, dict] = {}
+        for number, row in enumerate(rows):
+            try:
+                key = _key(row, request=True)
+                check(key not in indexed, f"duplicate request {key}")
+                indexed.setdefault(key, row)
+                check(
+                    row["status"] == "passed" and row["error"] is None,
+                    f"failed request {key}: {row.get('error')}",
+                )
+                check(
+                    _ids(row["input_ids"])
+                    and row["input_ids"] == inputs.get(str(row["input_length"]))
+                    and len(row["input_ids"]) == row["input_length"],
+                    f"request input IDs/length differ {key}",
+                )
+                check(
+                    _ids(row["output_ids"])
+                    and len(row["output_ids"]) == protocol["max_new_tokens"],
+                    f"request output IDs/count invalid {key}",
+                )
+                start, end = row["started_ns"], row["finished_ns"]
+                check(
+                    _time(start) and _time(end) and start < end,
+                    f"request times invalid {key}",
+                )
+                chunks = row["chunks"]
+                times = [chunk["observed_ns"] for chunk in chunks]
+                check(
+                    bool(times)
+                    and all(_time(value) and start <= value <= end for value in times)
+                    and times == sorted(times),
+                    f"stream chunk times invalid {key}",
+                )
+                check(
+                    all(
+                        type(chunk["output_tokens"]) is int
+                        and chunk["output_tokens"] > 0
+                        for chunk in chunks
+                    )
+                    and sum(chunk["output_tokens"] for chunk in chunks)
+                    == len(row["output_ids"]),
+                    f"stream token count invalid {key}",
+                )
+                check(
+                    bool(times) and _close(row["ttft_ms"], (times[0] - start) / 1e6),
+                    f"TTFT differs {key}",
+                )
+                check(_close(row["e2e_ms"], (end - start) / 1e6), f"E2E differs {key}")
+                check(
+                    row["inter_chunk_ms"]
+                    == [(right - left) / 1e6 for left, right in zip(times, times[1:])],
+                    f"inter-chunk times differ {key}",
+                )
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"malformed request {number}: {error}")
+        expected_requests = {
+            key + (index,) for key, count in expected.items() for index in range(count)
+        }
+        check(
+            set(indexed) == expected_requests and len(rows) == len(expected_requests),
+            "missing, extra, or duplicate requests",
+        )
+        actual_batches = run["batches"]
+        if _artifact(root, "rounds.jsonl").exists():
+            try:
+                check(
+                    _jsonl(root / "rounds.jsonl") == actual_batches,
+                    "rounds.jsonl differs from embedded batches",
+                )
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"rounds.jsonl malformed: {error}")
+        seen, batch_keys, previous = set(), [], 0
+        for number, batch in enumerate(actual_batches):
+            try:
+                key = _key(batch)
+                batch_keys.append(key)
+                check(key not in seen, f"duplicate batch {key}")
+                seen.add(key)
+                group = [
+                    row
+                    for request_key, row in indexed.items()
+                    if request_key[:-1] == key
+                ]
+                start, end = batch["started_ns"], batch["finished_ns"]
+                check(
+                    _time(start) and _time(end) and previous <= start < end,
+                    f"batch interval/order invalid {key}",
+                )
+                previous = end
+                check(batch["status"] == "passed", f"failed batch {key}")
+                check(
+                    batch["requests"] == len(group) == expected.get(key),
+                    f"batch requests differ {key}",
+                )
+                check(
+                    all(
+                        start <= row["started_ns"] < row["finished_ns"] <= end
+                        for row in group
+                    ),
+                    f"batch does not contain request interval {key}",
+                )
+                wall = end - start
+                tokens = sum(len(row["output_ids"]) for row in group)
+                throughput = tokens * 1e9 / wall if wall > 0 else None
+                check(
+                    batch["output_tokens"] == tokens
+                    and batch["wall_ns"] == wall
+                    and throughput is not None
+                    and _close(batch["output_tokens_per_second"], throughput),
+                    f"batch stored tokens/wall/throughput differ {key}",
+                )
+                batches.append(
+                    {
+                        **dict(zip(_FIELDS, key)),
+                        "started_ns": start,
+                        "finished_ns": end,
+                        "wall_ns": wall,
+                        "output_tokens": tokens,
+                        "output_tokens_per_second": throughput,
+                        "ttft_ms": [
+                            (row["chunks"][0]["observed_ns"] - row["started_ns"]) / 1e6
+                            for row in group
+                            if row.get("chunks")
+                        ],
+                        "e2e_ms": [
+                            (row["finished_ns"] - row["started_ns"]) / 1e6
+                            for row in group
+                        ],
+                        "hbm_contained_samples": 0,
+                        "hbm_observed_max_mb_per_chip": None,
+                    }
+                )
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"malformed batch {number}: {error}")
+        check(
+            seen == set(expected) and len(actual_batches) == len(expected),
+            "missing, extra, or duplicate batches",
+        )
+        check(
+            batch_keys == list(expected),
+            "batch order differs from declared warmup/formal protocol order",
+        )
+
+        # PID provenance is checked independently of the availability of HBM values.
+        rank_pids: dict[int, set[int]] = {rank: set() for rank in range(expected_tp)}
+        for number, sample in enumerate(run.get("process_samples", [])):
+            try:
+                check(
+                    sample["root_pid"] == guard.get("parent_pid")
+                    and "error" not in sample,
+                    f"process root/error differs {number}",
+                )
+                check(
+                    set(sample["chips"]) == set(target),
+                    f"process target chips differ {number}",
+                )
+                raw_pids = target_process_pids(
+                    _artifact(root, sample["raw_table"]).read_text(encoding="utf-8"),
+                    npu_id=npu_id,
+                    chip_ids={int(chip) for chip in target},
+                )
+                for rank, chip in enumerate(sorted(target, key=int)):
+                    row = sample["chips"][chip]
+                    check(
+                        set(row["pids"]) == raw_pids[int(chip)],
+                        f"process raw PID set differs {number}/{chip}",
+                    )
+                    check(
+                        row["foreign_pids"] == [] and row["unknown_pids"] == [],
+                        f"unapproved process {number}/{chip}",
+                    )
+                    approved = set(row.get("approved_background_pids", []))
+                    check(
+                        approved <= {int(pid) for pid in baseline.get(chip, {})},
+                        f"process background allowlist differs {number}/{chip}",
+                    )
+                    parents = {
+                        int(pid): parent for pid, parent in row["parents"].items()
+                    }
+                    for pid in set(row["pids"]) - approved:
+                        owned = is_descendant(
+                            pid, root_pid=sample["root_pid"], read_parent=parents.get
+                        )
+                        check(owned, f"process ancestry missing {number}/{chip}")
+                        if owned:
+                            rank_pids[rank].add(pid)
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"malformed process sample {number}: {error}")
+        rank_events: dict[int, list[dict]] = {rank: [] for rank in range(expected_tp)}
+        event_files = sorted((root / "rank_forward_events").glob("*.forward.jsonl"))
+        check(
+            len(event_files) == expected_tp,
+            "rank forward sources do not contain exactly one worker per TP rank",
+        )
+        for event_file in event_files:
+            try:
+                match = re.fullmatch(
+                    r"rank(\d+)_pid([1-9]\d*)\.forward\.jsonl", event_file.name
+                )
+                if match is None:
+                    raise ValueError("invalid rank forward filename")
+                rank, pid = map(int, match.groups())
+                check(
+                    rank in rank_events and pid in rank_pids.get(rank, set()),
+                    "rank forward PID lacks correct chip/own ancestry source",
+                )
+                events = _jsonl(
+                    _artifact(root, event_file.relative_to(root).as_posix())
+                )
+                previous_call, previous_time = 0, 0
+                for event in events:
+                    check(
+                        event["rank"] == rank
+                        and event["pid"] == pid
+                        and type(event["forward_call"]) is int
+                        and previous_call < event["forward_call"]
+                        and _time(event["observed_ns"])
+                        and previous_time <= event["observed_ns"]
+                        and isinstance(event["input_shape"], list)
+                        and bool(event["input_shape"])
+                        and all(
+                            type(value) is int and value >= 0
+                            for value in event["input_shape"]
+                        ),
+                        "rank forward identity/count/time/shape invalid",
+                    )
+                    previous_call, previous_time = (
+                        event["forward_call"],
+                        event["observed_ns"],
+                    )
+                if rank in rank_events:
+                    rank_events[rank].extend(events)
+            except _ARTIFACT_ERRORS as error:
+                errors.append(f"rank forward evidence malformed: {error}")
+        for rank, events in rank_events.items():
+            check(
+                any(
+                    batch["phase"] == "formal"
+                    and batch["started_ns"]
+                    <= event["observed_ns"]
+                    <= batch["finished_ns"]
+                    for batch in batches
+                    for event in events
+                ),
+                f"rank {rank} lacks real forwards in formal windows",
+            )
+        result["rank_forward_events"] = {
+            str(rank): len(events) for rank, events in rank_events.items()
+        }
+
+        # A sampling gap makes memory evidence incomplete, not a zero-memory run.
+        samples = []
+        try:
+            samples = _jsonl(_artifact(root, "hbm_samples.jsonl"))
+            if samples != run.get("hbm_samples"):
+                hbm_errors.append("HBM JSONL differs from embedded samples")
+            if not samples:
+                hbm_errors.append("HBM samples missing")
+            if run.get("sampler_errors") != []:
+                hbm_errors.append("sampler_errors are present or missing")
+            valid_samples = []
+            previous = 0
+            for number, sample in enumerate(samples):
+                try:
+                    start, end = sample["started_ns"], sample["finished_ns"]
+                    if not (_time(start) and _time(end) and previous <= start <= end):
+                        raise ValueError("sample interval/order invalid")
+                    previous = end
+                    if not (
+                        _time(run.get("sampler_started_ns"))
+                        and _time(run.get("sampler_finished_ns"))
+                        and run["sampler_started_ns"]
+                        <= start
+                        <= end
+                        <= run["sampler_finished_ns"]
+                    ):
+                        raise ValueError("sampler interval does not cover sample")
+                    actual = parse_target_hbm(
+                        _artifact(root, sample["raw_table"]).read_text(
+                            encoding="utf-8"
+                        ),
+                        npu_id=npu_id,
+                        chip_logic_ids={
+                            int(chip): logical for chip, logical in target.items()
+                        },
+                    )
+                    if {str(chip): value for chip, value in actual.items()} != sample[
+                        "chips"
+                    ]:
+                        raise ValueError("sample differs from raw target HBM")
+                    valid_samples.append(sample)
+                except _ARTIFACT_ERRORS as error:
+                    hbm_errors.append(f"HBM sample {number} invalid: {error}")
+            for batch in batches:
+                contained = [
+                    sample
+                    for sample in valid_samples
+                    if batch["started_ns"]
+                    <= sample["started_ns"]
+                    <= sample["finished_ns"]
+                    <= batch["finished_ns"]
+                ]
+                batch["hbm_contained_samples"] = len(contained)
+                if contained:
+                    batch["hbm_observed_max_mb_per_chip"] = {
+                        chip: max(
+                            sample["chips"][chip]["used_mb"] for sample in contained
+                        )
+                        for chip in target
+                    }
+                else:
+                    hbm_errors.append(f"no contained HBM sample for {_key(batch)}")
+        except _ARTIFACT_ERRORS as error:
+            hbm_errors.append(f"HBM evidence missing or malformed: {error}")
+        result["hbm_coverage_complete"] = (
+            not hbm_errors and len(batches) == len(expected) and bool(batches)
+        )
+
+        for length in protocol["input_lengths"]:
+            for concurrency in protocol["concurrency"]:
+                formal = [
+                    batch
+                    for batch in batches
+                    if batch["phase"] == "formal"
+                    and batch["input_length"] == length
+                    and batch["concurrency"] == concurrency
+                ]
+                speeds = [
+                    batch["output_tokens_per_second"]
+                    for batch in formal
+                    if batch["output_tokens_per_second"] is not None
+                ]
+                peaks = [
+                    batch["hbm_observed_max_mb_per_chip"]
+                    for batch in formal
+                    if batch["hbm_observed_max_mb_per_chip"] is not None
+                ]
+                cells.append(
+                    {
+                        "input_length": length,
+                        "concurrency": concurrency,
+                        "repetitions": len(formal),
+                        "throughput": (
+                            {
+                                "min": min(speeds),
+                                "median": median(speeds),
+                                "max": max(speeds),
+                            }
+                            if speeds
+                            else None
+                        ),
+                        "ttft_ms": _distribution(
+                            [value for batch in formal for value in batch["ttft_ms"]]
+                        ),
+                        "e2e_ms": _distribution(
+                            [value for batch in formal for value in batch["e2e_ms"]]
+                        ),
+                        "formal_request_count": sum(
+                            len(batch["ttft_ms"]) for batch in formal
+                        ),
+                        "hbm_scope": "whole_chip_including_approved_background",
+                        "hbm_observed_max_mb_per_chip": (
+                            {chip: max(peak[chip] for peak in peaks) for chip in target}
+                            if peaks
+                            else None
+                        ),
+                        "hbm_complete": bool(formal)
+                        and all(
+                            batch["hbm_observed_max_mb_per_chip"] is not None
+                            for batch in formal
+                        ),
+                    }
+                )
+        mode = run.get("profile_mode")
+        check(mode in {"off", "all-batches"}, "profile_mode is invalid")
+        if mode == "off":
+            check(
+                not run.get("profile"), "profile_mode off has Profiler capture evidence"
+            )
+        if mode == "all-batches":
+            profile_errors = result["profiler"]["errors"]
+            try:
+                profile = run["profile"]
+                if [control["action"] for control in profile["controls"]] != [
+                    "start",
+                    "stop",
+                ] or not all(
+                    control.get("acknowledged") is True
+                    for control in profile["controls"]
+                ):
+                    profile_errors.append(
+                        "Profiler start/stop controls were not both acknowledged"
+                    )
+                traces = profile["traces"]
+                if len(traces) != expected_tp or {
+                    trace["rank"] for trace in traces
+                } != set(range(expected_tp)):
+                    profile_errors.append(
+                        "Profiler traces do not contain exactly every TP rank"
+                    )
+                for trace in traces:
+                    raw = _artifact(root, trace["path"]).read_bytes()
+                    if hashlib.sha256(raw).hexdigest() != trace[
+                        "sha256"
+                    ] or not isinstance(json.loads(raw).get("traceEvents"), list):
+                        profile_errors.append("Profiler trace SHA/content differs")
+            except _ARTIFACT_ERRORS as error:
+                profile_errors.append(f"Profiler evidence incomplete: {error}")
+            result["profiler"].update(
+                status="invalid_capture" if profile_errors else "valid_capture",
+                valid=not profile_errors,
+            )
+        result["execution_valid"] = not errors
+        result["shared_performance_valid"] = not errors and mode == "off"
+        result["shared_profiler_valid"] = not errors and result["profiler"]["valid"]
+        result["evidence_complete"] = (
+            not errors
+            and result["hbm_coverage_complete"]
+            and (mode == "off" or result["shared_profiler_valid"])
+        )
+    except _ARTIFACT_ERRORS as error:
+        errors.append(f"incomplete run artifact: {error}")
+    for cell in cells:
+        cell["shared_performance_valid"] = result["shared_performance_valid"]
+        cell["exclusive"] = False
+    return result
+
+
+audit_shared_run = audit_run
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("run", type=Path)
+    parser.add_argument("--expected-tp", type=int, choices=(1, 2), required=True)
+    parser.add_argument("--expected-protocol", type=Path)
+    args = parser.parse_args()
+    report = audit_run(
+        args.run,
+        expected_tp=args.expected_tp,
+        expected_protocol=(
+            _json(args.expected_protocol) if args.expected_protocol else None
+        ),
+    )
+    print(json.dumps(report, indent=2))
+    raise SystemExit(0 if report["execution_valid"] else 1)
+
+
+if __name__ == "__main__":
+    main()

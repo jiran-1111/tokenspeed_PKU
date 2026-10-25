@@ -1,0 +1,337 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""CPU-only tests for attribution within each formal matrix window."""
+
+from __future__ import annotations
+
+import copy
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[2] / "delivery/homework2-20261023")
+)
+
+from shared_matrix_hbm_windows import analyze_matrix_hbm_windows
+
+
+class MatrixHBMWindowTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="matrix-hbm-test-", dir=Path(__file__).parent
+        )
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.run = {
+            "device": {"npu_id": 1, "chip_logic_ids": {"0": 2, "1": 3}},
+            "guard": {
+                "parent_pid": 100,
+                "approved_background": {"0": {"90": [999, "123"]}, "1": {}},
+            },
+            "protocol": {"input_lengths": [128], "concurrency": [1], "repetitions": 2},
+            "hbm_samples": [],
+            "process_samples": [],
+            "batches": [self.batch(1, 100, 200), self.batch(2, 300, 400)],
+        }
+        self.sample("one.txt", 110, 150)
+        self.sample("two.txt", 310, 350)
+
+    @staticmethod
+    def batch(repetition: int, start: int, end: int) -> dict:
+        return {
+            "phase": "formal",
+            "input_length": 128,
+            "concurrency": 1,
+            "repetition": repetition,
+            "started_ns": start,
+            "finished_ns": end,
+        }
+
+    def sample(self, name: str, start: int, end: int, *, own_mb: int = 20) -> None:
+        table = "\n".join(
+            [
+                "| NPU Chip | Process id | Process name | Process memory(MB) |",
+                "+---+",
+                "| 1 0 | 90 | protected | 10 |",
+                f"| 1 0 | 101 | worker | {own_mb} |",
+                "| 1 1 | 102 | worker | 25 |",
+                "+---+",
+            ]
+        )
+        (self.root / name).write_text(table, encoding="utf-8")
+        self.run["hbm_samples"].append(
+            {
+                "started_ns": start,
+                "finished_ns": end,
+                "raw_table": name,
+                "chips": {
+                    "0": {"used_mb": 100, "capacity_mb": 1000},
+                    "1": {"used_mb": 200, "capacity_mb": 1000},
+                },
+            }
+        )
+        self.run["process_samples"].append(
+            {
+                "observed_ns": (start + end) // 2,
+                "root_pid": 100,
+                "raw_table": name,
+                "chips": {
+                    "0": {
+                        "pids": [90, 101],
+                        "foreign_pids": [],
+                        "approved_background_pids": [90],
+                        "unknown_pids": [],
+                        "parents": {"101": 100},
+                    },
+                    "1": {
+                        "pids": [102],
+                        "foreign_pids": [],
+                        "approved_background_pids": [],
+                        "unknown_pids": [],
+                        "parents": {"102": 100},
+                    },
+                },
+            }
+        )
+
+    def analyze(self) -> dict:
+        return analyze_matrix_hbm_windows(self.run, self.root)
+
+    def test_own_background_and_residual_use_same_sample(self) -> None:
+        result = self.analyze()
+        sample = result["samples"][0]
+        self.assertTrue(sample["valid"], sample["issues"])
+        chip = sample["chips"]["0"]
+        self.assertEqual(chip["sampled_total_chip_used_mb"], 100)
+        self.assertEqual(chip["sampled_own_process_mb"], 20)
+        self.assertEqual(chip["sampled_background_process_mb"], 10)
+        self.assertEqual(chip["sampled_unattributed_mb"], 70)
+        self.assertTrue(result["batches"][0]["complete"])
+
+    def test_short_window_is_missing_and_not_backfilled_from_later_peak(self) -> None:
+        self.run["batches"][0].update(started_ns=120, finished_ns=130)
+        self.sample("high.txt", 320, 340, own_mb=80)
+        result = self.analyze()
+        first, second = result["batches"]
+        self.assertFalse(first["complete"])
+        self.assertEqual(first["sample_indices"], [])
+        self.assertIsNone(first["sampled_peaks_mb"]["0"]["sampled_own_process_mb"])
+        self.assertEqual(second["sampled_peaks_mb"]["0"]["sampled_own_process_mb"], 80)
+        self.assertFalse(result["cells"][0]["complete"])
+        self.assertEqual(result["cells"][0]["missing_repetitions"], [1])
+
+    def test_query_boundaries_are_inclusive_and_crossing_queries_excluded(self) -> None:
+        self.run["hbm_samples"].clear()
+        self.run["process_samples"].clear()
+        for name, start, end in [
+            ("equal.txt", 100, 200),
+            ("before.txt", 99, 120),
+            ("after.txt", 180, 201),
+        ]:
+            self.sample(name, start, end)
+        first = self.analyze()["batches"][0]
+        self.assertEqual(first["sample_indices"], [0])
+        self.assertEqual(first["sample_count"], 1)
+
+    def test_pid_ancestry_is_not_borrowed_from_another_sample(self) -> None:
+        self.run["process_samples"][1]["chips"]["0"]["parents"] = {}
+        result = self.analyze()
+        self.assertTrue(result["samples"][0]["valid"])
+        self.assertFalse(result["samples"][1]["valid"])
+        self.assertIsNone(result["samples"][1]["chips"]["0"]["sampled_own_process_mb"])
+        self.assertTrue(
+            any("ancestry" in issue for issue in result["samples"][1]["issues"])
+        )
+
+    def test_root_itself_needs_no_parent_edge(self) -> None:
+        for index, sample in enumerate(self.run["process_samples"]):
+            name = sample["raw_table"]
+            path = self.root / name
+            path.write_text(
+                path.read_text().replace("| 101 |", "| 100 |"), encoding="utf-8"
+            )
+            sample["chips"]["0"]["pids"] = [90, 100]
+            sample["chips"]["0"].pop("parents")
+        result = self.analyze()
+        self.assertTrue(result["samples"][0]["valid"], result["samples"][0]["issues"])
+        self.assertEqual(
+            result["samples"][0]["chips"]["0"]["sampled_own_process_mb"], 20
+        )
+
+    def test_same_query_background_must_be_declared_and_in_baseline(self) -> None:
+        for mutation in ("not_approved", "not_baseline"):
+            original = copy.deepcopy(self.run)
+            if mutation == "not_approved":
+                self.run["process_samples"][0]["chips"]["0"][
+                    "approved_background_pids"
+                ] = []
+            else:
+                self.run["guard"]["approved_background"]["0"] = {}
+            result = self.analyze()
+            chip = result["samples"][0]["chips"]["0"]
+            self.assertFalse(chip["valid"])
+            self.assertIsNone(chip["sampled_own_process_mb"])
+            if mutation == "not_baseline":
+                self.assertIsNone(chip["sampled_background_process_mb"])
+            self.run = original
+
+    def test_outside_process_observation_and_duplicate_matches_are_missing(
+        self,
+    ) -> None:
+        for mutation in ("outside", "duplicate_process", "duplicate_hbm"):
+            original = copy.deepcopy(self.run)
+            if mutation == "outside":
+                self.run["process_samples"][0]["observed_ns"] = 151
+            elif mutation == "duplicate_process":
+                self.run["process_samples"].append(
+                    copy.deepcopy(self.run["process_samples"][0])
+                )
+            else:
+                self.run["hbm_samples"].append(
+                    copy.deepcopy(self.run["hbm_samples"][0])
+                )
+            sample = self.analyze()["samples"][0]
+            self.assertFalse(sample["valid"])
+            self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+            self.run = original
+
+    def test_foreign_unknown_and_saved_raw_pid_mismatch_never_become_zero(self) -> None:
+        for field in ("foreign_pids", "unknown_pids", "pids"):
+            original = copy.deepcopy(self.run)
+            self.run["process_samples"][0]["chips"]["0"][field] = (
+                [101] if field != "pids" else [90]
+            )
+            sample = self.analyze()["samples"][0]
+            self.assertFalse(sample["valid"])
+            self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+            self.run = original
+
+    def test_missing_raw_file_preserves_total_and_null_process_values(self) -> None:
+        (self.root / "one.txt").unlink()
+        sample = self.analyze()["samples"][0]
+        chip = sample["chips"]["0"]
+        self.assertFalse(sample["valid"])
+        self.assertEqual(chip["sampled_total_chip_used_mb"], 100)
+        self.assertIsNone(chip["sampled_own_process_mb"])
+        self.assertIsNone(chip["sampled_unattributed_mb"])
+
+    def test_missing_formal_round_and_extra_round_are_both_retained(self) -> None:
+        self.run["batches"].pop()
+        self.run["batches"].append(self.batch(3, 500, 600))
+        result = self.analyze()
+        self.assertEqual(
+            [batch["repetition"] for batch in result["batches"]], [1, 2, 3]
+        )
+        self.assertFalse(result["batches"][1]["complete"])
+        self.assertIn("missing_formal_batch", result["batches"][1]["issues"])
+        self.assertIn("unexpected_formal_batch", result["batches"][2]["issues"])
+
+    def test_negative_residual_is_preserved_and_flagged(self) -> None:
+        self.run["hbm_samples"][0]["chips"]["0"]["used_mb"] = 5
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertEqual(sample["chips"]["0"]["sampled_unattributed_mb"], -25)
+
+    def test_missing_chip_total_preserves_verified_process_measurement(self) -> None:
+        self.run["hbm_samples"][0]["chips"].pop("0")
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_total_chip_used_mb"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_unattributed_mb"])
+        self.assertEqual(sample["chips"]["0"]["sampled_own_process_mb"], 20)
+
+    def test_contradictory_background_ancestry_is_rejected(self) -> None:
+        self.run["guard"]["approved_background"]["0"]["101"] = [999, "456"]
+        self.run["process_samples"][0]["chips"]["0"]["approved_background_pids"].append(
+            101
+        )
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_background_process_mb"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+
+    def test_empty_complete_process_table_is_an_observed_zero(self) -> None:
+        (self.root / "one.txt").write_text(
+            "| NPU Chip | Process id | Process name | Process memory(MB) |\n+---+\n| No running processes found. |\n+---+",
+            encoding="utf-8",
+        )
+        for row in self.run["process_samples"][0]["chips"].values():
+            row.update(
+                pids=[],
+                foreign_pids=[],
+                approved_background_pids=[],
+                unknown_pids=[],
+                parents={},
+            )
+        sample = self.analyze()["samples"][0]
+        self.assertTrue(sample["valid"], sample["issues"])
+        self.assertEqual(sample["chips"]["0"]["sampled_own_process_mb"], 0)
+        self.assertEqual(sample["chips"]["0"]["sampled_background_process_mb"], 0)
+
+    def test_unmatched_process_sample_is_not_used_for_attribution(self) -> None:
+        self.run["process_samples"][0]["raw_table"] = "elsewhere.txt"
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertIn("missing_process_sample", sample["issues"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+
+    def test_noncanonical_raw_path_and_integer_parent_keys_are_rejected(self) -> None:
+        original = copy.deepcopy(self.run)
+        self.run["hbm_samples"][0]["raw_table"] = "./one.txt"
+        self.run["process_samples"][0]["raw_table"] = "./one.txt"
+        self.assertFalse(self.analyze()["samples"][0]["valid"])
+        self.run = original
+        self.run["process_samples"][0]["chips"]["0"]["parents"] = {101: 100}
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+
+    def test_analysis_does_not_modify_input_or_expose_baseline_uid(self) -> None:
+        before = copy.deepcopy(self.run)
+        self.run["env"] = {"secret": "DO_NOT_COPY_ENV"}
+        before["env"] = copy.deepcopy(self.run["env"])
+        result = self.analyze()
+        self.assertEqual(self.run, before)
+        self.assertNotIn("DO_NOT_COPY_ENV", str(result))
+        self.assertNotIn("background_uid", str(result))
+
+    def test_tp1_outputs_only_selected_chip(self) -> None:
+        self.run["device"]["chip_logic_ids"].pop("1")
+        self.run["guard"]["approved_background"].pop("1")
+        for sample in self.run["hbm_samples"] + self.run["process_samples"]:
+            sample["chips"].pop("1")
+        result = self.analyze()
+        self.assertTrue(result["complete"])
+        self.assertEqual(set(result["samples"][0]["chips"]), {"0"})
+        self.assertEqual(set(result["batches"][0]["sampled_peaks_mb"]), {"0"})
+
+    def test_different_root_pid_cannot_claim_the_same_parent_edges(self) -> None:
+        self.run["process_samples"][0]["root_pid"] = 999
+        sample = self.analyze()["samples"][0]
+        self.assertFalse(sample["valid"])
+        self.assertIn("invalid_or_mismatched_root_pid", sample["issues"])
+        self.assertIsNone(sample["chips"]["0"]["sampled_own_process_mb"])
+
+
+if __name__ == "__main__":
+    unittest.main()

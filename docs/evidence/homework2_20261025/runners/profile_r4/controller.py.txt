@@ -1,0 +1,498 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Serialize authorized same-card shared TP2 functional validation only."""
+
+import hashlib
+import importlib.util
+import json
+import os
+import shlex
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+BASE = Path.home() / "tokenspeed"
+TASK = BASE / ".tmp/hw2-20261023"
+TOOLS = TASK / "shared_profile_r4_20261025"
+SOURCE = TASK / "source_final"
+sys.path[:0] = [str(TOOLS), str(SOURCE)]
+from benchmarks.course_project.native_performance import parse_target_hbm
+from benchmarks.course_project.tp_devices import (
+    check_sources,
+    parse_mapping,
+    target_process_pids,
+)
+from shared_helpers import check_memory
+
+
+def identity(pid):
+    path = Path(f"/proc/{pid}")
+    return (
+        path.stat().st_uid,
+        (path / "stat").read_text().rpartition(")")[2].split()[19],
+    )
+
+
+def alive(pid):
+    path = Path(f"/proc/{pid}/stat")
+    return path.exists() and path.read_text().rpartition(")")[2].split()[0] != "Z"
+
+
+def query(args):
+    return subprocess.check_output(["npu-smi", "info", *args], text=True, timeout=20)
+
+
+def save(state):
+    state["updated_utc"] = datetime.now(timezone.utc).isoformat()
+    temporary = TOOLS / "state.tmp"
+    temporary.write_text(json.dumps(state, indent=2))
+    temporary.replace(TOOLS / "state.json")
+
+
+def audit(directory, expected_tp, release, protocol_path):
+    from shared_measurement_audit import audit_run
+
+    result = audit_run(
+        directory / "run.json",
+        expected_tp=expected_tp,
+        expected_protocol=json.loads(protocol_path.read_text()),
+    )
+    with (directory / "shared_measurement_audit.json").open("x") as stream:
+        json.dump(result, stream, indent=2)
+    return {
+        key: value
+        for key, value in result.items()
+        if key not in {"cells", "requests", "samples"}
+    }
+
+
+def agreement(directory, reference):
+    def formal(path):
+        return [
+            json.loads(line)
+            for line in (path / "requests.jsonl").read_text().splitlines()
+            if json.loads(line)["phase"] == "formal"
+        ]
+
+    refs = {}
+    for row in formal(reference):
+        key = tuple(row["input_ids"])
+        if key in refs:
+            assert refs[key] == row["output_ids"], "TP1 reference is not repeatable"
+        refs[key] = row["output_ids"]
+    rows = formal(directory)
+    matched = sum(
+        row["output_ids"]
+        == refs.get(tuple(row["input_ids"]), [])[: len(row["output_ids"])]
+        for row in rows
+    )
+    result = {
+        "exact_prefix_matches": matched,
+        "formal_requests": len(rows),
+        "all_match": matched == len(rows),
+        "scope": "same input token IDs, greedy output prefix; finite cohort only",
+    }
+    (directory / "sequence_comparison.json").write_text(json.dumps(result, indent=2))
+    return result
+
+
+def main():
+    import fcntl
+
+    with (TASK / "preflight_control.lock").open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        gate = json.loads((TASK / "ready_gate.json").read_text())
+        manifest = SOURCE / "docs/evidence/homework2_20261023/source_manifest.json"
+        assert check_sources(SOURCE, manifest) == gate["source_manifest_sha256"]
+        original = TASK / "queue_driver_final.py"
+        assert (
+            hashlib.sha256(original.read_bytes()).hexdigest() == gate["driver_sha256"]
+        )
+        tools_manifest = json.loads((TOOLS / "tool_manifest.json").read_text())
+        assert all(
+            hashlib.sha256((TOOLS / name).read_bytes()).hexdigest() == sha
+            for name, sha in tools_manifest.items()
+        )
+        assert json.loads((TOOLS / "preparation.json").read_text())["passed"]
+        primary = json.loads(
+            (TASK / "shared_measurement_20261025/state.json").read_text()
+        )
+        assert (
+            primary["status"]
+            == "shared_measurement_complete_original_queue_retained_paused"
+        )
+        old = json.loads((TASK / "queue_state.json").read_text())
+        assert (
+            old["status"] == "stopped_by_workspace_marker"
+            and not old.get("current")
+            and not old["finished"]
+        )
+        old_pid = int((TASK / "queue_driver_final.pid").read_text())
+        assert not alive(old_pid)
+        marker = TASK / "stop-queue"
+        marker_text = "User-authorized shared performance and Profiler cohort 20261025; protect background services.\n"
+        assert marker.read_text() == marker_text
+        for item in primary["finished"].values():
+            assert item["release"]["own_contexts_released"] and item["source_unchanged"]
+        spec = importlib.util.spec_from_file_location(
+            "hw2_original_queue_helpers", original
+        )
+        helper = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(helper)
+        state = {
+            "status": "starting",
+            "finished": {},
+            "resource_mode": "shared_measurement_authorized",
+            "measurement_scope": "shared_background_observed",
+            "performance_eligible": False,
+            "source_manifest_sha256": gate["source_manifest_sha256"],
+            "old_queue_pid": old_pid,
+        }
+        save(state)
+        pinned_card = None
+        reference_directory = (
+            SOURCE
+            / "results/raw/homework2_20261024"
+            / primary["finished"]["0.8b_tp1_matrix"]["job"]
+        )
+        cases = json.loads((TOOLS / "jobs.json").read_text())
+        for job in cases:
+            model, config_name = job["id"], job["config"]
+            config_path = (
+                TOOLS / config_name
+                if config_name.startswith("effective_")
+                else SOURCE / config_name
+            )
+            config = json.loads(config_path.read_text())
+            tp = config["tp_size"]
+            protocol_path = TOOLS / job["protocol"]
+            minimum = 43008 if "27b" in model else 16384
+            if job["profile_mode"] != "off":
+                paired = primary["finished"][job["correctness_job"]]
+                assert paired["comparison"][
+                    "all_match"
+                ], "profile requires successful paired finite agreement"
+            source_sha = check_sources(SOURCE, manifest)
+            assert helper.package_versions() == gate["package_versions"]
+            mapping = parse_mapping(query(["-m"]))
+            table = query([])
+            candidates = []
+            for card in sorted({card for card, chip in mapping}):
+                if pinned_card is not None and card != pinned_card:
+                    continue
+                chips = {chip: mapping[card, chip] for chip in (0, 1)}
+                memory = parse_target_hbm(table, npu_id=card, chip_logic_ids=chips)
+                try:
+                    check_memory(
+                        memory,
+                        minimum_free_mb=(
+                            max(minimum, 43008) if pinned_card is None else minimum
+                        ),
+                    )
+                except ValueError:
+                    continue
+                pids = target_process_pids(table, npu_id=card, chip_ids={0, 1})
+                candidates.append(
+                    (
+                        sum(len(value) for value in pids.values()),
+                        -min(
+                            value["capacity_mb"] - value["used_mb"]
+                            for value in memory.values()
+                        ),
+                        card,
+                        chips,
+                        pids,
+                    )
+                )
+            if not candidates:
+                raise RuntimeError(
+                    "no same-card pair meets conservative shared memory reserve"
+                )
+            _, _, card, chips, pids = min(
+                candidates, key=lambda item: (item[0], item[1], item[2])
+            )
+            pinned_card = card
+            (TOOLS / f"{model}.whole_card_before.txt").write_text(table)
+            chips = {
+                chip: value for chip, value in chips.items() if tp == 2 or chip == 0
+            }
+            pids = {chip: values for chip, values in pids.items() if chip in chips}
+            assert all(
+                identity(pid)[0] != os.getuid()
+                for values in pids.values()
+                for pid in values
+            ), "own old NPU process remains"
+
+            job_name = f"shared_measurement_{model}_20261025_r4_native_profile"
+            directory = SOURCE / "results/raw/homework2_20261024" / job_name
+            assert not directory.exists()
+            baseline = {
+                chip: {pid: list(identity(pid)) for pid in values}
+                for chip, values in pids.items()
+            }
+            baseline_path = TOOLS / f"{job_name}.baseline.json"
+            with baseline_path.open("x") as stream:
+                json.dump(baseline, stream, indent=2)
+            (TOOLS / f"{job_name}.before_devices.txt").write_text(table)
+            weights = json.loads((TASK / "weights_state.json").read_text())[
+                config["model_id"]
+            ]
+            assert weights["revision"] == config["model_revision"]
+
+            def check_weights():
+                for name, expected in weights["files"].items():
+                    current = (SOURCE / config["local_model_path"] / name).stat()
+                    assert [
+                        current.st_dev,
+                        current.st_ino,
+                        current.st_size,
+                        current.st_mtime_ns,
+                    ] == expected
+
+            check_weights()
+            command = [
+                str(SOURCE / ".conda-env/bin/python"),
+                str(TOOLS / "run_tp_matrix_shared_derived.py"),
+                "--config",
+                str(config_path),
+                "--protocol",
+                str(protocol_path),
+                "--source-manifest",
+                str(manifest),
+                "--npu-id",
+                str(card),
+                "--chip-logic-ids",
+                ",".join(f"{chip}:{value}" for chip, value in chips.items()),
+                "--output-dir",
+                str(directory),
+                "--profile-mode",
+                job["profile_mode"],
+            ]
+            paths = [
+                TOOLS / "bootstrap",
+                TOOLS,
+                SOURCE / "python",
+                SOURCE / "tokenspeed-kernel/python",
+                SOURCE / "tokenspeed-kernel-npu/python",
+                SOURCE / "tokenspeed-scheduler/python",
+                SOURCE,
+            ]
+            environment = {
+                "ASCEND_RT_VISIBLE_DEVICES": ",".join(map(str, chips.values())),
+                "TOKENSPEED_HW2_WORKSPACE": str(BASE),
+                "TOKENSPEED_SOURCE_SNAPSHOT": str(SOURCE),
+                "PYTHONPATH": ":".join(map(str, paths)),
+                "OMP_NUM_THREADS": "1",
+                "HF_HUB_OFFLINE": "1",
+                "TRANSFORMERS_OFFLINE": "1",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "TOKENSPEED_MAMBA_SSM_DTYPE": "float32",
+                "TOKENSPEED_NPU_PROFILER_LEVEL": (
+                    "Level0" if job["profile_mode"] == "off" else "Level1"
+                ),
+                "ASCEND_WORK_PATH": str(directory / "native_profiler_raw"),
+                "TOKENSPEED_HW2_PROFILE_CLOCK": (
+                    "0" if job["profile_mode"] == "off" else "1"
+                ),
+                "TOKENSPEED_HW2_TOOL_MANIFEST_SHA256": hashlib.sha256(
+                    (TOOLS / "tool_manifest.json").read_bytes()
+                ).hexdigest(),
+                "TOKENSPEED_HW2_SHARED_TASK": str(TOOLS),
+                "TOKENSPEED_HW2_SHARED_AUTHORIZATION": str(
+                    TOOLS / "authorization.json"
+                ),
+                "TOKENSPEED_HW2_SHARED_MIN_FREE_MB": str(minimum),
+                "TOKENSPEED_HW2_SHARED_BASELINE": str(baseline_path),
+                "TOKENSPEED_HW2_FORWARD_LOG_DIR": str(
+                    directory / "rank_forward_events"
+                ),
+            }
+            activation = (
+                "source "
+                + shlex.quote(str(SOURCE / "scripts/use_project_env.sh"))
+                + "\n"
+            )
+            activation += "\n".join(
+                (
+                    f"export {key}={shlex.quote(value)}"
+                    + (':"${PYTHONPATH:-}"' if key == "PYTHONPATH" else "")
+                )
+                for key, value in environment.items()
+            )
+            activation += "\nexec " + shlex.join(command)
+            receipt = {
+                "job": job_name,
+                "model": model,
+                "npu_id": card,
+                "chip_logic_ids": chips,
+                "source_manifest_sha256": source_sha,
+                "tool_manifest_sha256": hashlib.sha256(
+                    (TOOLS / "tool_manifest.json").read_bytes()
+                ).hexdigest(),
+                "performance_eligible": False,
+                "started_utc": datetime.now(timezone.utc).isoformat(),
+            }
+            state.update(
+                status="running_shared_measurement",
+                current_job=job_name,
+                current=receipt,
+            )
+            save(state)
+            with (TOOLS / f"{job_name}.log").open("x") as log:
+                process = subprocess.Popen(
+                    ["bash", "--noprofile", "--norc", "-c", activation],
+                    cwd=SOURCE,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                )
+                start = (
+                    Path(f"/proc/{process.pid}/stat")
+                    .read_text()
+                    .rpartition(")")[2]
+                    .split()[19]
+                )
+                receipt["pid"] = process.pid
+                save(state)
+
+                def cleanup():
+                    for attempt in range(30):
+                        try:
+                            helper.terminate_owned_group(process, expected_start=start)
+                            return
+                        except RuntimeError as error:
+                            receipt.setdefault("cleanup_identity_refusals", []).append(
+                                {"attempt": attempt, "message": str(error)}
+                            )
+                            save(state)
+                            time.sleep(0.5)
+                    raise RuntimeError(
+                        "ownership still unverifiable; no unsafe signal was sent"
+                    )
+
+                deadline = time.monotonic() + 1800
+                while process.poll() is None:
+                    if time.monotonic() > deadline:
+                        cleanup()
+                        break
+                    if (directory / "shared_guard_violation.json").exists():
+                        # The collector already signalled itself. Allow its finally
+                        # blocks to finish before attempting guarded group cleanup.
+                        try:
+                            process.wait(timeout=15)
+                        except subprocess.TimeoutExpired:
+                            cleanup()
+                        break
+                    time.sleep(1)
+                cleanup()
+            receipt.update(
+                exit_code=process.returncode,
+                ended_utc=datetime.now(timezone.utc).isoformat(),
+            )
+            check_weights()
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / "shared_baseline.json").write_bytes(baseline_path.read_bytes())
+            (directory / "outer_before_devices.txt").write_bytes(
+                (TOOLS / f"{job_name}.before_devices.txt").read_bytes()
+            )
+            release = {
+                "own_contexts_released": False,
+                "scope": "collector contexts only; protected background may remain",
+                "background": baseline,
+            }
+            for attempt in range(12):
+                after = query([])
+                actual = target_process_pids(after, npu_id=card, chip_ids=set(chips))
+                acceptable = all(
+                    pid in baseline[chip] and list(identity(pid)) == baseline[chip][pid]
+                    for chip, values in actual.items()
+                    for pid in values
+                )
+                (directory / "outer_after_devices.txt").write_text(after)
+                if acceptable:
+                    release["own_contexts_released"] = True
+                    release["after_pids"] = {
+                        chip: sorted(values) for chip, values in actual.items()
+                    }
+                    release["after_identities"] = {
+                        pid: list(identity(pid))
+                        for values in actual.values()
+                        for pid in values
+                    }
+                    break
+                time.sleep(1)
+            release["observed_after_exit_utc"] = datetime.now(timezone.utc).isoformat()
+            (directory / "shared_release.json").write_text(
+                json.dumps(release, indent=2)
+            )
+            receipt["release"] = release
+            receipt["source_unchanged"] = check_sources(SOURCE, manifest) == source_sha
+            if process.returncode == 0 and release["own_contexts_released"]:
+                receipt["audit"] = audit(directory, tp, release, protocol_path)
+                receipt["status"] = (
+                    "collected"
+                    if receipt["audit"]["execution_valid"]
+                    and receipt["audit"]["shared_profiler_valid"]
+                    else "audit_failed"
+                )
+                if reference_directory is None:
+                    reference_directory = directory
+                if model.startswith("0.8b"):
+                    receipt["comparison"] = agreement(directory, reference_directory)
+            else:
+                receipt["status"] = "execution_failed"
+            (TOOLS / f"{job_name}.receipt.json").write_text(
+                json.dumps(receipt, indent=2)
+            )
+            state["finished"][model] = receipt
+            save(state)
+            if receipt["status"] != "collected":
+                state["status"] = "shared_failure_needs_review"
+                save(state)
+                return
+        assert marker.read_text() == marker_text
+        state.update(
+            status="shared_measurement_complete_original_queue_retained_paused",
+            current_job=None,
+            current=None,
+            rationale="new authorized cohort supplies required shared measurements; old exclusive queue and all data retained",
+        )
+        save(state)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except BaseException as error:
+        (TOOLS / "failure.json").write_text(
+            json.dumps(
+                {
+                    "type": type(error).__name__,
+                    "error": str(error),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+                indent=2,
+            )
+        )
+        raise

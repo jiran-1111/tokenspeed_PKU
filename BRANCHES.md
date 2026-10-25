@@ -4,7 +4,7 @@
 
 | 分支 | 标签/状态 | 用途 |
 | --- | --- | --- |
-| [`homework2/in-progress`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/in-progress) | **作业2进行中，未完成** | 从project/develop a77f25c3建立；四模型TP2、并行正确性、通信分析。先开发和测试，再写报告。 |
+| [`homework2/in-progress`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/in-progress) | **实验与报告材料齐备；数值诊断中** | 从project/develop a77f25c3建立；四模型同卡TP2、性能、HBM、通信及报告已取得。4B/9B短输入差异未解决，不宣称全部数值通过。 |
 | [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成**；冻结标签 `hw1-completed-20261022` | Qwen3.5-0.8B单chip、作业1报告、原正确性/性能/Profiler及补充实验。实现保持冻结，文档可继续说明。 |
 | [`project/develop`](https://github.com/jiran-1111/tokenspeed_PKU/tree/project/develop) | **大项目继续开发**；整理前基线 `project-baseline-20261023` | 四模型Agent项目的开发、维护和后续整合入口。已有阶段实验与报告不等于全部最终验收已通过。 |
 | [`jr`](https://github.com/jiran-1111/tokenspeed_PKU/tree/jr) | **其他成员分支，受保护不清理** | 保留作者独立工作。本次不修改、不重命名、不删除、不合并该分支。 |

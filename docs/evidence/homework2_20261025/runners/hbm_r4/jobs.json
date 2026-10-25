@@ -1,0 +1,16 @@
+[
+  {
+    "id": "0.8b_tp1_hbm128_retry",
+    "config": "configs/homework2/qwen35_0.8b_tp1.yaml",
+    "protocol": "hbm_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  },
+  {
+    "id": "0.8b_tp2_hbm128_retry",
+    "config": "configs/homework2/qwen35_0.8b_tp2.yaml",
+    "protocol": "hbm_protocol.json",
+    "profile_mode": "off",
+    "correctness_job": null
+  }
+]

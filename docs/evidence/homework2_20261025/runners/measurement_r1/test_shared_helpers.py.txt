@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import unittest
+from types import SimpleNamespace
+
+from shared_helpers import (
+    check_memory,
+    check_processes,
+    observe_forward,
+    with_finalizer,
+)
+
+
+class SharedGuardTests(unittest.TestCase):
+    def test_monitor_stops_before_engine_exit(self):
+        events = []
+
+        class Engine:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                self_seen = events[-1]
+                if self_seen != "monitor_stopped":
+                    raise AssertionError(
+                        "Engine cleanup would kill an active query child"
+                    )
+                events.append("engine_exit")
+
+        expected = object()
+
+        def run(*args, **kwargs):
+            events.append("matrix_finished")
+            self.assertEqual((args, kwargs), ((5,), {"count": 7}))
+            return expected
+
+        with Engine():
+            self.assertIs(
+                with_finalizer(run, lambda: events.append("monitor_stopped"))(
+                    5, count=7
+                ),
+                expected,
+            )
+        self.assertEqual(events, ["matrix_finished", "monitor_stopped", "engine_exit"])
+
+    def test_monitor_stops_when_request_raises(self):
+        events = []
+
+        def run():
+            raise ValueError("actual request failure")
+
+        with self.assertRaisesRegex(ValueError, "actual request failure"):
+            with_finalizer(run, lambda: events.append("monitor_stopped"))()
+        self.assertEqual(events, ["monitor_stopped"])
+
+    def test_known_background_and_owned_workers_allowed(self):
+        check_processes(
+            {0: {11, 22}, 1: {23}},
+            {0: {11: (7, "100")}, 1: {}},
+            {22, 23},
+            {11: (7, "100")},
+        )
+
+    def test_background_natural_exit_allowed(self):
+        check_processes({0: {22}, 1: {23}}, {0: {11: (7, "100")}, 1: {}}, {22, 23}, {})
+
+    def test_new_foreign_process_rejected(self):
+        with self.assertRaisesRegex(ValueError, "unapproved"):
+            check_processes(
+                {0: {11, 99}, 1: set()},
+                {0: {11: (7, "100")}, 1: {}},
+                set(),
+                {11: (7, "100"), 99: (8, "101")},
+            )
+
+    def test_reused_background_pid_rejected(self):
+        with self.assertRaisesRegex(ValueError, "identity"):
+            check_processes(
+                {0: {11}, 1: set()},
+                {0: {11: (7, "100")}, 1: {}},
+                set(),
+                {11: (7, "200")},
+            )
+
+    def test_unknown_identity_rejected(self):
+        with self.assertRaisesRegex(ValueError, "identity"):
+            check_processes(
+                {0: {11}, 1: set()}, {0: {11: (7, "100")}, 1: {}}, set(), {}
+            )
+
+    def test_wrong_chip_set_rejected(self):
+        with self.assertRaisesRegex(ValueError, "chips"):
+            check_processes({0: set()}, {0: {}, 1: {}}, set(), {})
+
+    def test_memory_reserve(self):
+        check_memory(
+            {
+                0: {"used_mb": 20000, "capacity_mb": 65536},
+                1: {"used_mb": 3000, "capacity_mb": 65536},
+            },
+            minimum_free_mb=42000,
+        )
+
+    def test_low_memory_rejected(self):
+        with self.assertRaisesRegex(ValueError, "memory"):
+            check_memory(
+                {0: {"used_mb": 60000, "capacity_mb": 65536}}, minimum_free_mb=8192
+            )
+
+    def test_invalid_memory_rejected(self):
+        with self.assertRaises(ValueError):
+            check_memory(
+                {0: {"used_mb": True, "capacity_mb": 65536}}, minimum_free_mb=8192
+            )
+
+    def test_forward_observation_preserves_args_result_and_exceptions(self):
+        events, calls = [], []
+        expected = object()
+
+        def original(instance, *args, **kwargs):
+            calls.append((instance, args, kwargs))
+            if kwargs.get("fail"):
+                raise RuntimeError("actual computation failed")
+            return expected
+
+        wrapped = observe_forward(original, events.append)
+        instance = SimpleNamespace(global_rank=1)
+        tensor = SimpleNamespace(shape=(17,))
+        self.assertIs(wrapped(instance, "ctx", tensor, scale=3), expected)
+        self.assertEqual(calls[0][1:], (("ctx", tensor), {"scale": 3}))
+        self.assertEqual(events[0]["rank"], 1)
+        self.assertEqual(events[0]["input_shape"], [17])
+        self.assertGreater(events[0]["observed_ns"], 0)
+        with self.assertRaisesRegex(RuntimeError, "actual computation"):
+            wrapped(instance, "ctx", tensor, fail=True)
+        self.assertEqual(len(events), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

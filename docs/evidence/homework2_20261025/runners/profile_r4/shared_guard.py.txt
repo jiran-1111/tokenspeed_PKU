@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Explicit shared-device guard; never signal a background process."""
+
+import hashlib
+import json
+import os
+import signal
+import subprocess
+import threading
+import time
+from contextlib import contextmanager
+from pathlib import Path
+
+from benchmarks.course_project.native_performance import parse_target_hbm
+from benchmarks.course_project.tp_devices import (
+    check_sources,
+    is_descendant,
+    parse_mapping,
+    target_process_pids,
+    validate_target,
+)
+from owned_release_wait import wait_for_own_release
+from shared_helpers import check_memory, check_processes
+
+BASELINE = {}
+MONITOR_STOP = None
+
+
+def stop_shared_monitor():
+    if MONITOR_STOP is None:
+        raise RuntimeError("shared monitor was not started")
+    MONITOR_STOP()
+
+
+def identity(pid):
+    path = Path(f"/proc/{pid}")
+    fields = (path / "stat").read_text().rpartition(")")[2].split()
+    return path.stat().st_uid, fields[19]
+
+
+def parent(pid):
+    return int(Path(f"/proc/{pid}/stat").read_text().rpartition(")")[2].split()[1])
+
+
+def is_approved_background(pid, chip):
+    if pid not in BASELINE.get(chip, {}):
+        return False
+    return identity(pid) == BASELINE[chip][pid]
+
+
+def query(arguments):
+    import fcntl
+
+    lock_path = Path(os.environ["TOKENSPEED_HW2_WORKSPACE"]) / ".tmp/hw2-query.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        return subprocess.check_output(
+            ["npu-smi", "info", *arguments], text=True, timeout=15
+        )
+
+
+def query_shared_devices():
+    return query([])
+
+
+@contextmanager
+def shared_hardware_lease(
+    repo_root, *, npu_id, chip_logic_ids, tp_size, output_dir, source_manifest
+):
+    import fcntl
+
+    global BASELINE, MONITOR_STOP
+    workspace = Path(os.environ["TOKENSPEED_HW2_WORKSPACE"]).resolve(strict=True)
+    assert repo_root.resolve().is_relative_to(workspace)
+    assert output_dir.resolve().is_relative_to(repo_root.resolve())
+    assert tp_size in (1, 2) and len(chip_logic_ids) == tp_size
+    assert set(chip_logic_ids) == ({0} if tp_size == 1 else {0, 1})
+    assert os.environ["ASCEND_RT_VISIBLE_DEVICES"] == ",".join(
+        str(chip_logic_ids[chip]) for chip in sorted(chip_logic_ids)
+    )
+    authorization = json.loads(
+        Path(os.environ["TOKENSPEED_HW2_SHARED_AUTHORIZATION"]).read_text()
+    )
+    assert authorization["shared_functional_only"] is False
+    assert (
+        authorization["performance_authorized"] is True
+        and authorization["profiler_authorized"] is True
+    )
+    assert authorization["measurement_scope"] == "shared_background_observed"
+    tools = Path(os.environ["TOKENSPEED_HW2_SHARED_TASK"]).resolve(strict=True)
+
+    def check_tools():
+        manifest_raw = (tools / "tool_manifest.json").read_bytes()
+        digest = hashlib.sha256(manifest_raw).hexdigest()
+        assert digest == os.environ["TOKENSPEED_HW2_TOOL_MANIFEST_SHA256"]
+        for name, expected in json.loads(manifest_raw).items():
+            path = tools / name
+            assert path.resolve().is_relative_to(tools)
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, name
+        return digest
+
+    tool_sha = check_tools()
+    with (workspace / ".tmp/hw2-npu.lock").open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        source_sha = check_sources(repo_root, source_manifest)
+        mapping = query(["-m"])
+        validate_target(
+            parse_mapping(mapping),
+            npu_id=npu_id,
+            chip_logic_ids=chip_logic_ids,
+            tp_size=tp_size,
+        )
+        initial = query([])
+        processes = target_process_pids(
+            initial, npu_id=npu_id, chip_ids=set(chip_logic_ids)
+        )
+        baseline_raw = Path(os.environ["TOKENSPEED_HW2_SHARED_BASELINE"]).read_bytes()
+        BASELINE = {
+            int(chip): {int(pid): tuple(value) for pid, value in values.items()}
+            for chip, values in json.loads(baseline_raw).items()
+        }
+        check_processes(
+            processes,
+            BASELINE,
+            set(),
+            {pid: identity(pid) for pids in processes.values() for pid in pids},
+        )
+        check_memory(
+            parse_target_hbm(initial, npu_id=npu_id, chip_logic_ids=chip_logic_ids),
+            minimum_free_mb=int(os.environ["TOKENSPEED_HW2_SHARED_MIN_FREE_MB"]),
+        )
+        (output_dir / "before_mapping.txt").write_text(mapping)
+        (output_dir / "before_shared_devices.txt").write_text(initial)
+        receipt = {
+            "sources_sha": source_sha,
+            "resource_mode": "shared_measurement_authorized",
+            "parent_pid": os.getpid(),
+            "approved_background": {
+                chip: {pid: list(value) for pid, value in items.items()}
+                for chip, items in BASELINE.items()
+            },
+            "baseline_sha256": hashlib.sha256(baseline_raw).hexdigest(),
+            "background_samples": [],
+            "violations": [],
+            "performance_eligible": False,
+            "shared_measurement_authorized": True,
+        }
+        receipt["tool_manifest_sha256"] = tool_sha
+        receipt["authorization_sha256"] = hashlib.sha256(
+            Path(os.environ["TOKENSPEED_HW2_SHARED_AUTHORIZATION"]).read_bytes()
+        ).hexdigest()
+        stopped = threading.Event()
+
+        def snapshot(label):
+            table = query([])
+            actual = target_process_pids(
+                table, npu_id=npu_id, chip_ids=set(chip_logic_ids)
+            )
+            all_pids = set().union(*actual.values())
+            identities, exited = {}, set()
+            for pid in all_pids:
+                try:
+                    identities[pid] = identity(pid)
+                except FileNotFoundError:
+                    if Path(f"/proc/{pid}").exists():
+                        raise
+                    exited.add(pid)
+            live = {chip: pids - exited for chip, pids in actual.items()}
+            owned = {
+                pid
+                for pid in all_pids
+                if is_descendant(pid, root_pid=os.getpid(), read_parent=parent)
+            }
+            check_processes(live, BASELINE, owned, identities)
+            memory = parse_target_hbm(
+                table, npu_id=npu_id, chip_logic_ids=chip_logic_ids
+            )
+            check_memory(memory, minimum_free_mb=8192)
+            number = len(receipt["background_samples"])
+            filename = f"shared_safety_{number:05d}.txt"
+            (output_dir / filename).write_text(table)
+            receipt["background_samples"].append(
+                {
+                    "label": label,
+                    "observed_ns": time.perf_counter_ns(),
+                    "raw_table": filename,
+                    "pids": {chip: sorted(pids) for chip, pids in actual.items()},
+                    "identities": {
+                        pid: list(value) for pid, value in identities.items()
+                    },
+                    "exited_during_query": sorted(exited),
+                    "owned_pids": sorted(owned),
+                    "memory": memory,
+                }
+            )
+            return owned
+
+        def monitor():
+            while not stopped.is_set():
+                try:
+                    snapshot("monitor")
+                except BaseException as error:
+                    receipt["violations"].append(
+                        {"type": type(error).__name__, "message": str(error)}
+                    )
+                    (output_dir / "shared_guard_violation.json").write_text(
+                        json.dumps(receipt["violations"], indent=2)
+                    )
+                    # This is always the collector's own PID, never a device occupant.
+                    os.kill(os.getpid(), signal.SIGINT)
+                    return
+                stopped.wait(1)
+
+        watcher = threading.Thread(
+            target=monitor, name="shared-measurement-protection", daemon=True
+        )
+
+        def stop_monitor():
+            stopped.set()
+            watcher.join(timeout=20)
+            if watcher.is_alive():
+                raise RuntimeError("shared device monitor did not stop")
+
+        MONITOR_STOP = stop_monitor
+        watcher.start()
+        try:
+            yield receipt
+            if receipt["violations"]:
+                raise ValueError("shared protection rejected this run")
+        finally:
+            stop_shared_monitor()
+            owned = wait_for_own_release(
+                lambda: snapshot("after_engine_exit"),
+                parent_pid=os.getpid(),
+                timeout_seconds=15,
+                clock=time.monotonic,
+                sleep=time.sleep,
+            )
+            receipt["own_children_released"] = owned <= {os.getpid()}
+            receipt["parent_context_pending_exit"] = os.getpid() in owned
+            receipt["after_target_exclusively_idle"] = not set().union(
+                *receipt["background_samples"][-1]["pids"].values()
+            )
+            receipt["tools_after_sha256"] = check_tools()
+            receipt["sources_after_sha"] = check_sources(repo_root, source_manifest)
+            receipt["sources_unchanged"] = receipt["sources_after_sha"] == source_sha
+            if not receipt["own_children_released"] or not receipt["sources_unchanged"]:
+                raise ValueError(
+                    "shared source or own-worker cleanup verification failed"
+                )

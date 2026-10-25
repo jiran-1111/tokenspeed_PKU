@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import hashlib
+import json
+import tempfile
+import unittest
+from contextlib import contextmanager
+from pathlib import Path
+from unittest.mock import patch
+
+from shared_native_capture import capture_native_profile
+
+
+class NativeCaptureTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(dir=Path(__file__).parent)
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        (self.root / "profile").mkdir()
+        (self.root / "rank_forward_events").mkdir()
+        self.record = {"profile": {"traces": []}}
+        self.inputs = {}
+        for rank in (0, 1):
+            pid = rank + 100
+            events = (
+                self.root / "rank_forward_events" / f"rank{rank}_pid{pid}.forward.jsonl"
+            )
+            events.write_text(json.dumps(dict(rank=rank, pid=pid)) + "\n")
+            cpu = self.root / "profile" / f"hw2-TP{rank}.trace.json"
+            cpu.write_bytes(
+                b'[{"ph":"M","name":"process_name","pid":99,"args":{"name":"Python"}}'
+            )
+            self.record["profile"]["traces"].append(
+                dict(
+                    rank=rank,
+                    path=cpu.relative_to(self.root).as_posix(),
+                    sha256=hashlib.sha256(cpu.read_bytes()).hexdigest(),
+                )
+            )
+            native = (
+                self.root
+                / f"native_profiler_raw/profiling_data/host_{pid}_date_ascend_pt/PROF_1_2_A/mindstudio_profiler_output/msprof_123.json"
+            )
+            native.parent.mkdir(parents=True)
+            native.write_text(
+                json.dumps(
+                    [
+                        dict(
+                            ph="M",
+                            name="process_name",
+                            pid=1,
+                            args=dict(name="Ascend Hardware"),
+                        ),
+                        dict(
+                            ph="M",
+                            name="thread_name",
+                            pid=1,
+                            tid=2,
+                            args=dict(name="Stream 2"),
+                        ),
+                        dict(ph="X", name="kernel", pid=1, tid=2, ts=1, dur=1),
+                        dict(
+                            ph="X",
+                            name=f"HW2_SYNC|rank={rank}|seq=1|mono=1|epoch=2",
+                            pid=3,
+                            tid=4,
+                            ts=1,
+                            dur=1,
+                        ),
+                    ]
+                )
+            )
+            self.inputs[rank] = (cpu, native)
+
+    @contextmanager
+    def original(self, *args, **kwargs):
+        yield
+
+    def capture(self):
+        with patch("shared_native_capture.capture_engine_profile", self.original):
+            with capture_native_profile(
+                object(), output_dir=self.root, tp_size=2, record=self.record
+            ):
+                pass
+
+    def test_canonical_is_bound_to_each_worker_and_original_bytes_remain(self):
+        originals = {
+            rank: (cpu.read_bytes(), native.read_bytes())
+            for rank, (cpu, native) in self.inputs.items()
+        }
+        self.capture()
+        profile = self.record["profile"]
+        self.assertEqual({row["rank"] for row in profile["traces"]}, {0, 1})
+        self.assertFalse(profile["engine_original_files_rewritten"])
+        for row in profile["native_derivations"]:
+            self.assertEqual(row["canonical_event_count"], 5)
+            self.assertTrue(row["prepared_array_was_open"])
+        for rank, (cpu, native) in self.inputs.items():
+            self.assertEqual((cpu.read_bytes(), native.read_bytes()), originals[rank])
+
+    def test_missing_native_input_fails_without_repairing_original(self):
+        cpu, native = self.inputs[0]
+        original = cpu.read_bytes()
+        native.unlink()
+        with self.assertRaisesRegex(ValueError, "official CANN"):
+            self.capture()
+        self.assertEqual(cpu.read_bytes(), original)
+
+    def test_worker_pid_mismatch_cannot_borrow_another_native_folder(self):
+        events = next((self.root / "rank_forward_events").glob("rank0*"))
+        events.write_text(json.dumps(dict(rank=0, pid=999)) + "\n")
+        with self.assertRaisesRegex(ValueError, "worker PID"):
+            self.capture()
+
+    def test_changed_original_receipt_is_rejected(self):
+        self.inputs[0][0].write_bytes(b"[]")
+        with self.assertRaisesRegex(ValueError, "changed"):
+            self.capture()

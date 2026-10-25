@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import sys
+import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from shared_profile_clock import mstx_range
+from shared_profiler_setup import configure_profiler
+
+
+class SetupTests(unittest.TestCase):
+    def test_factory_keeps_sampling_options_and_preserves_native_data(self):
+        configs = []
+        profiler = SimpleNamespace(
+            ProfilerLevel=SimpleNamespace(Level1=1),
+            AiCMetrics=SimpleNamespace(PipeUtilization=2),
+            _ExperimentalConfig=lambda **kwargs: configs.append(kwargs) or kwargs,
+            profile=lambda **kwargs: kwargs,
+        )
+        backend = SimpleNamespace(
+            is_npu=True, profiler=profiler, activity_map={"CPU": 3, "NPU": 4}
+        )
+        result = configure_profiler(lambda *args, **kwargs: self.fail("wrong backend"))(
+            backend,
+            activities=["CPU", "NPU", "MEM"],
+            with_stack=False,
+            record_shapes=True,
+        )
+        self.assertEqual(
+            configs,
+            [
+                dict(
+                    profiler_level=1,
+                    aic_metrics=2,
+                    mstx=True,
+                    data_simplification=False,
+                )
+            ],
+        )
+        self.assertEqual(result["activities"], [3, 4])
+        self.assertTrue(result["profile_memory"])
+        self.assertFalse(result["with_stack"])
+        self.assertTrue(result["record_shapes"])
+
+    def test_cpu_factory_forwards_explicit_arguments(self):
+        backend = SimpleNamespace(is_npu=False)
+        result = configure_profiler(lambda b, **kwargs: (b, kwargs))(
+            backend, activities=["CPU"], with_stack=True, record_shapes=False
+        )
+        self.assertIs(result[0], backend)
+        self.assertEqual(
+            result[1], dict(activities=["CPU"], with_stack=True, record_shapes=False)
+        )
+
+    def test_mstx_end_runs_after_original_failure(self):
+        calls = []
+        mstx = SimpleNamespace(
+            range_start=lambda name, **kwargs: calls.append((name, kwargs)) or 7,
+            range_end=lambda value, **kwargs: calls.append((value, kwargs)),
+        )
+        with patch.dict(
+            sys.modules, {"torch_npu": SimpleNamespace(npu=SimpleNamespace(mstx=mstx))}
+        ):
+            with self.assertRaisesRegex(RuntimeError, "original"):
+                with mstx_range("anchor"):
+                    raise RuntimeError("original")
+        self.assertEqual(
+            calls,
+            [
+                ("anchor", dict(stream=None, domain="tokenspeed_hw2")),
+                (7, dict(domain="tokenspeed_hw2")),
+            ],
+        )
+
+    def test_inactive_range_does_not_end_zero_or_hide_bad_return(self):
+        mstx = SimpleNamespace(
+            range_start=lambda *a, **k: 0,
+            range_end=lambda *a, **k: self.fail("inactive end"),
+        )
+        with patch.dict(
+            sys.modules, {"torch_npu": SimpleNamespace(npu=SimpleNamespace(mstx=mstx))}
+        ):
+            with mstx_range("inactive") as value:
+                self.assertEqual(value, 0)
+            mstx.range_start = lambda *a, **k: None
+            with self.assertRaises(RuntimeError):
+                with mstx_range("bad"):
+                    pass

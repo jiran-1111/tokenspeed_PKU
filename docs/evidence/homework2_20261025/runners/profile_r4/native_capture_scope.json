@@ -1,0 +1,10 @@
+{
+  "scope": "new formal captures with separately derived canonical timelines",
+  "math_core_unchanged": true,
+  "original_engine_files_rewritten": false,
+  "input_artifacts": "original CPU prepare bytes plus complete official CANN msprof JSON from the same worker PID",
+  "all_events_preserved": true,
+  "native_decimal_tokens_preserved": true,
+  "previous_failures_preserved": true,
+  "formal_clock_and_task_classification_requires_independent_analysis": true
+}

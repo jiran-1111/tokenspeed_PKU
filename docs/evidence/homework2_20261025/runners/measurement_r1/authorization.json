@@ -1,0 +1,11 @@
+{
+  "user_quote": "允许共享性能和Profiler（推荐）",
+  "approved_date": "2026-10-25",
+  "shared_functional_only": false,
+  "performance_authorized": true,
+  "profiler_authorized": true,
+  "measurement_scope": "shared_background_observed",
+  "preserve_background_services": true,
+  "one_own_npu_experiment_at_a_time": true,
+  "old_functional_timings_reclassified": false
+}

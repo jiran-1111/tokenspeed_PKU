@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""CPU-only public scalar summary; raw private observations remain in workspace."""
+
+import hashlib
+import json
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from statistics import median
+
+TASK = Path.home() / "tokenspeed/.tmp/hw2-20261023"
+SOURCE = TASK / "source_final"
+TOOLS = TASK / "shared_measurement_20261025"
+ANALYSIS = TASK / "shared_measurement_analysis_20261025"
+sys.path[:0] = [str(ANALYSIS), str(TOOLS), str(SOURCE)]
+from shared_hbm_attribution import analyze_guard_samples
+from shared_matrix_hbm_windows import analyze_matrix_hbm_windows
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def utilization(table, card, target_chips):
+    current = None
+    result = {}
+    for line in table.splitlines():
+        match = re.match(r"^\|\s*(\d+)\s+Ascend[^|]*\|", line)
+        if match:
+            current = int(match[1])
+            continue
+        match = re.match(r"^\|\s*(\d+)\s+\d+\s*\|[^|]+\|\s*(\d+)\s+", line)
+        if match and current == card and int(match[1]) in target_chips:
+            chip, value = int(match[1]), int(match[2])
+            assert chip not in result and 0 <= value <= 100
+            result[chip] = value
+    return {str(chip): result.get(chip) for chip in target_chips}
+
+
+def percentile(values, q):
+    values = sorted(values)
+    position = (len(values) - 1) * q
+    lower = int(position)
+    return values[lower] + (values[min(lower + 1, len(values) - 1)] - values[lower]) * (
+        position - lower
+    )
+
+
+summary = {
+    "generated_utc": datetime.now(timezone.utc).isoformat(),
+    "measurement_scope": "shared_background_observed",
+    "exclusive": False,
+    "authorization_date": "2026-10-25",
+    "old_functional_timings_reclassified": False,
+    "source_core_manifest_sha256": sha(
+        SOURCE / "docs/evidence/homework2_20261023/source_manifest.json"
+    ),
+    "analysis_sha256": sha(Path(__file__)),
+    "jobs": {},
+    "limitations": [
+        "Shared compute and bandwidth interference is uncontrolled; process identity stability does not prove constant load.",
+        "HBM is sampled, not instantaneous maximum; total chip memory includes background and runtime allocations.",
+        "Client stream timing is not device token latency; profiler jobs are separate from normal shared measurements.",
+        "Only fixed token inputs and finite greedy continuations were tested; 4B/9B original differences remain unresolved.",
+    ],
+}
+private_baselines = {}
+for folder in (TOOLS, TASK / "shared_hbm_supplement_20261025"):
+    if not (folder / "state.json").exists():
+        continue
+    state = json.loads((folder / "state.json").read_text())
+    for name, receipt in state.get("finished", {}).items():
+        directory = SOURCE / "results/raw/homework2_20261024" / receipt["job"]
+        run_path = directory / "run.json"
+        if not run_path.exists():
+            summary["jobs"][name] = {
+                "execution_valid": False,
+                "status": receipt["status"],
+                "failure_type": "run_not_written",
+            }
+            continue
+        run = json.loads(run_path.read_text())
+        audit_path = directory / "shared_measurement_audit.json"
+        audit = json.loads(audit_path.read_text()) if audit_path.exists() else {}
+        requests = [
+            json.loads(line)
+            for line in (directory / "requests.jsonl").read_text().splitlines()
+        ]
+        formal = [row for row in requests if row["phase"] == "formal"]
+        guard = run["guard"]
+        private_baselines[name] = guard["approved_background"]
+        baseline = guard["approved_background"]
+        counts = {chip: [] for chip in baseline}
+        utilization_samples = {chip: [] for chip in baseline}
+        for sample in guard["background_samples"]:
+            for chip, approved in baseline.items():
+                counts[chip].append(
+                    sum(str(pid) in approved for pid in sample["pids"][chip])
+                )
+            values = utilization(
+                (directory / sample["raw_table"]).read_text(),
+                run["device"]["npu_id"],
+                set(map(int, baseline)),
+            )
+            for chip, value in values.items():
+                if value is not None:
+                    utilization_samples[chip].append(value)
+        memory = analyze_matrix_hbm_windows(run, directory)
+        guard_memory = analyze_guard_samples(run, directory)
+        cells = audit.get("cells", [])
+        for cell in cells:
+            selected = [
+                row
+                for row in formal
+                if row["input_length"] == cell["input_length"]
+                and row["concurrency"] == cell["concurrency"]
+            ]
+            tpot = [
+                (row["e2e_ms"] - row["ttft_ms"]) / (len(row["output_ids"]) - 1)
+                for row in selected
+                if row["ttft_ms"] is not None and len(row["output_ids"]) > 1
+            ]
+            cell["client_tpot_ms"] = (
+                {"p50": median(tpot), "p95": percentile(tpot, 0.95)} if tpot else None
+            )
+        summary["jobs"][name] = {
+            "job_id": receipt["job"],
+            "status": receipt["status"],
+            "exit_code": receipt["exit_code"],
+            "started_utc": receipt["started_utc"],
+            "ended_utc": receipt["ended_utc"],
+            "device": run["device"],
+            "model_id": run["config"]["model_id"],
+            "model_revision": run["config"]["model_revision"],
+            "config": {
+                key: value
+                for key, value in run["config"].items()
+                if key != "local_model_path"
+            },
+            "protocol": run["protocol"],
+            "sampling_params": run["sampling_params"],
+            "profile_mode": run["profile_mode"],
+            "raw_run_sha256": sha(run_path),
+            "request_log_sha256": sha(directory / "requests.jsonl"),
+            "independent_audit_sha256": (
+                sha(audit_path) if audit_path.exists() else None
+            ),
+            "config_sha256": run["config_sha256"],
+            "protocol_sha256": run["protocol_sha256"],
+            "inputs_sha256": run["inputs_sha256"],
+            "tool_manifest_sha256": guard["tool_manifest_sha256"],
+            "tools_after_sha256": guard["tools_after_sha256"],
+            "authorization_sha256": guard["authorization_sha256"],
+            "execution_valid": audit.get("execution_valid", False),
+            "shared_performance_valid": audit.get("shared_performance_valid", False),
+            "shared_profiler_valid": audit.get("shared_profiler_valid", False),
+            "hbm_coverage_complete": audit.get("hbm_coverage_complete", False),
+            "execution_error_count": len(audit.get("execution_errors", [])),
+            "hbm_issue_count": len(audit.get("hbm_errors", [])),
+            "sources_unchanged": guard["sources_unchanged"]
+            and not run["source_after_mismatches"],
+            "own_contexts_released": receipt["release"]["own_contexts_released"],
+            "rank_forward_events": audit.get("rank_forward_events"),
+            "comparison": receipt.get("comparison"),
+            "formal_requests": len(formal),
+            "warmup_requests": len(requests) - len(formal),
+            "failed_requests": sum(row["status"] != "passed" for row in requests),
+            "cells": cells,
+            "batches": audit.get("batches", []),
+            "matrix_hbm_windows": {
+                key: value for key, value in memory.items() if key != "samples"
+            },
+            "all_run_guard_process_memory_ranges_mb": guard_memory["sampled_ranges_mb"],
+            "background": {
+                chip: {
+                    "initial_approved_process_count": len(baseline[chip]),
+                    "observed_count_min": min(values),
+                    "observed_count_max": max(values),
+                    "total_chip_aicore_utilization_percent_range": (
+                        [min(utilization_samples[chip]), max(utilization_samples[chip])]
+                        if utilization_samples[chip]
+                        else None
+                    ),
+                }
+                for chip, values in counts.items()
+            },
+            "profile_trace_artifacts": run.get("profile", {}).get("traces", []),
+        }
+if all(name in summary["jobs"] for name in ("0.8b_tp1_matrix", "0.8b_tp2_matrix")):
+    one, two = (
+        summary["jobs"][name] for name in ("0.8b_tp1_matrix", "0.8b_tp2_matrix")
+    )
+    summary["paired_0.8b_matrix"] = {
+        "same_card": one["device"]["npu_id"] == two["device"]["npu_id"],
+        "tp1_chip_is_tp2_rank0_chip": one["device"]["chip_logic_ids"]["0"]
+        == two["device"]["chip_logic_ids"]["0"],
+        "same_inputs_sha256": one["inputs_sha256"] == two["inputs_sha256"],
+        "same_protocol_sha256": one["protocol_sha256"] == two["protocol_sha256"],
+        "configs_only_differ_tp": {
+            k: v for k, v in one["config"].items() if k != "tp_size"
+        }
+        == {k: v for k, v in two["config"].items() if k != "tp_size"},
+        "common_chip_background_identities_equal_before_runs": private_baselines[
+            "0.8b_tp1_matrix"
+        ]["0"]
+        == private_baselines["0.8b_tp2_matrix"]["0"],
+        "observed_throughput_ratios_tp2_over_tp1": [
+            {
+                "input_length": a["input_length"],
+                "concurrency": a["concurrency"],
+                "ratio_of_round_medians": b["throughput"]["median"]
+                / a["throughput"]["median"],
+            }
+            for a in one["cells"]
+            for b in two["cells"]
+            if (a["input_length"], a["concurrency"])
+            == (b["input_length"], b["concurrency"])
+        ],
+        "exclusive": False,
+        "causal_communication_speedup_established": False,
+    }
+print(json.dumps(summary))

@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-25",
+  "branch": "homework2/in-progress",
+  "source_core_files": 1531,
+  "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "hardware_materials_collected": true,
+  "all_models_numerically_passed": false,
+  "unresolved": [
+    "4B 128-input TP1/TP2 greedy divergence",
+    "9B 128-input TP1/TP2 greedy divergence"
+  ],
+  "ordinary_0_8b_formal_per_tp": 96,
+  "ordinary_27b_tp2_formal": 96,
+  "strategy_formal_per_arm": 24,
+  "independent_hbm_formal_per_tp": 128,
+  "accepted_dual_rank_native_profiles": 3,
+  "formal_timeline_windows": 6,
+  "performance_scope": "shared_background_observed",
+  "exclusive": false,
+  "all_failures_retained": true,
+  "hw1_and_jr_unchanged": true,
+  "old_exclusive_queue": "retained_paused_no_duplicate_runs",
+  "whole_course_project_complete": false,
+  "report_organization": "four homework2 tasks",
+  "actual_execution": "AI tools under group authorization; member responsibility allocation is not a claim of personal execution or hours"
+}

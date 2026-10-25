@@ -1,0 +1,33 @@
+{
+  "figures": {
+    "homework2_throughput_20261025.png": {
+      "sha256": "095e7f2d52e7148e47d8d1a7f0d8e614b0653f147e3ec0b2e7c73b1d912698ab",
+      "bytes": 65347
+    },
+    "homework2_throughput_20261025.pdf": {
+      "sha256": "d9832c6ab884cfa54a97e4849dea617d0b1f0e11c943c60b406ffc42ebfcf46d",
+      "bytes": 31120
+    },
+    "homework2_throughput_20261025.svg": {
+      "sha256": "d8c0c181a1a0ebe666358d0b544d415ec0ca7a577ab44ac2da96df25148e1292",
+      "bytes": 65934
+    },
+    "homework2_timeline_20261025.png": {
+      "sha256": "2d3b8d39fd7aa9629280cca5349f5f970e577c5f58f0f7969840c9cb36c9509c",
+      "bytes": 84501
+    },
+    "homework2_timeline_20261025.pdf": {
+      "sha256": "d2e6af6d9e1b62062434a25618043f3683f641a5814b7bc8e2b8bc5cccb62e9f",
+      "bytes": 38529
+    },
+    "homework2_timeline_20261025.svg": {
+      "sha256": "16e2ecff4db9fbd89eb2f96ff35e6faaacc6e8279cb373e003f40c469d323fb0",
+      "bytes": 76117
+    }
+  },
+  "inputs": {
+    "shared_measurement_summary_20261025T071723.json": "bd186b3eaa122f456f7e565a57a8d6f87f3cf7e132f5281beb4f90dabc002076",
+    "shared_profile_summary_r7_20261025.json": "f95f61c87f4e82aa3e3c0817eb3c8d77e7cda71e765c67fa73a765506a3ce056",
+    "shared_profile_plot_data_r7_20261025.json": "3999707c881b0f95ca7c884f29baf79e7a0033d4ca4aefce7e0f414269f838c9"
+  }
+}

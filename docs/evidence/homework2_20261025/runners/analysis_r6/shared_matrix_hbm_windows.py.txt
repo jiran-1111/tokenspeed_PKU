@@ -1,0 +1,493 @@
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Offline process-memory attribution inside saved formal matrix windows."""
+
+from __future__ import annotations
+
+from collections import Counter, defaultdict
+from pathlib import Path, PurePosixPath
+
+from benchmarks.course_project.tp_devices import is_descendant
+from shared_hbm_attribution import parse_process_memory
+
+METRICS = (
+    "sampled_total_chip_used_mb",
+    "sampled_chip_capacity_mb",
+    "sampled_process_total_mb",
+    "sampled_own_process_mb",
+    "sampled_background_process_mb",
+    "sampled_unknown_process_mb",
+    "sampled_unattributed_mb",
+)
+_BATCH_FIELDS = ("input_length", "concurrency", "repetition")
+
+
+def _entry(mapping: object, key: int) -> object:
+    return (
+        mapping.get(str(key), mapping.get(key)) if isinstance(mapping, dict) else None
+    )
+
+
+def _positive(value: object) -> bool:
+    return type(value) is int and value > 0
+
+
+def _pid_set(values: object) -> set[int] | None:
+    if not isinstance(values, list) or not all(_positive(pid) for pid in values):
+        return None
+    return set(values) if len(values) == len(set(values)) else None
+
+
+def _interval(start: object, end: object) -> bool:
+    return _positive(start) and _positive(end) and start <= end
+
+
+def _raw_path(root: Path, name: object) -> Path:
+    if not isinstance(name, str) or not name or "\\" in name or ":" in name:
+        raise ValueError("invalid raw table path")
+    relative = PurePosixPath(name)
+    if (
+        relative.is_absolute()
+        or ".." in relative.parts
+        or relative.suffix != ".txt"
+        or relative.as_posix() != name
+    ):
+        raise ValueError("invalid raw table path")
+    path = (root / name).resolve()
+    if not path.is_relative_to(root):
+        raise ValueError("raw table path escapes run directory")
+    return path
+
+
+def _key(batch: dict) -> tuple | None:
+    values = tuple(batch.get(field) for field in _BATCH_FIELDS)
+    return values if all(_positive(value) for value in values) else None
+
+
+def _peaks(records: list[dict], chips: set[int]) -> dict:
+    """Known observations only; completeness is always returned separately."""
+    peaks = {}
+    for chip in sorted(chips):
+        peaks[str(chip)] = {}
+        for metric in METRICS:
+            values = [record["chips"][str(chip)][metric] for record in records]
+            known = [value for value in values if value is not None]
+            peaks[str(chip)][metric] = max(known) if known else None
+    return peaks
+
+
+def _attribute_sample(
+    sample: dict,
+    *,
+    index: int,
+    matches: list[dict],
+    duplicate: bool,
+    root: Path,
+    npu_id: int,
+    chips: set[int],
+    guard: dict,
+) -> dict:
+    issues: list[str] = []
+    start, end, name = (
+        sample.get("started_ns"),
+        sample.get("finished_ns"),
+        sample.get("raw_table"),
+    )
+    record = {
+        "sample_index": index,
+        "started_ns": start,
+        "finished_ns": end,
+        "raw_table": name if isinstance(name, str) else None,
+        "observed_ns": None,
+        "issues": issues,
+        "valid": False,
+        "chips": {},
+    }
+    if not _interval(start, end):
+        issues.append("invalid_query_interval")
+    if duplicate:
+        issues.append("duplicate_hbm_raw_table")
+    process = matches[0] if len(matches) == 1 else None
+    if process is None:
+        issues.append(
+            "missing_process_sample"
+            if not matches
+            else "ambiguous_process_sample_match"
+        )
+    else:
+        observed, root_pid = process.get("observed_ns"), process.get("root_pid")
+        record["observed_ns"] = observed
+        if not (
+            _interval(start, end) and _positive(observed) and start <= observed <= end
+        ):
+            issues.append("process_observation_outside_query")
+        if not _positive(root_pid) or (
+            "parent_pid" in guard and root_pid != guard["parent_pid"]
+        ):
+            issues.append("invalid_or_mismatched_root_pid")
+        if "error" in process:
+            issues.append("process_sample_has_error")
+    processes = None
+    try:
+        table = _raw_path(root, name).read_text(encoding="utf-8")
+        processes = parse_process_memory(table, npu_id=npu_id, chip_ids=chips)
+    except (OSError, UnicodeError):
+        issues.append("unreadable_raw_table")
+    except ValueError:
+        issues.append("invalid_raw_path_or_process_table")
+    join_valid = not issues
+    for chip in sorted(chips):
+        chip_issues: list[str] = []
+        values = dict.fromkeys(METRICS)
+        values.update(
+            valid=False,
+            issues=chip_issues,
+            sampled_owned_pids=[],
+            sampled_background_pids=[],
+            sampled_unknown_pids=[],
+        )
+        total = _entry(sample.get("chips"), chip)
+        if isinstance(total, dict):
+            used, capacity = total.get("used_mb"), total.get("capacity_mb")
+            if (
+                type(used) is int
+                and type(capacity) is int
+                and 0 <= used <= capacity
+                and capacity > 0
+            ):
+                values["sampled_total_chip_used_mb"] = used
+                values["sampled_chip_capacity_mb"] = capacity
+        if values["sampled_total_chip_used_mb"] is None:
+            chip_issues.append("missing_or_invalid_chip_total")
+        if processes is not None:
+            pid_memory = processes[chip]
+            values["sampled_process_memory_mb"] = {
+                str(pid): value for pid, value in sorted(pid_memory.items())
+            }
+            process_total = sum(pid_memory.values())
+            values["sampled_process_total_mb"] = process_total
+            if values["sampled_total_chip_used_mb"] is not None:
+                residual = values["sampled_total_chip_used_mb"] - process_total
+                values["sampled_unattributed_mb"] = residual
+                if residual < 0:
+                    chip_issues.append("process_sum_exceeds_chip_total")
+            own, background = set(), set()
+            attribution_issue_count = len(chip_issues)
+            row = _entry(process.get("chips"), chip) if process else None
+            if join_valid and isinstance(row, dict):
+                listed, foreign, approved, unknown = (
+                    _pid_set(row.get(field))
+                    for field in (
+                        "pids",
+                        "foreign_pids",
+                        "approved_background_pids",
+                        "unknown_pids",
+                    )
+                )
+                metadata_valid = all(
+                    value is not None for value in (listed, foreign, approved, unknown)
+                )
+                if not metadata_valid:
+                    chip_issues.append("missing_or_invalid_pid_metadata")
+                elif listed != set(pid_memory):
+                    metadata_valid = False
+                    chip_issues.append("saved_raw_pid_mismatch")
+                elif (
+                    not (foreign <= listed and approved <= listed and unknown <= listed)
+                    or approved & (foreign | unknown)
+                    or foreign & unknown
+                ):
+                    metadata_valid = False
+                    chip_issues.append("inconsistent_pid_classification")
+                if metadata_valid:
+                    baseline = _entry(guard.get("approved_background"), chip)
+                    background_valid = isinstance(baseline, dict) and all(
+                        str(pid) in baseline or pid in baseline for pid in approved
+                    )
+                    if not background_valid:
+                        chip_issues.append("approved_background_not_in_baseline")
+                    else:
+                        background = set(approved)
+                        values["sampled_background_process_mb"] = sum(
+                            pid_memory[pid] for pid in background
+                        )
+                    if foreign or unknown:
+                        chip_issues.append("foreign_or_unknown_pids")
+                    # Deliberately do not pool parents/PIDs across queries or chips.
+                    parents = row.get("parents", {})
+                    if not isinstance(parents, dict):
+                        parents = {}
+                    root_pid = process["root_pid"]
+                    for pid in listed - approved - foreign - unknown:
+                        if is_descendant(
+                            pid,
+                            root_pid=root_pid,
+                            read_parent=lambda current: parents.get(str(current)),
+                        ):
+                            own.add(pid)
+                        else:
+                            chip_issues.append("own_pid_ancestry_unverified")
+                    if any(
+                        is_descendant(
+                            pid,
+                            root_pid=root_pid,
+                            read_parent=lambda current: parents.get(str(current)),
+                        )
+                        for pid in background
+                    ):
+                        chip_issues.append("own_background_overlap")
+                        values["sampled_background_process_mb"] = None
+                        background.clear()
+                    expected_own = listed - approved
+                    if (
+                        len(chip_issues) == attribution_issue_count
+                        and own == expected_own
+                    ):
+                        values["sampled_own_process_mb"] = sum(
+                            pid_memory[pid] for pid in own
+                        )
+            else:
+                chip_issues.append(
+                    "query_process_join_unverified"
+                    if not join_valid
+                    else "missing_chip_process_metadata"
+                )
+            unresolved = set(pid_memory) - own - background
+            values["sampled_unknown_process_mb"] = sum(
+                pid_memory[pid] for pid in unresolved
+            )
+            values["sampled_owned_pids"] = sorted(own)
+            values["sampled_background_pids"] = sorted(background)
+            values["sampled_unknown_pids"] = sorted(unresolved)
+        else:
+            chip_issues.append("missing_process_memory")
+        chip_issues[:] = list(dict.fromkeys(chip_issues))
+        values["valid"] = join_valid and not chip_issues
+        record["chips"][str(chip)] = values
+    for chip, values in record["chips"].items():
+        issues.extend(f"chip_{chip}_{issue}" for issue in values["issues"])
+    record["valid"] = not issues and all(
+        value["valid"] for value in record["chips"].values()
+    )
+    return record
+
+
+def analyze_matrix_hbm_windows(run: dict, run_dir: Path | str) -> dict:
+    """Join each HBM query to its own process observation and formal batch.
+
+    Own memory requires same-query ancestry. Approved background classification
+    uses that query's saved allowlist and guard baseline membership; no UID or
+    historical identity check is invented. Every supplied sample/formal batch is
+    retained, including missing declared rounds and invalid/ambiguous joins.
+    """
+    device = run.get("device", {})
+    targets = device.get("chip_logic_ids", {})
+    try:
+        chips = {int(chip) for chip in targets}
+    except (TypeError, ValueError) as error:
+        raise ValueError("invalid target physical card/chips") from error
+    npu_id = device.get("npu_id")
+    if (
+        type(npu_id) is not int
+        or npu_id < 0
+        or not chips
+        or chips - {0, 1}
+        or len(chips) != len(targets)
+    ):
+        raise ValueError("invalid target physical card/chips")
+    root = Path(run_dir).resolve()
+    guard = run.get("guard", {})
+    if not isinstance(guard, dict):
+        guard = {}
+    process_by_raw: dict[str, list[dict]] = defaultdict(list)
+    for process in run.get("process_samples", []):
+        if isinstance(process, dict) and isinstance(process.get("raw_table"), str):
+            process_by_raw[process["raw_table"]].append(process)
+    hbm_samples = run.get("hbm_samples", [])
+    raw_counts = Counter(
+        sample.get("raw_table")
+        for sample in hbm_samples
+        if isinstance(sample, dict) and isinstance(sample.get("raw_table"), str)
+    )
+    samples = []
+    for index, sample in enumerate(hbm_samples):
+        sample = sample if isinstance(sample, dict) else {}
+        name = sample.get("raw_table")
+        matches = process_by_raw.get(name, []) if isinstance(name, str) else []
+        samples.append(
+            _attribute_sample(
+                sample,
+                index=index,
+                matches=matches,
+                duplicate=isinstance(name, str) and raw_counts[name] != 1,
+                root=root,
+                npu_id=npu_id,
+                chips=chips,
+                guard=guard,
+            )
+        )
+    issues = []
+    protocol = run.get("protocol", {})
+    lengths, concurrency, repetitions = (
+        protocol.get(field) for field in ("input_lengths", "concurrency", "repetitions")
+    )
+    declared = all(
+        isinstance(values, list)
+        and bool(values)
+        and all(_positive(value) for value in values)
+        and len(values) == len(set(values))
+        for values in (lengths, concurrency)
+    ) and _positive(repetitions)
+    if not declared:
+        issues.append("protocol_missing_or_invalid")
+    expected = (
+        [
+            (length, count, repetition)
+            for length in lengths
+            for count in concurrency
+            for repetition in range(1, repetitions + 1)
+        ]
+        if declared
+        else []
+    )
+    actual = [
+        (index, batch)
+        for index, batch in enumerate(run.get("batches", []))
+        if isinstance(batch, dict) and batch.get("phase") == "formal"
+    ]
+    grouped: dict[tuple | None, list[tuple[int, dict]]] = defaultdict(list)
+    for index, batch in actual:
+        grouped[_key(batch)].append((index, batch))
+    ordered = []
+    for key in expected:
+        ordered.extend((index, batch, []) for index, batch in grouped.get(key, []))
+        if key not in grouped:
+            ordered.append(
+                (None, dict(zip(_BATCH_FIELDS, key)), ["missing_formal_batch"])
+            )
+    for index, batch in actual:
+        if _key(batch) not in expected:
+            ordered.append(
+                (index, batch, ["unexpected_formal_batch"] if declared else [])
+            )
+    batches = []
+    for index, batch, batch_issues in ordered:
+        key = _key(batch)
+        if key is None:
+            batch_issues.append("invalid_formal_batch_key")
+        if len(grouped.get(key, [])) > 1:
+            batch_issues.append("duplicate_formal_batch")
+        start, end = batch.get("started_ns"), batch.get("finished_ns")
+        interval_valid = _interval(start, end) and start < end
+        if not interval_valid:
+            batch_issues.append("missing_or_invalid_batch_interval")
+        contained = [
+            sample
+            for sample in samples
+            if interval_valid
+            and _interval(sample["started_ns"], sample["finished_ns"])
+            and start <= sample["started_ns"] <= sample["finished_ns"] <= end
+        ]
+        if not contained:
+            batch_issues.append("no_contained_hbm_query")
+        if any(not sample["valid"] for sample in contained):
+            batch_issues.append("invalid_contained_hbm_query")
+        batches.append(
+            {
+                **{field: batch.get(field) for field in _BATCH_FIELDS},
+                "phase": "formal",
+                "batch_index": index,
+                "started_ns": start,
+                "finished_ns": end,
+                "sample_indices": [sample["sample_index"] for sample in contained],
+                "sample_count": len(contained),
+                "valid_sample_count": sum(sample["valid"] for sample in contained),
+                "sampled_peaks_mb": _peaks(contained, chips),
+                "issues": batch_issues,
+                "complete": not batch_issues,
+            }
+        )
+    cells = []
+    cell_keys = list(
+        dict.fromkeys(
+            (batch["input_length"], batch["concurrency"]) for batch in batches
+        )
+    )
+    for length, count in cell_keys:
+        rounds = [
+            batch
+            for batch in batches
+            if (batch["input_length"], batch["concurrency"]) == (length, count)
+        ]
+        required = (
+            list(range(1, repetitions + 1))
+            if declared
+            else sorted({_key(batch)[2] for batch in rounds if _key(batch) is not None})
+        )
+        complete = [
+            repetition
+            for repetition in required
+            if len([batch for batch in rounds if batch["repetition"] == repetition])
+            == 1
+            and next(batch for batch in rounds if batch["repetition"] == repetition)[
+                "complete"
+            ]
+        ]
+        known_samples = sorted(
+            {index for batch in rounds for index in batch["sample_indices"]}
+        )
+        cells.append(
+            {
+                "input_length": length,
+                "concurrency": count,
+                "expected_repetitions": required,
+                "complete_repetitions": complete,
+                "missing_repetitions": [
+                    repetition for repetition in required if repetition not in complete
+                ],
+                "sample_indices": known_samples,
+                "sampled_peaks_mb": _peaks(
+                    [samples[index] for index in known_samples], chips
+                ),
+                "complete": bool(required)
+                and complete == required
+                and len(rounds) == len(required),
+            }
+        )
+    return {
+        "measurement": "sampled_process_memory_within_formal_query_windows",
+        "npu_id": npu_id,
+        "samples": samples,
+        "batches": batches,
+        "cells": cells,
+        "issues": issues,
+        "complete": not issues
+        and bool(batches)
+        and all(batch["complete"] for batch in batches),
+        "background_identity_verified": False,
+        "limitations": [
+            "Process memory(MB) is a sampled process statistic, not exact model memory or exclusive HBM demand.",
+            "Only queries entirely inside each formal batch contribute; missing rounds are never backfilled from other windows.",
+            "Own ancestry and approved-background membership use only the matching query; no UID verification is invented.",
+            "Whole-chip used minus all listed process memory is an unattributed residual; fields are sequential observations, not atomic or instantaneous peaks.",
+            "Peaks of known observations can be partial; inspect complete, issues and sample counts separately.",
+        ],
+    }

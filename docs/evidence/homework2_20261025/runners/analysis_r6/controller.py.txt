@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""CPU-only sequential analysis of all preserved formal native captures."""
+
+import json
+import os
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+task = Path.home() / "tokenspeed/.tmp/hw2-20261023"
+source = task / "source_final"
+tools = task / "shared_profile_analysis_r6_20261025"
+captures = task / "shared_profile_r4_20261025"
+state = json.loads((captures / "state.json").read_text())
+assert state["status"] == "shared_measurement_complete_original_queue_retained_paused"
+assert all(
+    item["audit"]["shared_profiler_valid"] and item["release"]["own_contexts_released"]
+    for item in state["finished"].values()
+)
+record = {"status": "running", "finished": {}, "npu_execution": False, "current": None}
+
+
+def save():
+    record["updated_utc"] = datetime.now(timezone.utc).isoformat()
+    temporary = tools / "analysis_state.tmp"
+    temporary.write_text(json.dumps(record, indent=2))
+    temporary.replace(tools / "analysis_state.json")
+
+
+save()
+env = dict(os.environ)
+env.update(
+    TOKENSPEED_SOURCE_SNAPSHOT=str(source),
+    PYTHONPATH=":".join(map(str, [tools, source])),
+    TORCH_DEVICE_BACKEND_AUTOLOAD="0",
+    ASCEND_RT_VISIBLE_DEVICES="",
+    CUDA_VISIBLE_DEVICES="",
+    PYTHONDONTWRITEBYTECODE="1",
+    OMP_NUM_THREADS="1",
+)
+pattern = r'(?i)"opName"\s*:\s*"Hccl(?:Allreduce|Allgather|Broadcast)"'
+for name, item in state["finished"].items():
+    directory = source / "results/raw/homework2_20261024" / item["job"]
+    output = tools / f"{name}.timeline.json"
+    command = [
+        str(source / ".conda-env/bin/python"),
+        "-B",
+        str(tools / "analyze_shared_profiler_native_cached_20261025.py"),
+        "--run-dir",
+        str(directory),
+        "--source-root",
+        str(source),
+        "--tools-dir",
+        str(captures),
+        "--clock-tolerance-ns",
+        "2000",
+        "--collective-pattern",
+        pattern,
+        "--output",
+        str(output),
+    ]
+    with (tools / f"{name}.analysis.log").open("x") as log:
+        process = subprocess.Popen(
+            command, env=env, stdout=log, stderr=subprocess.STDOUT, cwd=source
+        )
+        record["current"] = {
+            "name": name,
+            "pid": process.pid,
+            "started_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        save()
+        code = process.wait()
+    result = (
+        json.loads(output.read_text())
+        if output.exists()
+        else {
+            "status": "process_failed",
+            "errors": [{"stage": "process", "exit_code": code}],
+        }
+    )
+    record["finished"][name] = {
+        "exit_code": code,
+        "status": result["status"],
+        "errors": result["errors"],
+        "formal_windows": len(result.get("formal_windows", [])),
+    }
+    record["current"] = None
+    save()
+record["status"] = (
+    "passed"
+    if all(item["status"] == "passed" for item in record["finished"].values())
+    else "failed"
+)
+save()

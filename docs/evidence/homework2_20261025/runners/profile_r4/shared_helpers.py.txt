@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""Pure safety checks and observational hooks for authorized shared validation."""
+
+import functools
+import os
+import time
+
+
+def check_processes(current, baseline, owned, identities):
+    if set(current) != set(baseline):
+        raise ValueError("shared target chips changed")
+    for chip, pids in current.items():
+        for pid in pids:
+            if pid in baseline[chip]:
+                if identities.get(pid) != baseline[chip][pid]:
+                    raise ValueError("background process identity changed or unknown")
+            elif pid not in owned:
+                raise ValueError("unapproved process on shared target")
+
+
+def check_memory(values, *, minimum_free_mb):
+    if type(minimum_free_mb) is not int or minimum_free_mb < 1 or not values:
+        raise ValueError("invalid memory reserve")
+    for value in values.values():
+        used, capacity = value["used_mb"], value["capacity_mb"]
+        if (
+            type(used) is not int
+            or type(capacity) is not int
+            or not 0 <= used <= capacity
+        ):
+            raise ValueError("invalid memory statistic")
+        if capacity - used < minimum_free_mb:
+            raise ValueError("shared device memory reserve insufficient")
+
+
+def observe_forward(original, emit):
+    """Record completed Python forwards without changing calls or results."""
+    counts = {}
+
+    @functools.wraps(original)
+    def forward(instance, *args, **kwargs):
+        result = original(instance, *args, **kwargs)
+        rank = instance.global_rank
+        counts[rank] = counts.get(rank, 0) + 1
+        if counts[rank] <= 256 or counts[rank] % 64 == 0:
+            input_ids = args[1] if len(args) > 1 else kwargs["input_ids"]
+            emit(
+                {
+                    "rank": rank,
+                    "pid": os.getpid(),
+                    "forward_call": counts[rank],
+                    "input_shape": [int(value) for value in input_ids.shape],
+                    "observed_ns": time.perf_counter_ns(),
+                }
+            )
+        return result
+
+    return forward
+
+
+def with_finalizer(original, finish):
+    @functools.wraps(original)
+    def invoke(*args, **kwargs):
+        try:
+            return original(*args, **kwargs)
+        finally:
+            finish()
+
+    return invoke
