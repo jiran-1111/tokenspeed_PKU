@@ -44,3 +44,7 @@ python -B .tmp/cached-propagation/invoke.py \
 [协议和复算说明](../../project/homework2_semantic_quality_20261026.md)补充四模型各八条CPU/TP1/TP2输出。[冻结manifest](semantic_quality_frozen_manifest.json)生成前固定；[全部输出与配对](semantic_quality.json)保存完整ID和文本。TP2/TP1一致数依次6/8、8/8、8/8、8/8，原始和EOS对齐计数相同。这不是答案正确率；0.8B/9B代码截断和0.8B共同不可靠称谓保留，原4B/9B短输入分叉仍未修复。
 
 [失败及设备释放](semantic_quality_failures_and_release.json)区分内部guard和外层driver终态，保留27TP1首次共享余量保护失败。后续空闲单chip独占TP1和原保护共享TP2成功；模型、配置、输入及1531核心源未变。[三个归档收据](semantic_quality_archive_receipts.json)全部逐SHA验证；[八个工具ZIP](semantic_quality_tools.json)保留准备失败和最终版本，最终分析器两端23测试、全结果复算一致。公开摘要没有服务器身份；严格重算需先恢复原始文件和controller，不能把公开标量复核说成硬件重跑。
+
+## 原分叉的分布诊断
+
+[分数平移与分布差异](../../project/homework2_logit_distribution_20261026.md)只使用原4B/9B共同前沿的112个完整向量，未重采NPU。180原文件SHA固定，两端40测试及全部140项配对复算通过；新量度没有替代原失败或形成新门槛。9B分叉步温度1诊断TV为0.341416，不能把差异全部解释成常数平移。数据、工具和超时保留记录分别见`frontier_distribution*.json`及工具ZIP。主报告与既有性能数据保持其原协议和结论。
