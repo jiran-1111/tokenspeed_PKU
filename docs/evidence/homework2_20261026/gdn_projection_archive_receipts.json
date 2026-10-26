@@ -1,0 +1,30 @@
+{
+  "expected_math_r1": {
+    "archive_sha256": "157fd2819bf4dfbc23ad17d7a12989829ad0c289a26a68bcad6d3b2990b33bb2",
+    "files": 18,
+    "bytes": 43643,
+    "original_inputs_unchanged": true,
+    "cpu_analysis_passed": true,
+    "checkpoint_expected_only": true,
+    "all_file_hashes_match": true
+  },
+  "actual_identity_capture": {
+    "archive_sha256": "bafddca23a3c7bcec323f1e3343ac8caf35bb5056edce661bd7c6304c2ecf8b9",
+    "files": 145,
+    "bytes": 55659847,
+    "jobs": 2,
+    "source_core_unchanged": true,
+    "all_own_contexts_released": true,
+    "original_inputs_unchanged": true,
+    "all_file_hashes_match": true
+  },
+  "linked_math_r2": {
+    "archive_sha256": "657eea7fe6c2709114d995ad9999cf0e905185ccd76e69dc280ef3276c2c8594",
+    "files": 19,
+    "bytes": 45291,
+    "original_inputs_unchanged": true,
+    "cpu_analysis_passed": true,
+    "same_capture_parameter_checks": 72,
+    "all_file_hashes_match": true
+  }
+}

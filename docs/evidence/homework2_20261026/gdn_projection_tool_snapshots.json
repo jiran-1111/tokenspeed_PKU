@@ -1,0 +1,26 @@
+{
+  "gdn_projection_r1": {
+    "files": 9,
+    "manifest_sha256": "024b6850df97baa4ecf36171099cd5797ce072d10aff0b7463dfc471bb93805e",
+    "archive_sha256": "841757bcd7d8864afc4161278ee2e721a826628dc65e943faa03e93888130533",
+    "server_folder": "cached_projection_r1_20261026",
+    "cpu_tests_passed": 27,
+    "exact_tested_bytes": true
+  },
+  "gdn_projection_r2": {
+    "files": 9,
+    "manifest_sha256": "b4ca5398338805cf15435de5ce2d280b1962e09f51753f3aa472e83d6a766e32",
+    "archive_sha256": "528ef12893bcb6f9d150d45ff0a3c55b7d4cfe34d861bad927c2848d0edec5b9",
+    "server_folder": "cached_projection_r2_20261026",
+    "cpu_tests_passed": 27,
+    "exact_tested_bytes": true
+  },
+  "gdn_identity_capture_r1": {
+    "files": 20,
+    "manifest_sha256": "fefa94585af9633c8a1a496acfc1997fef4281a39d25ecb9da09ebd7b091b83f",
+    "archive_sha256": "25f96ed2ccc6c19719fe0afbbe15022f15c74be87455a15af9ff6431b43cd229",
+    "server_folder": "gdn_identity_r1_20261026",
+    "cpu_tests_passed": 51,
+    "exact_tested_bytes": true
+  }
+}

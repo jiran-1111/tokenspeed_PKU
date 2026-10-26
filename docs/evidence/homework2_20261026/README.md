@@ -34,3 +34,7 @@ python -B .tmp/cached-propagation/invoke.py \
 ```
 
 两个CLI显式要求root、原任务选择清单、输出和CPU线程数，并校验case、guard、位置135/有效前缀136、dtype和真实状态映射。交叉分析验证A_log、dt_bias及逻辑Q/K/V卷积权重逐位匹配才计算替换；不把当前输入差异和历史差异当成可加贡献。重新采硬件还需同revision权重、匹配CANN/torch_npu及设备，须重新检查映射与后台并串行执行；恢复ZIP本身不是硬件运行授权。
+
+## 后续GDN投影与实际参数身份
+
+[投影及门控补充记录](../../project/homework2_gdn_projection_diagnosis_20261026.md)另取得72项实际参数身份、54项自身操作数参考及30原向量保持性。`gdn_projection_diagnosis.json`保留独立分析器的期望权重限定，并以单列的同批捕获证书关联实际参数身份；`gdn_runtime_parameter_identity.json`保存逐rank细节。三个新ZIP、工具身份和182项归档收据均使用`gdn_projection_*`或`gdn_identity_capture_r1`名称，先前缓存记录与失败文件保留。原4B/9B自由输出差异仍未修复。

@@ -63,4 +63,4 @@ TP1 rank0与TP2 rank0/1各保留原10个完整logits；**共30个向量相对上
 - [归档下载与逐文件SHA收据](../evidence/homework2_20261026/archive_receipts.json)：139项硬件、25项局部分析（含准备失败）及14项交叉分析，共178项均已下载并逐SHA核对。权重、大型张量和含账户信息的原日志只保存在工作区。
 - [冻结工具清单与ZIP身份](../evidence/homework2_20261026/tool_snapshots.json)，[复算命令](../evidence/homework2_20261026/README.md)。历史失败与成功工具各自保留，没有覆盖重写成成功。
 
-本批还未独立复算GDN gated norm、其输出投影和MLP GEMM，也没有为FA QK norm/RoPE及全部prefix建立完整参考。下一步优先使用已保存的实际输入，补这些投影与门控边界的参考和权重身份；如需新增硬件观察，继续先固定工具、串行采集并复查全部原向量。任何数学修改须另固定源码再验证，不能用现有同源性能认证新实现。
+本批还未独立复算GDN gated norm、其输出投影和MLP GEMM，也没有为FA QK norm/RoPE及全部prefix建立完整参考。后续[投影及门控补充](homework2_gdn_projection_diagnosis_20261026.md)已完成前述GDN/MLP局部参考和72项同批实际参数认证，保留全部非零结果；原自由输出差异仍未修复。如需新增硬件观察，继续先固定工具、串行采集并复查全部原向量。任何数学修改须另固定源码再验证，不能用现有同源性能认证新实现。
