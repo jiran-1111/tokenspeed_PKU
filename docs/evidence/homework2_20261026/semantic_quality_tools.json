@@ -1,0 +1,79 @@
+{
+  "snapshots": [
+    {
+      "name": "semantic_cpu_r1",
+      "archive": "semantic_cpu_r1.zip",
+      "archive_sha256": "78e630fecc49e9a094c0e714b4ec621c0d8c30c9d3073fdcd23d03173896c2a8",
+      "manifest_sha256": "2519f3728191c15e4b0ea965f75d2014dd202fd16b8f1102d469149dc584f0d6",
+      "files": 5,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_cpu_r2",
+      "archive": "semantic_cpu_r2.zip",
+      "archive_sha256": "5ef0ca371b7d939dfa1261327554ca3ae95db64cf4b8c6caa1a53fa4d4e6f9d7",
+      "manifest_sha256": "e92b33f9ecd72016d647759868ff4c63913d722c02787e57436a8201c12ffdfd",
+      "files": 6,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_cpu_r3",
+      "archive": "semantic_cpu_r3.zip",
+      "archive_sha256": "99a678c34594a00074f967698a19258f93b04f75cc7bdaccb4ca16ec3f33aa26",
+      "manifest_sha256": "04e3c7cc77e845149a9664000e329d7727fac81bc4910eebeb20e8e8099d9151",
+      "files": 6,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_cpu_r4",
+      "archive": "semantic_cpu_r4.zip",
+      "archive_sha256": "4c502917bd3c6fcdcb77a7165d68929c1e66a14386eaa6c4d7c8e3b10fc9d1fb",
+      "manifest_sha256": "563df0e9c190d96761daa8fd03a2084f2796c4ddb9e43a3fde519db8966bfc9d",
+      "files": 7,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_native_r1",
+      "archive": "semantic_native_r1.zip",
+      "archive_sha256": "8d3d4e69e14a23f4910dfd74ca44007025234a17b0e4d13a43fc515c64bb221e",
+      "manifest_sha256": "2b97ca07b5eb7d159665d693e3a359441c5d5e577cec0e0b356d04a38a1a1cab",
+      "files": 9,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_native_r2",
+      "archive": "semantic_native_r2.zip",
+      "archive_sha256": "68193e62a3074ce3535cfefe7acd94db5839c888227daa39b502490dfdb535e6",
+      "manifest_sha256": "2a78c578047d6ea0efe257a9b5379b65c83819f3b5aaa87806199902acfd682d",
+      "files": 9,
+      "server_execution": true
+    },
+    {
+      "name": "semantic_analysis_r1",
+      "archive": "semantic_analysis_r1.zip",
+      "archive_sha256": "e02bbda9308d30c341ab0babb52f958688d303c54d4f4d4e3e3119d01142f54f",
+      "manifest_sha256": "1ed8fd5f493691421c844051867ed633a631b05144ca1e939616e3a45d3c454f",
+      "files": 3,
+      "server_execution": false
+    },
+    {
+      "name": "semantic_analysis_r2",
+      "archive": "semantic_analysis_r2.zip",
+      "archive_sha256": "68f1910c9dd62da36308c2dc2f59395289f4c8da199c17fe55055d877719945e",
+      "manifest_sha256": "c94a9a3a1988299cae346d1ceb8c3fad3ffd9b9e2e830c90162e7bb2c5747629",
+      "files": 3,
+      "server_execution": true
+    }
+  ],
+  "tests": {
+    "cpu_r1_server": 6,
+    "cpu_r2_server": 10,
+    "cpu_r3_server": 10,
+    "cpu_r4_server": 14,
+    "native_r1_server": 8,
+    "native_r2_server": 13,
+    "analysis_r1_local": 14,
+    "analysis_r2_local_and_server": 23
+  },
+  "tool_versions_do_not_change_core_math": true
+}

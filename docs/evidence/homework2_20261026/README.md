@@ -1,4 +1,4 @@
-# 9B缓存step8补充证据
+# 作业2：缓存诊断与多输入补充证据
 
 用途与结论见[诊断记录](../../project/homework2_cached_step8_diagnosis_20261026.md)。仅针对原9B短输入的实际缓存step8；核心1531源未变，30个原前沿向量逐位保持。**4B/9B自由输出差异仍未修复，不新增通过阈值，不作为性能结论。**
 
@@ -38,3 +38,9 @@ python -B .tmp/cached-propagation/invoke.py \
 ## 后续GDN投影与实际参数身份
 
 [投影及门控补充记录](../../project/homework2_gdn_projection_diagnosis_20261026.md)另取得72项实际参数身份、54项自身操作数参考及30原向量保持性。`gdn_projection_diagnosis.json`保留独立分析器的期望权重限定，并以单列的同批捕获证书关联实际参数身份；`gdn_runtime_parameter_identity.json`保存逐rank细节。三个新ZIP、工具身份和182项归档收据均使用`gdn_projection_*`或`gdn_identity_capture_r1`名称，先前缓存记录与失败文件保留。原4B/9B自由输出差异仍未修复。
+
+## 四模型冻结语义请求
+
+[协议和复算说明](../../project/homework2_semantic_quality_20261026.md)补充四模型各八条CPU/TP1/TP2输出。[冻结manifest](semantic_quality_frozen_manifest.json)生成前固定；[全部输出与配对](semantic_quality.json)保存完整ID和文本。TP2/TP1一致数依次6/8、8/8、8/8、8/8，原始和EOS对齐计数相同。这不是答案正确率；0.8B/9B代码截断和0.8B共同不可靠称谓保留，原4B/9B短输入分叉仍未修复。
+
+[失败及设备释放](semantic_quality_failures_and_release.json)区分内部guard和外层driver终态，保留27TP1首次共享余量保护失败。后续空闲单chip独占TP1和原保护共享TP2成功；模型、配置、输入及1531核心源未变。[三个归档收据](semantic_quality_archive_receipts.json)全部逐SHA验证；[八个工具ZIP](semantic_quality_tools.json)保留准备失败和最终版本，最终分析器两端23测试、全结果复算一致。公开摘要没有服务器身份；严格重算需先恢复原始文件和controller，不能把公开标量复核说成硬件重跑。

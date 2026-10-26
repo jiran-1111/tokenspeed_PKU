@@ -1,0 +1,103 @@
+{
+  "native_controller_receipts": [
+    {
+      "original_file_sha256": "ee0b8e0b409de0e332e76f5070c83ebad0833980c269e67bd743d1e7150d1cb9",
+      "original_status": "failed",
+      "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+      "finished": {
+        "semantic_quality_0.8b_tp1_20261026_r1": {
+          "job": "semantic_quality_0.8b_tp1_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_0.8b_tp2_20261026_r1": {
+          "job": "semantic_quality_0.8b_tp2_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_4b_tp1_20261026_r1": {
+          "job": "semantic_quality_4b_tp1_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_4b_tp2_20261026_r1": {
+          "job": "semantic_quality_4b_tp2_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_9b_tp1_20261026_r1": {
+          "job": "semantic_quality_9b_tp1_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_9b_tp2_20261026_r1": {
+          "job": "semantic_quality_9b_tp2_20261026_r1",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_27b_tp1_20261026_r1": {
+          "job": "semantic_quality_27b_tp1_20261026_r1",
+          "exit_code": 1,
+          "own_contexts_released": true
+        }
+      }
+    },
+    {
+      "original_file_sha256": "ea69ad318d372e472c48c855001ab9bb4acecf46b5196caff0668d618f3c4423",
+      "original_status": "collected",
+      "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+      "finished": {
+        "semantic_quality_27b_tp1_20261026_r2": {
+          "job": "semantic_quality_27b_tp1_20261026_r2",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        },
+        "semantic_quality_27b_tp2_20261026_r2": {
+          "job": "semantic_quality_27b_tp2_20261026_r2",
+          "exit_code": 0,
+          "own_contexts_released": true,
+          "quality_status": "collected",
+          "requests": 8,
+          "guard_verified": true
+        }
+      }
+    }
+  ],
+  "failed_run": {
+    "job": "semantic_quality_27b_tp1_20261026_r1",
+    "original_quality_sha256": "1ca760681feb337ca310dbbd532c095b363ceeeac0717c6e240c4c3d18e68160",
+    "status": "failed",
+    "generated_requests": 0,
+    "cause": "Unchanged shared guard reserve>=8192MB was triggered during27BTP1 initialization; selected chip had been idle.",
+    "followup": "Same source/model/input/config; existing exclusive idle-chip lease forTP1. TP2 shared guard unchanged."
+  },
+  "preparation_failures_retained": [
+    "R1 missing optional generation_config; no manifest or generation",
+    "R2 installed tokenizer returned BatchEncoding by default; no manifest or generation",
+    "R3 first0.8B CPU rejected same-workspace model symlink; zero records",
+    "AnalysisR1 local only: did not require outer controller completion; superseded by strict R2, original result retained"
+  ],
+  "original_4b_9b_failure_removed": false,
+  "original_1pct_hw1_gate_unchanged": true
+}
