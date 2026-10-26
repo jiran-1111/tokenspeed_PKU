@@ -56,4 +56,4 @@ python .tmp/fa7-analysis/invoke.py \
   --output .tmp/fa7-new-analysis.json --threads 8
 ```
 
-下一步应优先补9B cached step8的真实KV、请求位置与GDN状态边界；这批Prefill结果不能证明后续缓存没有问题。任何数学实现修改都须另固定源码并重新验证，不拿本次相同源的性能数据认证新实现。
+后续[9B cached step8补采](homework2_cached_step8_diagnosis_20261026.md)已取得真实KV、请求位置与GDN状态边界，并完成CPU输入/历史交叉替换；本记录的Prefill结果本身仍不能证明后续缓存没有问题。任何数学实现修改都须另固定源码并重新验证，不拿本次相同源的性能数据认证新实现。

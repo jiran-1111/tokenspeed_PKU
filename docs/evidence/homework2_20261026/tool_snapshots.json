@@ -1,0 +1,42 @@
+{
+  "cached_capture_r1": {
+    "files": 18,
+    "manifest_sha256": "196f6fdd190bf581809f008fbfeb4f9872b234b8799e3bb3b06635a72f429723",
+    "archive_sha256": "c6752f20cd7095e6b0e989d075e1e0aaf6bf47c5d23c9428ab28733c6e536e57",
+    "server_folder": "cached_diagnostic_r1_20261026",
+    "tests_collected": 46,
+    "tests_passed": 46,
+    "tests_failed": 0,
+    "exact_tested_bytes": true
+  },
+  "cached_analysis_r1": {
+    "files": 7,
+    "manifest_sha256": "1dd872e885a282d31059e3a431ce7901a30a7c462684c1a66a9a7eee61cdd8d5",
+    "archive_sha256": "6ebca3ff5b3afb035547e41cc9a9ec6a433c4770faf55af1df741e632f570d53",
+    "server_folder": "cached_analysis_r1_20261026",
+    "tests_collected": 18,
+    "tests_passed": 17,
+    "tests_failed": 1,
+    "exact_tested_bytes": true
+  },
+  "cached_analysis_r2": {
+    "files": 7,
+    "manifest_sha256": "fbf646ef348d378794c0988566e252db6c7cf48cf58284da64b1eaf4a37801d7",
+    "archive_sha256": "6e1df2ab024c389e0f937646302086c196015f3893fe8a811c8b0f03e19ca883",
+    "server_folder": "cached_analysis_r2_20261026",
+    "tests_collected": 18,
+    "tests_passed": 18,
+    "tests_failed": 0,
+    "exact_tested_bytes": true
+  },
+  "cached_propagation_r1": {
+    "files": 8,
+    "manifest_sha256": "7ce3d2b118fb427482ca8a341f7ba3a64d7b25923671146b2df3cc7bd5ea5259",
+    "archive_sha256": "bcce6fadd768e9c0202a4a4dc0631d0c93eab6eb01ac2788cef7ab88128550dd",
+    "server_folder": "cached_propagation_r1_20261026",
+    "tests_collected": 26,
+    "tests_passed": 26,
+    "tests_failed": 0,
+    "exact_tested_bytes": true
+  }
+}

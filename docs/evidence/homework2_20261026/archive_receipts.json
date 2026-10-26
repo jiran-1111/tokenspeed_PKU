@@ -1,0 +1,30 @@
+{
+  "captures": {
+    "archive_sha256": "86e704cd32f36dfb431d01b4fe3f10a8a70df323ca2765d1de3bdea24402e8b4",
+    "files": 139,
+    "bytes": 55639830,
+    "jobs": 2,
+    "source_core_unchanged": true,
+    "all_own_contexts_released": true,
+    "original_inputs_unchanged": true,
+    "all_file_hashes_match": true
+  },
+  "analysis": {
+    "archive_sha256": "a6768ce556292c9f4942a7d833f05b5586708099c11bbfc79ad32b12d73ab371",
+    "files": 25,
+    "bytes": 116374,
+    "original_inputs_unchanged": true,
+    "cpu_analysis_passed": true,
+    "preparation_failure_r1_retained": true,
+    "all_file_hashes_match": true
+  },
+  "counterfactual": {
+    "archive_sha256": "d33fdf54c3959e16e6841dacee649eb354732de71d936b342312a808f5da3fc9",
+    "files": 14,
+    "bytes": 60789,
+    "original_inputs_unchanged": true,
+    "cpu_analysis_passed": true,
+    "counterfactual_only": true,
+    "all_file_hashes_match": true
+  }
+}

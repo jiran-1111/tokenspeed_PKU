@@ -49,3 +49,5 @@ python -B .tmp/hw2-reproduce/analysis/analyze_shared_profiler_native_cached_2026
 ## 同源FA7补充诊断
 
 [FA7完整Prefill观察](../../project/homework2_fa7_diagnosis_20261025.md)已取得两模型48项实际参数分片核对、逐算子FP32参考及84向量结果保持性复验。该层被测attention与MLP SUM均与实际部分和的BF16舍入和逐位一致；原4B/9B自由输出失败仍未修复，cached step8 KV尚未覆盖。大型原始和分析归档收据、工具ZIP及公开标量见上述记录；作业2主报告保持已发布的四任务版本。
+
+后续[9B cached step8实际KV与GDN状态观察](../../project/homework2_cached_step8_diagnosis_20261026.md)已补采完成，另保留30向量保持性、178项归档及CPU输入/历史交叉替换。它限制了该步KV写入和SSM单步更新错误的解释，仍未修复原输出差异。
