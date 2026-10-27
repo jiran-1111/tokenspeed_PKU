@@ -1,0 +1,70 @@
+{
+  "passed": true,
+  "scope": "Independent NumPy recomputation from full saved vectors; raw PT interpretation remains the bound CPU producer; no model acceptance threshold",
+  "arrays": 20,
+  "vectors": 280,
+  "pair_comparisons": 588,
+  "max_floating_metric_difference": 3.3584246494910985e-15,
+  "formula_recomputation_tolerance": 1e-12,
+  "formula_tolerance_is_engine_gate": false,
+  "array_hashes_all_equal": true,
+  "top10_exact": true,
+  "report_sha256": "7545727f3f1dffb00eeede255c16b36ec1be656ee4087f72be1f12e1e824cb91",
+  "npz_sha256": "543c88f01d741c67e90bc6adebb06f301e2dd9158d1c51f22a7aa0fc8c06a1fa",
+  "script_sha256": "58b337c423e74fed1cb2e7fb8d577f27f29ca96ccb2cbd4f04a11688f8eeb52a",
+  "summary": {
+    "4b": {
+      "r2": {
+        "vectors": 18,
+        "max_relative_l2": 0.30816709801536185,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 6.046875,
+        "argmax_matches": 17,
+        "max_offline_temperature1_tv": 0.031226134971031314
+      },
+      "r9": {
+        "vectors": 18,
+        "max_relative_l2": 0.1398977602365223,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 2.38671875,
+        "argmax_matches": 18,
+        "max_offline_temperature1_tv": 0.031188239602957146
+      },
+      "r10": {
+        "vectors": 18,
+        "max_relative_l2": 0.2602870655017802,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 4.75,
+        "argmax_matches": 18,
+        "max_offline_temperature1_tv": 0.021055939864307725
+      }
+    },
+    "9b": {
+      "r2": {
+        "vectors": 10,
+        "max_relative_l2": 0.3852801253118086,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 12.304100751876831,
+        "argmax_matches": 9,
+        "max_offline_temperature1_tv": 0.34141632997287685
+      },
+      "r9": {
+        "vectors": 10,
+        "max_relative_l2": 0.27689970284158844,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 9.8426274061203,
+        "argmax_matches": 10,
+        "max_offline_temperature1_tv": 0.29836521760729123
+      },
+      "r10": {
+        "vectors": 10,
+        "max_relative_l2": 0.23122590357308898,
+        "undefined_relative_l2_steps": [],
+        "max_abs": 10.140221357345581,
+        "argmax_matches": 10,
+        "max_offline_temperature1_tv": 0.4133427941663792
+      }
+    }
+  },
+  "candidate_adopted": false
+}

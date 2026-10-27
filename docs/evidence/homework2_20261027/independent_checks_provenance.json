@@ -1,0 +1,9 @@
+{
+  "public_script_sha256": {
+    "check_gdn_sensitivity.py": "c4598cd0c775c545d6802b91628163a12308302dcede60e31f56fc4424662c23",
+    "check_head_local.py": "2e584c9b8e66b5d7b5174ae8e2830d8963ebac7e6c46791e7b21fd991136528d"
+  },
+  "public_summary_privacy": "Server account and absolute private path omitted; original immutable result and SHA retained in workspace archive",
+  "private_numpy_receipt_sha256": "9186d9de3ee09f29d28e44648bc34a13462653d1f4c54dd498938e3044baeaa5",
+  "local_review_scope": "NumPy formula/metrics recomputation from bound NPZ and raw file SHA checks. Raw PT operands were not independently re-extracted locally; checkpoint large files were not locally reread."
+}

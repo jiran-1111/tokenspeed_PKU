@@ -1,0 +1,58 @@
+{
+  "core_source_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "snapshots": {
+    "cached_step9_capture_r1": {
+      "archive_sha256": "9a25e42726af6c84575fa2eb92d99ac74644d510288d1c58bc3e0a018cc378a8",
+      "tool_manifest_sha256": "44f00a99235ec4cdc24996e6a82b50da268c54282c980799ee6614c153cab172",
+      "tool_files": 23
+    },
+    "cached_step9_analysis_r1": {
+      "archive_sha256": "0488bac0f9efa4203fdc27d60cfa4f376de10aa8edba47f344d7f6f9ace65e95",
+      "tool_manifest_sha256": "f420aa71a68b3ae476ac49d582fff37962592ae1f59ef812524d99dcf7ff49c9",
+      "tool_files": 13
+    },
+    "cached_step9_head_reference_r2": {
+      "archive_sha256": "93f393a287e664767efda100d9120dd956979f3982a0e03a24cb81d1c74f883d",
+      "tool_manifest_sha256": "389ebf94017adbc82b1e1a460a21e1a7ed9b57661b52ce835441ebe7202e1d1e",
+      "tool_files": 4
+    },
+    "gdn_sensitivity_r1": {
+      "archive_sha256": "7667f25cd30485fba41127b14cc760da46892d00ebbc1f8ad677e0d9a0f8e40e",
+      "tool_manifest_sha256": "98dd2f786201c358819a0ba6d18b824225776c3ecfb0b7f9ff4695ca16a11691",
+      "tool_files": 8
+    }
+  },
+  "raw_capture_archive": {
+    "archive_sha256": "f738bea2bf6df10704d2cfdce40b691de0ff079145d31c76cc6cd6ce4288d8cf",
+    "bytes": 70649277,
+    "files": 142,
+    "tests_passed": 70,
+    "same_card_serial": true,
+    "all_own_contexts_released": true,
+    "vectors_original_equal": 30,
+    "npu_math_changed": false,
+    "all_file_hashes_match": true
+  },
+  "cpu_archive": {
+    "archive_sha256": "f4975719d27926848e2f6b0e30d9c85642447b721bf6a7c58d04246d8336127f",
+    "bytes": 13310589,
+    "files": 51,
+    "npu_execution": false,
+    "failed_head_r1_preserved": true,
+    "all_file_hashes_match": true
+  },
+  "analysis_sha256": "c8f9dab841658a72b3f16ae7fb3fc5eaf1869b9144c7c58fc0c92a74b6bbf8f4",
+  "head_reference_sha256": "8ef26fcfb937a0414a3d815649bf70b25b991cbab43d4846508ff9bc030de5a0",
+  "sensitivity_sha256": "e6e7351ade0db80eed79a1d6cda01712c68dd55dd791f0dab1385abe6fedf6e2",
+  "tests": {
+    "capture_server": 70,
+    "step9_analysis_local_and_server": 41,
+    "head_r2_local_and_server": 45,
+    "sensitivity_server": 52
+  },
+  "failed_head_r1_preserved": true,
+  "head_r1_failure": "JSON integer-versus-string metadata keys; R2 only canonicalized comparison, unchanged input/math/selection",
+  "source_files": 1531,
+  "no_new_threshold": true,
+  "not_general_correctness_certificate": true
+}

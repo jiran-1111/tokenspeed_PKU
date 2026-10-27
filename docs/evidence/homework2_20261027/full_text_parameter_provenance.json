@@ -1,0 +1,39 @@
+{
+  "archive": {
+    "archive_sha256": "2d69d94bf2598880650d7b3472fc7a9b473719f3ed4a76465173a6e82b24f30e",
+    "bytes": 103976100,
+    "files": 429,
+    "parameter_checks": 2472,
+    "original_vectors_preserved": 84,
+    "all_own_contexts_released": true,
+    "r1_scope_failure_preserved": true,
+    "visual_parameters_certified": false,
+    "runtime_math_changed": false,
+    "analysis_sha256": "cd323e59d8ba4d488eded89488fb50c52f6b4aae86be2f15da39c5d6b5b76050",
+    "all_file_hashes_match": true
+  },
+  "analysis_original_sha256": "cd323e59d8ba4d488eded89488fb50c52f6b4aae86be2f15da39c5d6b5b76050",
+  "published_summary_sha256": "48871928832708938573a88925be286d4c7b0031061fe38cc55847c221babe7f",
+  "ledger_zip_sha256": "2ea4e83014ab130fef09cfaa8ce0f0e285d13b5638c4aecc62ae4bde9048d735",
+  "server_tool_manifest_sha256": "794665910a0f3067948b082da725b5ef76a5b6101d113101d7341bdc4ce9e6fd",
+  "tool_zip_sha256": "eb405a468b5c67f70b60fc6f897de00df5bf401e78d6350708e9d1fcb8422c75",
+  "server_tests_zero_skips": 29,
+  "scope_failure_preserved": {
+    "status": "failed",
+    "jobs": {
+      "full_parameter_4b_tp1_20261027_r1": {
+        "exit_code": -10,
+        "own_contexts_released": true
+      }
+    },
+    "reason": "R1 failed closed on visual parameters before first original-vector observation; R2 explicitly records exclusions and blocks all visual module calls during armed text forwards"
+  },
+  "actual_parameter_bytes_recomputed_locally": false,
+  "local_review_script_actual_body_sha256": "71cc4b8f7616c0305c666c3e9182d82d04db7476f044a28b6e9d6a56e5d6d34d",
+  "local_review_script_public_sha256": "20bc03b62ce56c788b5e513063fa7948400f784c707cff9ab2cdd7ded9dd114d",
+  "public_script_difference": "Only full MIT header added to actual local checker body",
+  "runtime_changed": false,
+  "original_4b_9b_failures_resolved": false,
+  "new_threshold": null,
+  "certification_scope": "New original-math text job instances, not all multimodal parameters or historical job instance identities"
+}

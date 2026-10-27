@@ -1,6 +1,6 @@
 # 智能计算系统作业2实验报告：双 chip 并行与通信分析
 
-小组成员：张晟祺、李书砚、计然。实验与数据整理截至2026年10月26日。
+小组成员：张晟祺、李书砚、计然。实验与数据整理截至2026年10月27日。
 
 本报告按作业2的四项任务组织。四模型均完成同卡TP2连续推理；0.8B与27B在原固定32输出协议下与TP1一致，4B与9B的原短输入差异仍未解决；另补充四模型八条语义请求的TP1/TP2及CPU参考比较，保留表达差异、代码截断和内容质量问题。新增数据覆盖0.8B两长度×两并发的TP1/TP2性能、逐chip显存、双rank设备时间线，以及27B性能和容量；减小Prefill分块的策略实验取得了性能下降的结果。以下所有性能结论限定于记录了后台占用的共享环境。
 
@@ -23,6 +23,8 @@
 实现复用 TokenSpeed 的 Engine、C++ 调度器、分片加载器和 HCCL 后端。四组 `qwen35_*_tp{1,2}.yaml` 成对配置仅改变 `tp_size`；TP2 启动两个 worker，设置 rank 并绑定逻辑设备，以互补分片共同计算同一模型。四模型主实验沿用1531项核心运行源，SHA256 为 `2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3`；采集与诊断工具另留身份。各模型 revision、权重文件和精度在比较前后核对。主计算为 BF16，GDN SSM 状态为 FP32；9B 输出头另为 FP32，两种 TP 保持一致。[源清单](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/source_manifest.json)、[模型身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/model_artifacts.json)
 
 本轮功能、性能及 Profiler 允许在获准的共享条件下执行，每次重新读取映射、后台进程身份及显存余量；只清理自身实验进程。共享占用对性能和 HBM 归属的限制在第3、4章分别说明。
+
+本作业使用文本输入，不评价图像或视频能力。原配置实际加载的视觉分支不因本轮诊断而关闭；文本参数检查的范围与未认证的视觉参数分别记录。
 
 ### 1.2 典型4B层的切分与通信
 
@@ -90,17 +92,24 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 
 32层共65个规范化边界仅比较实际最后token行，第一层输入相同，注意力后即出现差异并在部分位置放大。进一步抓取**第0层GDN及其MLP**的完整128行操作数；每模型10项参数×TP1/rank0/rank1共30项分片均逐位匹配。QKVZBA重组投影relative-L2为4B的0.00002225、9B的0.00008193，注意力行投影规约后增至0.00336435、0.00240218。该层HCCL返回值等于两rank实际部分和经BF16舍入的结果。此检查没有覆盖FA或全模型；eager末步虽重现原图模式首差，仍不能撤销原自由输出失败或将差异全部认定为正常。[逐层诊断](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/layerwise_diagnosis_20261024.json)、[首层核对](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/first_layer_diagnosis_20261024.json)
 
+新增同源重复执行还检查了4B、9B全部32个文本层、embedding与输出头。每个rank观察412项，包括学习参数、81个实际Gemma有效权重和24个实际卷积权重视图；两模型的TP1及TP2两rank合计2472项，均与固定checkpoint期望分片逐块字节一致。全部84个原logits也与原基线字节相同，四任务退出并释放自身上下文。这排除了本批重复执行中遗漏文本层的参数加载/切分错误，未消除原输出差异。视觉参数逐名排除且未认证，观测期间阻断视觉模块调用；参数身份不能代替算子、缓存或语义正确性。[完整参数认证](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261027/full_text_parameter_identity.json)
+
 ### 2.4 独立HF参考与未采纳精度候选
 
+原9B分叉步step9另捕获实际缓存、状态、65个规范化边界和输出头输入，30个原logits保持逐位相同。三个rank的195个规范化BF16候选有189个逐位一致，其余6个各差一个元素，192个残差存储候选全同；本步final norm跨TP relative-L2为0.266842。输出头以各自真实输入和同checkpoint期望权重做CPU FP64复算，自身relative-L2均约4.7e-7，并分别重现25389、35378，支持本步输出差异跟随前层输入差异。此处没有导出实际完整输出头矩阵，不能把期望权重复算当成实际参数身份认证。step8九组GDN输入也未触发所怀疑的softplus消减为零；这些局部检查未解释全部传播起因。[实际缓存与局部精度检查](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/homework2_cached_precision_20261027.md)
+
 HF11在同权重、同前沿下显式关闭 matmul、卷积两项HF32，并核对权重、状态及logits文件身份。HF NPU FP32相对CPU FP32的最大relative-L2为4B的0.00027410、9B的0.00005271，argmax分别18/18、10/10。该结果支持独立参考间误差较小，不能认证原运行核心或图模式。BF16参考沿用HF10，卷积开关状态未记录，且GDN缓存为BF16、原运行时SSM为FP32，不支持单因素归因。
+
+下表均比较候选的TP2与TP1完整logits，argmax一致数也只指两种TP。
 
 | 外部覆盖候选（均未采纳） | 4B最大relative-L2／argmax一致 | 9B最大relative-L2／argmax一致 |
 | --- | --- | --- |
 | R7：提高行投影输出与SUM精度 | 0.22511805／16/18 | 0.16997695／9/10 |
 | R8：再提高残差存储与累积精度 | 0.20715290／18/18 | 0.25554309／10/10 |
 | R9：再改变列投影计算精度 | 0.13989776／18/18 | 0.27689970／10/10 |
+| R10：再保留规范化FP32输出 | 0.26028707／18/18 | 0.23122590／10/10 |
 
-这些候选改变数学路径，结果呈混合变化；R8/R9的4B末步两种TP均选198，CPU仍选271。未新增验收门槛，未修复原4B/9B自由输出差异，也不能据此排除核心bug。[补充数值证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/additional_numerical_capacity.json)
+这些候选改变数学路径，结果呈混合变化；R8–R10的4B末步两种TP均选198，CPU仍选271。R10的9B最大relative-L2下降，但离线温度1最大TV为0.413343，高于原实现0.341416；TV是离线诊断，不是原greedy采样分布。未新增验收门槛，未修复原4B/9B自由输出差异，也不能据此排除核心bug，故这些候选均未采纳。[既有候选](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/additional_numerical_capacity.json)、[R10全部向量指标及身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261027/norm_precision_r10_provenance.json)
 
 ### 2.5 四模型多输入生成比较与质量边界
 
