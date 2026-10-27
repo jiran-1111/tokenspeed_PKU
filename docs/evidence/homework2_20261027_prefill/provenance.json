@@ -1,0 +1,60 @@
+{
+  "scope": "New versioned CPU-only diagnosis; original runtime, inputs and failures preserved",
+  "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "core_files": 1531,
+  "conditional_analysis_original_sha256": "1e4014ab18adf8f31acab1b01bfa2b9ae98efe72dc43f440f819cd1aa30a7f56",
+  "conditional_analysis_public_sha256": "e9ae638664ae6ca13f3d7bc2ffc862b0faa7a5751aaf9b62ce37ee3d584ada5a",
+  "public_serialization_values_identical": true,
+  "tool_archives": {
+    "conditional_cpu_tools.zip": "5a5f38bc4dafce6c06c99f7f8d83ac00593c0a58d9a6ef18afbc253fcd3b2b30",
+    "row_cpu_tools.zip": "36fbeab53195d198817068b98e81da130b4fa966ed501c3896bdb0e366fbab10",
+    "local_verification_tool.zip": "011bb17df2a4521bbadb68e459056e9842b940fc19dff11355051204a005c227"
+  },
+  "conditional_tool_manifest_sha256": "f80fcd33238370cb702fd3bc74ba95c9822d326c5c65317f3c3dc41a5414b7ee",
+  "row_tool_manifest_sha256": "b988db858c245e83d511a8b2b642b2a29c2af3d20831cf535a0161c07341893a",
+  "tests": {
+    "local": "41 passed / 0 skipped",
+    "server_conditional": ".........................................                                [100%]\n41 passed in 0.31s",
+    "server_row": ".........................................                                [100%]\n41 passed in 0.30s"
+  },
+  "download": {
+    "archive_sha256": "01350cdef8b34e7d2c092d41270d5686a2dce3d7310c20f6d32af99637300920",
+    "bytes": 175261112,
+    "files": 23,
+    "runtime_math_changed": false,
+    "new_npu_experiment": false,
+    "source_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+    "all_file_hashes_match": true
+  },
+  "local_verification": {
+    "passed": true,
+    "metric_groups_independently_recomputed": 3138,
+    "max_metric_difference": 1.3010426069826053e-18,
+    "raw_input_files_rehashed": 38,
+    "core_files_rehashed": 1531,
+    "small_parameter_value_digests_recomputed": 24,
+    "archive_files_verified": 23,
+    "cpu_reference_algorithm_independently_reimplemented": false,
+    "checkpoint_bytes_reloaded_locally": false,
+    "raw_pt_reextracted_locally": false,
+    "scope": "Independent NumPy recomputation of saved metrics, BF16 sum and 24 small parameter byte digests; actual checkpoint/PT binding and mathematical reference execution performed by frozen server CPU tools.",
+    "analysis_sha256": "1e4014ab18adf8f31acab1b01bfa2b9ae98efe72dc43f440f819cd1aa30a7f56",
+    "row_analysis_sha256": "29083f4b60e3a1938bbb73f5b14ff775d325819a2f58d3fbefa358e31ad97101",
+    "script_sha256": "3332541f655c344bb37ac9d921b4589772faf93c9dd65230fc9b03e7f8cb540b",
+    "model_acceptance_threshold_added": false
+  },
+  "public_local_verification_tool": {
+    "sha256": "3085720b4e5e828426decd204f547b78da5eb9d2d3731ec99fd10c1699805c1d",
+    "only_added_full_mit_comment_header": true
+  },
+  "runtime_math_changed": false,
+  "actual_initial_state_observed": false,
+  "new_npu_experiment": false,
+  "full_model_correctness_certified": false,
+  "acceptance_threshold_added": false,
+  "conclusion": "Conditional first-layer Prefill closely matches actual own operands. Same-input BF16 partition storage reproduces observed first-layer row difference scale. Original full-model differences remain; no causal percentage or universal correctness claim.",
+  "row_analysis_original_sha256": "29083f4b60e3a1938bbb73f5b14ff775d325819a2f58d3fbefa358e31ad97101",
+  "row_analysis_public_sha256": "c665c569d4b8bcef23d12542af4b38e39e0db0471afd22f8d457fa6d1b555002",
+  "public_row_serialization_values_identical": true,
+  "public_row_serialization_change": "Added final newline required by repository end-of-file hook; no field/value changed"
+}

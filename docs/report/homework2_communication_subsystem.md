@@ -94,6 +94,8 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 
 新增同源重复执行还检查了4B、9B全部32个文本层、embedding与输出头。每个rank观察412项，包括学习参数、81个实际Gemma有效权重和24个实际卷积权重视图；两模型的TP1及TP2两rank合计2472项，均与固定checkpoint期望分片逐块字节一致。全部84个原logits也与原基线字节相同，四任务退出并释放自身上下文。这排除了本批重复执行中遗漏文本层的参数加载/切分错误，未消除原输出差异。视觉参数逐名排除且未认证，观测期间阻断视觉模块调用；参数身份不能代替算子、缓存或语义正确性。[完整参数认证](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261027/full_text_parameter_identity.json)
 
+首层完整128行另以CPU FP32/FP64复算卷积、门控、递推与带门控规范化。实际GDN输出相对FP32条件参考的relative-L2在六份rank上为1.91e-6–3.28e-6；旧记录未捕获真实初态，零初态参考不构成历史初始化认证。进一步给完整和分片投影相同输入，仅加入BF16部分结果存储与求和，4B/9B相对差异为0.00336433/0.00240203，接近实际0.00336435/0.00240218；实际TP2相对各自输入分片参考为1.13e-5/5.12e-6。这为被测首层跳变提供具体舍入解释，不能据此认证全部32层后的差异均正常。所有非零残差、四种参考及逐行结果保留；3138组指标已本地复算，未新增运行源码或NPU实验。[完整参考与分片存储对照](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/homework2_prefill_reference_20261027.md)
+
 ### 2.4 独立HF参考与未采纳精度候选
 
 原9B分叉步step9另捕获实际缓存、状态、65个规范化边界和输出头输入，30个原logits保持逐位相同。三个rank的195个规范化BF16候选有189个逐位一致，其余6个各差一个元素，192个残差存储候选全同；本步final norm跨TP relative-L2为0.266842。输出头以各自真实输入和同checkpoint期望权重做CPU FP64复算，自身relative-L2均约4.7e-7，并分别重现25389、35378，支持本步输出差异跟随前层输入差异。此处没有导出实际完整输出头矩阵，不能把期望权重复算当成实际参数身份认证。step8九组GDN输入也未触发所怀疑的softplus消减为零；这些局部检查未解释全部传播起因。[实际缓存与局部精度检查](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/homework2_cached_precision_20261027.md)
