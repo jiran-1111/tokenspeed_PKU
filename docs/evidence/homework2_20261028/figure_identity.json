@@ -1,0 +1,16 @@
+{
+  "figure_sha256": "6b61dd4000c0c2e650c7626b498e11135dc8069b7261553aff85266f87c5aa07",
+  "csv_sha256": "05cbe8dd1aae4c6712af8ad4eb6cb10f479ed9cc1469de68241df829bc38d263",
+  "metrics": 1820,
+  "plotted_steps": {
+    "4b": [
+      0,
+      17
+    ],
+    "9b": [
+      0,
+      9
+    ]
+  },
+  "zero_values": "Exactly zero at the first boundary, explicitly omitted from log axis; no epsilon substituted"
+}

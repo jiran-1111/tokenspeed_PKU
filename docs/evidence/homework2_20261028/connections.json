@@ -1,0 +1,99 @@
+{
+  "models": {
+    "9b": {
+      "connection_checks": 4242,
+      "connection_failures": [],
+      "input_files_rehashed": 30,
+      "all_own_head_reference_argmax_reproduced": true,
+      "final_step_head_scores": {
+        "actual_tp1": {
+          "argmax": 25389,
+          "second": 2444,
+          "top1_minus_top2": 0.24328231811523438,
+          "competing_scores": {
+            "25389": 16.387516021728516,
+            "35378": 13.624654769897461
+          }
+        },
+        "actual_tp2": {
+          "argmax": 35378,
+          "second": 25389,
+          "top1_minus_top2": 0.15335464477539062,
+          "competing_scores": {
+            "25389": 17.242416381835938,
+            "35378": 17.395771026611328
+          }
+        },
+        "own_reference_tp1": {
+          "argmax": 25389,
+          "second": 2444,
+          "top1_minus_top2": 0.2432880401611328,
+          "competing_scores": {
+            "25389": 16.387523651123047,
+            "35378": 13.624652862548828
+          }
+        },
+        "own_reference_tp2": {
+          "argmax": 35378,
+          "second": 25389,
+          "top1_minus_top2": 0.153350830078125,
+          "competing_scores": {
+            "25389": 17.2424259185791,
+            "35378": 17.395776748657227
+          }
+        }
+      },
+      "history_sha256": "32114fe837140a47bff6efa8615cc717b4e4e81b73cf70a33d26f29d684ad5e4",
+      "operations_sha256": "499925c9d82d271f834cbe7274ce238a27bade4d37168172707478a5d31e3dcd"
+    },
+    "4b": {
+      "connection_checks": 7578,
+      "connection_failures": [],
+      "input_files_rehashed": 54,
+      "all_own_head_reference_argmax_reproduced": true,
+      "final_step_head_scores": {
+        "actual_tp1": {
+          "argmax": 198,
+          "second": 271,
+          "top1_minus_top2": 0.0,
+          "competing_scores": {
+            "198": 21.125,
+            "271": 21.125
+          }
+        },
+        "actual_tp2": {
+          "argmax": 271,
+          "second": 198,
+          "top1_minus_top2": 0.125,
+          "competing_scores": {
+            "198": 21.125,
+            "271": 21.25
+          }
+        },
+        "own_reference_tp1": {
+          "argmax": 198,
+          "second": 271,
+          "top1_minus_top2": 0.0,
+          "competing_scores": {
+            "198": 21.125,
+            "271": 21.125
+          }
+        },
+        "own_reference_tp2": {
+          "argmax": 271,
+          "second": 198,
+          "top1_minus_top2": 0.125,
+          "competing_scores": {
+            "198": 21.125,
+            "271": 21.25
+          }
+        }
+      },
+      "history_sha256": "5f2c5f776070693779d3822a5145b37d45d5d4bc0a74a0728372ee69ce32511b",
+      "operations_sha256": "eb3f7fac7c748d658dc76ea36e2a5cf44234fb0f8aff8175021deb5e3b28000c"
+    }
+  },
+  "scope": "Actual gating and full replicated-tensor connections plus exact saved head margins; no new model math or numerical acceptance threshold",
+  "passed": true,
+  "script_sha256": "0797a6cecd5a0f7b5bd418cfcdab24f33b3fa84a8c0a62b6862356224bcf4839"
+}

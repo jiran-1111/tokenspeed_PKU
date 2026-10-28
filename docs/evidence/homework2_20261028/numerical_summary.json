@@ -1,0 +1,481 @@
+{
+  "scope": "Original 128-token Prefill plus all 17/9 original continuation inputs through the first divergent output, all 32 layers; actual-operand references, not independently propagated CPU hidden states",
+  "new_model_threshold": false,
+  "original_greedy_failures_repaired": false,
+  "models": {
+    "4b": {
+      "max_global_projection_stored": [
+        0.00016270258926038737,
+        "31",
+        "fa31.o_proj",
+        "tp2_rank1",
+        {
+          "shape": [
+            145,
+            2560
+          ],
+          "relative_l2": 0.00016270258926038737,
+          "max_abs": 0.03125,
+          "different_elements": 53,
+          "elements": 371200,
+          "zero_reference": false
+        }
+      ],
+      "max_step_projection_stored": [
+        0.0004809857814131831,
+        "5",
+        "l5.linear_attn.in_proj_qkvzba",
+        "tp2_rank1",
+        5,
+        {
+          "shape": [
+            1,
+            6176
+          ],
+          "relative_l2": 0.0004809857814131831,
+          "max_abs": 0.03125,
+          "different_elements": 3,
+          "elements": 6176,
+          "zero_reference": false
+        }
+      ],
+      "local_reference_peaks": {
+        "norms/actual_vs_fp32_stored": [
+          0.0001610956969491782,
+          "tp1_rank0",
+          2,
+          "layers.20.post_attention_layernorm",
+          {
+            "shape": [
+              1,
+              2560
+            ],
+            "relative_l2": 0.0001610956969491782,
+            "max_abs": 0.0078125,
+            "different_elements": 1,
+            "elements": 2560,
+            "zero_reference": false
+          }
+        ],
+        "norms/residual_actual_vs_bf16_add": [
+          0.0,
+          "tp1_rank0",
+          0,
+          "layers.0.post_attention_layernorm",
+          {
+            "shape": [
+              128,
+              2560
+            ],
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "different_elements": 0,
+            "elements": 327680,
+            "zero_reference": false
+          }
+        ],
+        "fa/q_norm_actual_vs_fp32_stored": [
+          7.280644327921514e-05,
+          "tp2_rank1",
+          2,
+          "19",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 7.280644327921514e-05,
+            "max_abs": 0.00390625,
+            "different_elements": 1,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/q_rope_actual_vs_fp32_stored": [
+          0.0018497626127863438,
+          "tp2_rank1",
+          13,
+          "11",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.0018497626127863438,
+            "max_abs": 0.0625,
+            "different_elements": 98,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/k_norm_actual_vs_fp32_stored": [
+          7.981171379023617e-05,
+          "tp2_rank0",
+          0,
+          "23",
+          {
+            "shape": [
+              128,
+              2,
+              256
+            ],
+            "relative_l2": 7.981171379023617e-05,
+            "max_abs": 0.03125,
+            "different_elements": 1,
+            "elements": 65536,
+            "zero_reference": false
+          }
+        ],
+        "fa/k_rope_actual_vs_fp32_stored": [
+          0.0018941430988481027,
+          "tp2_rank0",
+          6,
+          "3",
+          {
+            "shape": [
+              1,
+              2,
+              256
+            ],
+            "relative_l2": 0.0018941430988481027,
+            "max_abs": 0.03125,
+            "different_elements": 19,
+            "elements": 512,
+            "zero_reference": false
+          }
+        ],
+        "fa/attention_actual_vs_fp32_raw": [
+          0.0022323806148104824,
+          "tp2_rank1",
+          5,
+          "19",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.0022323806148104824,
+            "max_abs": 0.03551769256591797,
+            "different_elements": 2048,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/attention_actual_vs_fp32_stored": [
+          0.003283719670675689,
+          "tp2_rank1",
+          5,
+          "19",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.003283719670675689,
+            "max_abs": 0.0625,
+            "different_elements": 444,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/sigmoid_gate_actual_vs_fp32_stored": [
+          0.00031137100952245965,
+          "tp2_rank0",
+          11,
+          "3",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.00031137100952245965,
+            "max_abs": 0.00048828125,
+            "different_elements": 1,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "gdn/gated_norm_actual_vs_fp32_stored": [
+          0.00014137068055241917,
+          "tp2_rank0",
+          8,
+          "10",
+          {
+            "shape": [
+              1,
+              16,
+              128
+            ],
+            "relative_l2": 0.00014137068055241917,
+            "max_abs": 0.00048828125,
+            "different_elements": 1,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "mlp/activation_actual_vs_fp32_stored": [
+          0.0007367937878807189,
+          "tp1_rank0",
+          17,
+          "9",
+          {
+            "shape": [
+              1,
+              9216
+            ],
+            "relative_l2": 0.0007367937878807189,
+            "max_abs": 0.00390625,
+            "different_elements": 1,
+            "elements": 9216,
+            "zero_reference": false
+          }
+        ]
+      },
+      "max_prefill_state_relative_l2": 5.217363075809734e-07,
+      "max_final_trajectory_state_relative_l2": 1.8538425682926825e-07,
+      "max_final_own_state_relative_l2": 8.535675071338237e-08
+    },
+    "9b": {
+      "max_global_projection_stored": [
+        0.0002897927594746277,
+        "26",
+        "l26.mlp.down_proj",
+        "tp2_rank1",
+        {
+          "shape": [
+            137,
+            4096
+          ],
+          "relative_l2": 0.0002897927594746277,
+          "max_abs": 0.125,
+          "different_elements": 141,
+          "elements": 561152,
+          "zero_reference": false
+        }
+      ],
+      "max_step_projection_stored": [
+        0.0006809076273752642,
+        "0",
+        "l0.linear_attn.in_proj_qkvzba",
+        "tp2_rank1",
+        8,
+        {
+          "shape": [
+            1,
+            6176
+          ],
+          "relative_l2": 0.0006809076273752642,
+          "max_abs": 0.125,
+          "different_elements": 1,
+          "elements": 6176,
+          "zero_reference": false
+        }
+      ],
+      "local_reference_peaks": {
+        "norms/actual_vs_fp32_stored": [
+          0.0001810552919441647,
+          "tp2_rank0",
+          1,
+          "layers.13.post_attention_layernorm",
+          {
+            "shape": [
+              1,
+              4096
+            ],
+            "relative_l2": 0.0001810552919441647,
+            "max_abs": 0.0078125,
+            "different_elements": 1,
+            "elements": 4096,
+            "zero_reference": false
+          }
+        ],
+        "norms/residual_actual_vs_bf16_add": [
+          0.0,
+          "tp1_rank0",
+          0,
+          "layers.0.post_attention_layernorm",
+          {
+            "shape": [
+              128,
+              4096
+            ],
+            "relative_l2": 0.0,
+            "max_abs": 0.0,
+            "different_elements": 0,
+            "elements": 524288,
+            "zero_reference": false
+          }
+        ],
+        "fa/q_norm_actual_vs_fp32_stored": [
+          0.00014590502810290978,
+          "tp2_rank1",
+          2,
+          "19",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.00014590502810290978,
+            "max_abs": 0.0078125,
+            "different_elements": 1,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/q_rope_actual_vs_fp32_stored": [
+          0.0016795770597420798,
+          "tp2_rank1",
+          2,
+          "11",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.0016795770597420798,
+            "max_abs": 0.03125,
+            "different_elements": 96,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/k_norm_actual_vs_fp32_stored": [
+          7.951082291517643e-05,
+          "tp2_rank0",
+          0,
+          "19",
+          {
+            "shape": [
+              128,
+              2,
+              256
+            ],
+            "relative_l2": 7.951082291517643e-05,
+            "max_abs": 0.03125,
+            "different_elements": 2,
+            "elements": 65536,
+            "zero_reference": false
+          }
+        ],
+        "fa/k_rope_actual_vs_fp32_stored": [
+          0.0020299185824601113,
+          "tp2_rank0",
+          5,
+          "3",
+          {
+            "shape": [
+              1,
+              2,
+              256
+            ],
+            "relative_l2": 0.0020299185824601113,
+            "max_abs": 0.03125,
+            "different_elements": 23,
+            "elements": 512,
+            "zero_reference": false
+          }
+        ],
+        "fa/attention_actual_vs_fp32_raw": [
+          0.0024809700226537884,
+          "tp2_rank0",
+          6,
+          "27",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.0024809700226537884,
+            "max_abs": 0.3012847900390625,
+            "different_elements": 2048,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/attention_actual_vs_fp32_stored": [
+          0.0028522155740709934,
+          "tp2_rank0",
+          6,
+          "27",
+          {
+            "shape": [
+              1,
+              8,
+              256
+            ],
+            "relative_l2": 0.0028522155740709934,
+            "max_abs": 0.5,
+            "different_elements": 380,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "fa/sigmoid_gate_actual_vs_fp32_stored": [
+          6.118902296771704e-05,
+          "tp2_rank1",
+          0,
+          "31",
+          {
+            "shape": [
+              128,
+              8,
+              256
+            ],
+            "relative_l2": 6.118902296771704e-05,
+            "max_abs": 0.03125,
+            "different_elements": 5,
+            "elements": 262144,
+            "zero_reference": false
+          }
+        ],
+        "gdn/gated_norm_actual_vs_fp32_stored": [
+          0.000195862579953436,
+          "tp2_rank1",
+          3,
+          "30",
+          {
+            "shape": [
+              1,
+              16,
+              128
+            ],
+            "relative_l2": 0.000195862579953436,
+            "max_abs": 0.00390625,
+            "different_elements": 1,
+            "elements": 2048,
+            "zero_reference": false
+          }
+        ],
+        "mlp/activation_actual_vs_fp32_stored": [
+          0.0001801417607714808,
+          "tp2_rank1",
+          1,
+          "10",
+          {
+            "shape": [
+              1,
+              6144
+            ],
+            "relative_l2": 0.0001801417607714808,
+            "max_abs": 0.0009765625,
+            "different_elements": 1,
+            "elements": 6144,
+            "zero_reference": false
+          }
+        ]
+      },
+      "max_prefill_state_relative_l2": 4.348939440758444e-07,
+      "max_final_trajectory_state_relative_l2": 1.3764212962060677e-07,
+      "max_final_own_state_relative_l2": 5.5970786704123325e-08
+    }
+  }
+}

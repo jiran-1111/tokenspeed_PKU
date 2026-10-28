@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "metric_groups_independently_recomputed": 1910,
+  "ordered_difference_vector_groups_verified": 128,
+  "max_float_metric_difference": 8.673617379884035e-19,
+  "core_files_rehashed": 1531,
+  "archive_files_rehashed": 42,
+  "scope": "Exported actual norm/head metrics, all saved last-step difference vectors and argmax; no local checkpoint GEMM or raw PT extraction",
+  "model_numerical_threshold_added": false,
+  "script_sha256": "6fc7b97fa467ad194e88d14075c72dbf2359f395dfbcaa502961f736a42ff4d6"
+}
