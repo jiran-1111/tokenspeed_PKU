@@ -4,13 +4,13 @@
 
 ## 当前分支与项目状态
 
-**当前分支：`homework2/in-progress`。作业2四模型同卡TP2连续推理和实验材料已取得，按四项任务组织的[报告](docs/report/homework2_communication_subsystem.md)已更新。0.8B/27B在有限协议下与TP1输出一致；4B/9B短输入差异保留，原共同前沿全32层和真实历史的有限验证已完成，不能宣称四模型全部数值通过或完整大项目完成。**
+**当前分支：`homework2/in-progress`。作业2四模型同卡TP2连续推理和实验材料已取得，按四项任务组织的[报告](docs/report/homework2_communication_subsystem.md)已更新。0.8B/27B在有限协议下与TP1输出一致；4B/9B短输入差异保留，原共同前沿全32层、真实历史及[独立端到端CPU对照](docs/project/homework2_independent_reference_20261028.md)已完成，数值验收仍有保留，不能宣称四模型全部数值通过或完整大项目完成。**
 
 [新增实机证据](docs/evidence/homework2_20261025/README.md)覆盖共享条件下两长度×两并发性能、每chip HBM、双rank设备时间线、27B容量及通信粒度实验，保留原始失败与适用边界。[完整路径核对](docs/project/homework2_fullpath_validation_20261028.md)与[完整数值/工具](docs/evidence/homework2_20261028/README.md)补全原4B/9B分叉调查；[实施记录](docs/project/homework2_status_20261023.md)保留各阶段协议和范围变更。分支名称为历史标识，当前完成状态以上述材料及限制为准。
 
 | 入口 | 状态 | 用途 |
 | --- | --- | --- |
-| `homework2/in-progress` | **作业2材料定稿；保留数值限制** | 本分支；作业2报告、同卡TP2、性能与通信证据 |
+| `homework2/in-progress` | **实验材料齐备；任务二数值验收有保留** | 本分支；作业2报告、同卡TP2、性能与通信证据 |
 | `project/develop` | **大项目继续开发** | 四模型运行时、原生Session/KV、Agent实验、开源维护与后续整合主线 |
 | [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成** | 独立保留0.8B单chip验证、基线、Profiler、补充实验和报告 |
 | `jr` | **其他成员所有，本次未修改** | 保留独立工作；不跨分支覆盖或自动合并 |

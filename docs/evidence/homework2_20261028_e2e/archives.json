@@ -1,0 +1,90 @@
+{
+  "reference_tools.zip": {
+    "sha256": "f0ff95f88ca07e98447528b7fcfd4c1cea686bbd4073cc14f1d7fae1f005b6c3",
+    "bytes": 36768,
+    "source": "independent_e2e_reference_r1_20261028",
+    "members": {
+      "independent_ops.py": "101afb31a8d0f95db47e5b2a2ef0fafc8e626b4ab4273e910f97f78d9d479b9f",
+      "independent_model.py": "649a7e120135dda9521002853fb26affdd008a38733374d997e1e6ab517d1f94",
+      "checkpoint_reader.py": "05a986172b5e8bbb07190cd4f85701b76138eec144015c3d2278dc3cf482d02e",
+      "run_reference.py": "d8aa9ad769d54c03bd7c2fa634fd45863b6d31f0135cb11d2d8d62cd54669f41",
+      "reference_controller.py": "5024ca17b2fa9935a469d2ffd34562e9cb90ff803d2930e957031813768d76cc",
+      "prefill_oracle.py": "2f6d45fbdd603ce0154640bbf7aeb89754474f0e9ba822cc1e550d535bef8062",
+      "reference_math.py": "672de09ec0a024c1f5359db562564e4ca57bb8c30dc5bc575a52796185679b6c",
+      "test_independent_ops.py": "7f90f3e7425d3274a5b13372d3ee9c1e436f95c9f4cbda3a84b3efcb3f52c604",
+      "test_independent_model.py": "fecd4be5b4a42395233d7d15b48bd7634e087231e62220d62d0efa2d707fa507",
+      "test_checkpoint_reader.py": "b13a4dda41e51b3929b7b0c94382fabaac7357bb3b288bdaa89ece059ad0818e",
+      "test_torch_crosscheck.py": "1d97784a6cd46bfc8746e951227a48fb2aee9e7e56e6f4f30add74153feb5b49",
+      "reference_protocol.json": "826b82a7b273953a3120b0bfdfaeb8150186bccc80ae312e7c78949f4a7c3701",
+      "case_4b.json": "4b2449ff2691548ef9228c532dfa85bf04c3aa9958dc1609f00bec72d4c06095",
+      "case_9b.json": "827d28ace1f59561ee3a967e682c597fb4f83807505e7339f78b399e8b54a8c1",
+      "tool_manifest.json": "cf09ecac218c32702b757b6010f70b3f80125cc18ffec19290827c9bf1e534af"
+    }
+  },
+  "comparison_tools.zip": {
+    "sha256": "5fd04fffb25463679ba00547231f51a342397c910ac532ba939b9684ed28b513",
+    "bytes": 19210,
+    "source": "independent_e2e_comparison_r1_20261028",
+    "members": {
+      "compare_reference.py": "e04da352980e9ae26d7733cee0e57e910ad65e0b0e2da468026424b46fd1fff2",
+      "comparison_contract.py": "980843bd8c2067edfc79d46d4ac4eca1c20f420029b1dd99c2847ba25bb93f85",
+      "test_comparison_contract.py": "1cab57ad60278d04893c44b0647cb34085cbc614bf90252d96b5e11fa7f65179",
+      "analysis_binding.py": "86790319d356995d1c5d81349438193cdc42700ab85ca73c7e8df60f526e0003",
+      "parameter_identity.py": "f9c0234e293a4f674dcd9ec3db6bdbea38b4011a863f0d678efe18569ba9da1d",
+      "tool_manifest.json": "8976fe1f432691c47bca9a4e6097c255d3ebee07a233b79fff9fc8f9ee5ff261"
+    }
+  },
+  "4b_comparison.zip": {
+    "sha256": "7ae2fbfe005b98bd77cd92edf42daff54cd8755e0bbc49a263ccab81adf8dbdc",
+    "bytes": 218248,
+    "source": "independent_e2e_comparison_r1_20261028/output",
+    "members": {
+      "4b_comparison.json": "272214063f4bc695c32a6e63acfc4149c6b9efba9ec1d49c41db58e7cbbe5574"
+    }
+  },
+  "9b_comparison.zip": {
+    "sha256": "9b4d551e15f2d9e52308201af6f7f3b21845600ccd9897442236ed604c43a420",
+    "bytes": 130869,
+    "source": "independent_e2e_comparison_r1_20261028/output",
+    "members": {
+      "9b_comparison.json": "e9d6616c481db1f3bec6fe83e852590bc97d78e1fb2bf31d2a97becc44f4c935"
+    }
+  },
+  "local_verifier.zip": {
+    "sha256": "62264fc3ee9eeeec5ce93e6b615c87872f0fefb734ba7a7d018b267543d787f9",
+    "bytes": 3078,
+    "source": "local NumPy verification",
+    "members": {
+      "verify_local.py": "5d32d4460ba8292f562ac699a95aa1656de5ba667bfb6dd6240057c02c77647a"
+    }
+  },
+  "launch_and_audit_tools.zip": {
+    "sha256": "bc2a910ebad66ee216846ca5b90886aa37c82bf1bf940fab8cf53ff0ea3811ba",
+    "bytes": 4362,
+    "source": "local launch and final audit snapshots",
+    "members": {
+      "start_r1.py": "5fe8bb86a57693cfe0b7fc951cd474dab4afc1b54b538ecccecd10b2960a58cf",
+      "start_comparison_r1.py": "3bb2f57dc4422e44c116e15bb6c824092fcffb3be6917eb26ba40837aa9389de",
+      "archive_reference.py": "cd81d6629f4add5b6d91c63a6838d2c0d3fb9e508dae79677b04913b8a44ed28",
+      "server_audit_archive_comparison.py": "e1598d9ce55e4f1deacaadd54d3b0a0b59ec7818961c60163799ec19da5d384a"
+    }
+  },
+  "publication_tools.zip": {
+    "sha256": "e2a72f46909ddd0196245b480de5ee8686aeac8e355c2d95885e7501232e1aa4",
+    "bytes": 5649,
+    "source": "local figure and package generation",
+    "members": {
+      "build_publication.py": "7438a01b11681d2b1eaeb402f3576a93f69c91fc72b9512eca2af614e0300a2f",
+      "finalize_publication.py": "505f9032adddeef9cb466aab1cac2851b43107395851cbcddd77bf4c71e7ba04",
+      "fix_input_counts.py": "7c7b7a9b34e8dad9a9f4d7068ec636fb4a31257b9b7e1f44ff3aaa7e4b120f1e"
+    }
+  },
+  "boundary_curves.zip": {
+    "sha256": "080566e7b91d5c061e21625ccd21522f33c2835f1d469eeeb3a00b999042bb2e",
+    "bytes": 94399,
+    "source": "local boundary CSV generation",
+    "members": {
+      "boundary_curves.csv": "9fc13b7e5301d6266f35296e5f2c0beb3b3782e13a9783eeb87dad5d5a3095a6"
+    }
+  }
+}

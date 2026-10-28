@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "comparison_manifest_before_launch_and_after_matches": true,
+  "comparison_tool_manifest_sha256": "8976fe1f432691c47bca9a4e6097c255d3ebee07a233b79fff9fc8f9ee5ff261",
+  "comparison_tool_files_rehashed": 5,
+  "reference_manifest_rehashed": true,
+  "reference_cases_unchanged": true,
+  "complete_eight_references": true,
+  "summary_sha256": "83b0c8a58c45d8cf31bf3cb283a97f53a8d0b3b6f8942adf78a0ddebdc6896f0",
+  "core_files_rehashed": 1531,
+  "launch_binding": {
+    "launch_source_sha256": "3bb2f57dc4422e44c116e15bb6c824092fcffb3be6917eb26ba40837aa9389de",
+    "client_launch_receipt_sha256": "aeeecc2289884e3cf1b7b871491c5aa2548fa80cacff9984213073bc31cbe79c"
+  },
+  "runtime_changed": false,
+  "original_greedy_failures_repaired": false,
+  "npu_experiments_started": 0
+}
