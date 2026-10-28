@@ -1,13 +1,12 @@
 {
-  "date": "2026-10-25",
+  "date": "2026-10-28",
   "branch": "homework2/in-progress",
   "source_core_files": 1531,
   "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
   "hardware_materials_collected": true,
   "all_models_numerically_passed": false,
   "unresolved": [
-    "4B 128-input TP1/TP2 greedy divergence",
-    "9B 128-input TP1/TP2 greedy divergence"
+    "Original 4B/9B short-input TP1/TP2 sequences differ; comparison is reported without a universal correctness claim."
   ],
   "ordinary_0_8b_formal_per_tp": 96,
   "ordinary_27b_tp2_formal": 96,
@@ -22,5 +21,7 @@
   "old_exclusive_queue": "retained_paused_no_duplicate_runs",
   "whole_course_project_complete": false,
   "report_organization": "four homework2 tasks",
-  "actual_execution": "AI tools under group authorization; member responsibility allocation is not a claim of personal execution or hours"
+  "actual_execution": "AI tools under group authorization; member responsibility allocation is not a claim of personal execution or hours",
+  "course_required_materials_complete": true,
+  "optional_diagnostics_in_submission": false
 }

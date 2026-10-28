@@ -1,14 +1,13 @@
 # 作业2新增实机与通信证据（2026-10-25）
 
-本批补齐作业2性能、逐chip HBM、双rank设备时间线、大模型容量与通信粒度实验材料。[报告](../../report/homework2_communication_subsystem.md)按四项任务组织。**4B/9B短输入差异仍未解决，不能宣称四模型全部数值通过或完整大项目完成。** 本分支仍标记进行中，供继续正确性诊断。
+本目录提供作业2要求的性能、逐chip HBM、双rank设备时间线、大模型容量与通信策略材料。[报告](../../report/homework2_communication_subsystem.md)及[要求核对](../../project/homework2_requirements_audit_20261028.md)按原文组织。原4B/9B短输入输出差异保留，不宣称四模型全部输出一致。
 
 ## 数据入口与适用范围
 
 - `shared_performance.json`：0.8B同卡TP1/TP2各96正式、27B TP2 96正式、两策略各24正式，共336正式请求；保留全部轮次、慢轮及主矩阵采样缺口。0.8B短输入HBM由另一张卡的独立延长补测取得，两TP各128正式，不回填原轮次。吞吐是三轮中位与范围，延迟是客户端观察；共享背景不等于独占加速比。
 - `new_27b_sequence_comparison.json`：新TP2对同源前次TP1的96/96逐ID配对；前次TP1不作为新性能基线。
 - `native_profile_summary.json`：三份有效双rank采集的六个正式窗口、锚、输入/导出SHA、计算/通信并集、交集、主机同步等待与未知分类。Profiler输出16，普通性能输出32，不混算。
-- `additional_numerical_capacity.json`：HF11独立FP32参考、未采纳精度候选和27B容量成功/失败。旧4B/9B自由生成失败不被这些结果替代。
-- `next_numerical_diagnosis.json`：现有逐层数据的CPU聚合，仅用于制定下一步诊断，不认定根因。
+- `large_model_capacity.json`：27B TP2配置4096边界容量，保留请求完成但清理失败的R1及整体成功的R2；必要原始文件从混合归档逐字节提取，独立容量归档SHA见该文件。
 - `archive_receipts.json`：本地取得完整原始归档后的逐文件SHA核验；大型原始trace和含账户信息的日志保留在工作区，不随公开源码发布。`report_state.json`记录本批范围。
 
 ## 固定源、工具和历史失败
@@ -45,13 +44,3 @@ python -B .tmp/hw2-reproduce/analysis/analyze_shared_profiler_native_cached_2026
 ```
 
 路径占位符须替换为实际恢复目录。分析器验证source、run/protocol、工具manifest、授权范围、采集控制确认、原始trace身份与时钟锚，不会用缺失材料补造有效结果。正式复现实验还需设备、同revision权重和匹配CANN/torch_npu环境；每轮重新查设备映射与占用。本组共享性能和Profiler经过明确授权，不把该授权扩展到停止其他服务。新硬件采集始终串行；CPU分析可独立并行。
-
-## 同源FA7补充诊断
-
-[FA7完整Prefill观察](../../project/homework2_fa7_diagnosis_20261025.md)已取得两模型48项实际参数分片核对、逐算子FP32参考及84向量结果保持性复验。该层被测attention与MLP SUM均与实际部分和的BF16舍入和逐位一致；原4B/9B自由输出失败仍未修复，cached step8 KV尚未覆盖。大型原始和分析归档收据、工具ZIP及公开标量见上述记录；作业2主报告保持已发布的四任务版本。
-
-后续[9B cached step8实际KV与GDN状态观察](../../project/homework2_cached_step8_diagnosis_20261026.md)已补采完成，另保留30向量保持性、178项归档及CPU输入/历史交叉替换。它限制了该步KV写入和SSM单步更新错误的解释，仍未修复原输出差异。
-
-## 后续多输入比较
-
-2026-10-26另完成[四模型冻结语义请求](../../project/homework2_semantic_quality_20261026.md)，主报告第2.5节记录CPU/TP1/TP2比较、表达差异及代码截断。本页原性能、Profiler、原4B/9B失败及配置身份不变，新生成协议不回填本页统计。

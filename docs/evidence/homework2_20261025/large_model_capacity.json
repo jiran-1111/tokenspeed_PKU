@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-28",
+  "scope": "Required task 4: configured 27B TP2 capacity; original successful and failed runs retained.",
+  "core_runtime_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "capacity": {
+    "r1": {
+      "run_status": "failed",
+      "controller_status": "shared_failure_needs_review",
+      "collector_exit_code": 1,
+      "shared_functional_only": true,
+      "performance_eligible": false,
+      "configuration": {
+        "model_revision": "fc05daec18b0a78c049392ed2e771dde82bdf654",
+        "tp_size": 2,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "memory_utilization": 0.95,
+        "enforce_eager": false,
+        "prefix_caching": false,
+        "disable_kvstore": true
+      },
+      "request_observations": [
+        {
+          "phase": "warmup",
+          "input_tokens": 4095,
+          "output_tokens": 1,
+          "status": "passed"
+        },
+        {
+          "phase": "formal",
+          "input_tokens": 4095,
+          "output_tokens": 1,
+          "status": "passed"
+        }
+      ],
+      "rank_forwards_in_formal_windows": {
+        "0": 1,
+        "1": 1
+      },
+      "guard_own_children_released": false,
+      "external_after_exit_own_contexts_released": true,
+      "source_unchanged": true,
+      "sampled_formal_whole_chip_used_hbm_max_mb": {
+        "0": 38706,
+        "1": 34608
+      },
+      "contained_formal_hbm_sample_count": 3,
+      "hbm_scope": "Observed whole-chip used HBM samples include background and unattributed device usage; these are not model-owned HBM or instantaneous peaks.",
+      "source_refs": [
+        "capacity_r1_run",
+        "capacity_r1_state",
+        "capacity_r1_requests",
+        "capacity_r1_release",
+        "capacity_r1_rank0_events",
+        "capacity_r1_rank1_events"
+      ],
+      "failure": {
+        "type": "ValueError",
+        "message": "shared source or own-worker cleanup verification failed",
+        "scope": "Requests completed, but the overall run failed cleanup verification; later external release confirmation does not retroactively make the run successful."
+      }
+    },
+    "r2": {
+      "run_status": "passed",
+      "controller_status": "shared_functional_finished_original_queue_resumed",
+      "collector_exit_code": 0,
+      "shared_functional_only": true,
+      "performance_eligible": false,
+      "configuration": {
+        "model_revision": "fc05daec18b0a78c049392ed2e771dde82bdf654",
+        "tp_size": 2,
+        "dtype": "bfloat16",
+        "max_model_len": 4096,
+        "memory_utilization": 0.95,
+        "enforce_eager": false,
+        "prefix_caching": false,
+        "disable_kvstore": true
+      },
+      "request_observations": [
+        {
+          "phase": "warmup",
+          "input_tokens": 4095,
+          "output_tokens": 1,
+          "status": "passed"
+        },
+        {
+          "phase": "formal",
+          "input_tokens": 4095,
+          "output_tokens": 1,
+          "status": "passed"
+        }
+      ],
+      "rank_forwards_in_formal_windows": {
+        "0": 1,
+        "1": 1
+      },
+      "guard_own_children_released": true,
+      "external_after_exit_own_contexts_released": true,
+      "source_unchanged": true,
+      "sampled_formal_whole_chip_used_hbm_max_mb": {
+        "0": 38707,
+        "1": 34607
+      },
+      "contained_formal_hbm_sample_count": 3,
+      "hbm_scope": "Observed whole-chip used HBM samples include background and unattributed device usage; these are not model-owned HBM or instantaneous peaks.",
+      "source_refs": [
+        "capacity_r2_run",
+        "capacity_r2_state",
+        "capacity_r2_requests",
+        "capacity_r2_release",
+        "capacity_r2_rank0_events",
+        "capacity_r2_rank1_events",
+        "capacity_r2_independent_audit",
+        "capacity_r2_recovery"
+      ],
+      "independent_audit": {
+        "execution_valid": true,
+        "execution_errors": [],
+        "configured_context_boundary_reached": true,
+        "input_tokens": 4095,
+        "output_tokens": 1,
+        "total_request_tokens": 4096,
+        "formal_requests": 1,
+        "rank_forwards_in_formal_windows": {
+          "0": 1,
+          "1": 1
+        },
+        "performance_eligible": false,
+        "capacity_scope": "one configured 4096-token request under recorded shared conditions; not exclusive maximum memory/context capacity",
+        "numerical_reference_comparison_performed": false
+      },
+      "recovery": {
+        "prior_collector_exited": true,
+        "own_npu_contexts_absent": true,
+        "prior_failed_data_preserved": true
+      }
+    },
+    "supported_claim": "27B TP2 completed one formal 4095-input + 1-output request at the configured 4096-token boundary under the recorded shared conditions after one failed overall run.",
+    "limits": [
+      "No search for an exclusive maximum memory or context capacity.",
+      "No numerical-reference comparison for this probe.",
+      "One warmup and one formal request; not a performance matrix or repeatability estimate."
+    ]
+  },
+  "sources": {
+    "capacity_r1_run": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025/run.json",
+      "sha256": "4806dac48096b6d7bbc168b61782fb84b5a3c779f21f361b6ae368d2ea3412df"
+    },
+    "capacity_r1_state": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/tools/capacity_shared_20261025/state.json",
+      "sha256": "0b1bbd581d00273e7d0f2fd2ee0610b79b25e8a4bab937a74be5109febfdd40b"
+    },
+    "capacity_r1_requests": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025/requests.jsonl",
+      "sha256": "1cc179c1c2b266450dcc80c06aa8217b025d96800a665a26d802218b0e95f95d"
+    },
+    "capacity_r1_release": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025/shared_release.json",
+      "sha256": "e4ffb3f547b26474dd5231b34566d63c9fc72132a8d74d347904553d8c7b6990"
+    },
+    "capacity_r1_rank0_events": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025/rank_forward_events/rank0_*.forward.jsonl",
+      "sha256": "c533a510139424ce7f1d7a4cfe20d6ddf21e7cae63104af8b14d10baa78d7436"
+    },
+    "capacity_r1_rank1_events": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025/rank_forward_events/rank1_*.forward.jsonl",
+      "sha256": "6b441ad2862e62a1c3c1ae0979f4b06b47a6b646e2fc6eab3f4f019b5c9325ff"
+    },
+    "capacity_r2_run": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/run.json",
+      "sha256": "f43dc4eae07739b1ff816723c4da99e5f5ba737c0cd3351c245a512a17513304"
+    },
+    "capacity_r2_state": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/tools/capacity_shared_r2_20261025/state.json",
+      "sha256": "f5fe72db0f80eb3ca5565f583a7e7273d39f609b24f7ce9432ab04138a3ee86c"
+    },
+    "capacity_r2_requests": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/requests.jsonl",
+      "sha256": "99187a17a5a2e428254d35ff588d80accccb59cb7882c2857991cae8617b414b"
+    },
+    "capacity_r2_release": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/shared_release.json",
+      "sha256": "522aa55d846cb4dbf1fc14eb0b11b4326f88e12a993b581afb1dfb61672ec9fa"
+    },
+    "capacity_r2_rank0_events": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/rank_forward_events/rank0_*.forward.jsonl",
+      "sha256": "ae58f3b4d1ba3f6768d643c72b683dd3b69077de5e5ee2f8f454d32e4036136a"
+    },
+    "capacity_r2_rank1_events": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/rank_forward_events/rank1_*.forward.jsonl",
+      "sha256": "04cc5c49f44d66412d1256420ecd968291355ad3b9afc3808e9dc6973fe831aa"
+    },
+    "capacity_r2_independent_audit": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/jobs/shared_functional_27b_capacity_tp2_20261025_r2/shared_independent_audit.json",
+      "sha256": "34d3a4370490aabb3f621a24cdb2eaef6e1122e14ba9b1c344b8b0c4e1bb9b80"
+    },
+    "capacity_r2_recovery": {
+      "local_relative_path": ".tmp/hw2-20261023/supplement_export_capacity_20261028/tools/capacity_shared_r2_20261025/recovery.json",
+      "sha256": "f6f01c61baa6479e46e39b62193b26dd9ab3d69037d931b3733791a415eabd43"
+    }
+  },
+  "local_archive": {
+    "path": ".tmp/hw2-20261023/supplement_export_capacity_20261028.tar.gz",
+    "sha256": "ca264e14872c8cf956898d2376ad8f423c2473f1819a5448bdfffae0281d6578",
+    "files": 190,
+    "original_retained_files_byte_equal": true
+  }
+}

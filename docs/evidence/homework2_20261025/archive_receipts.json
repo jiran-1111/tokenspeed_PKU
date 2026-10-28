@@ -6,18 +6,6 @@
     "all_file_hashes_match": true,
     "raw_successes_and_failures_present": true
   },
-  "precision_candidates_hf10": {
-    "archive_sha256": "549e7f7808e9b4a4c1c510920e6589c3de894c659dd402995ccc3934b2621533",
-    "files": 1102,
-    "all_file_hashes_match": true,
-    "scope": "all completed R5-R9 precision variants/failures and independent HF R10 tensors/tools/analyses"
-  },
-  "capacity_hf11": {
-    "archive_sha256": "a178633c49830e7ea5ef896f7389e3de11f18af5fd87e4ae83b4fa0063c7e9fb",
-    "files": 271,
-    "all_file_hashes_match": true,
-    "scope": "full diagnostic tensors, CPU references, rejected R1 and accepted R2, tools and analysis"
-  },
   "timeline_analyses": {
     "archive_sha256": "a65e46f01342552577456d0e1b70f4e0ef9616702fdc166947aa1b5e7eb664ca",
     "files": 102,
@@ -25,5 +13,11 @@
     "original_inputs_unchanged": true,
     "historical_and_final_analyses_retained": true,
     "all_file_hashes_match": true
+  },
+  "capacity": {
+    "path": ".tmp/hw2-20261023/supplement_export_capacity_20261028.tar.gz",
+    "sha256": "ca264e14872c8cf956898d2376ad8f423c2473f1819a5448bdfffae0281d6578",
+    "files": 190,
+    "original_retained_files_byte_equal": true
   }
 }

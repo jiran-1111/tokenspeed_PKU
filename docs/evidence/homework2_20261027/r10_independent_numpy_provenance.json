@@ -1,8 +1,0 @@
-{
-  "executed_script_body_sha256": "58b337c423e74fed1cb2e7fb8d577f27f29ca96ccb2cbd4f04a11688f8eeb52a",
-  "public_script_sha256": "0d73c02603d1de494a6c95d078d88aa0a73540326e51d4a684b2e4e7862d0aa4",
-  "difference": "Public script adds the full MIT license header; executed mathematical body byte-identical. Original executed script and receipt retained in workspace.",
-  "usage": "python check_r10_local.py --bundle /path/to/restored/tools/norm_precision_analysis_r1_20261027 --output /path/to/new-receipt.json",
-  "formula_recomputation_tolerance": 1e-12,
-  "model_acceptance_threshold": null
-}

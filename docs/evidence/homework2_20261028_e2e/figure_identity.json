@@ -1,7 +1,0 @@
-{
-  "figure_sha256": "5219c35f018549491ed87211f54415be11fa8ef17b328eb356fc0c73bcaf0e31",
-  "csv_sha256": "9fc13b7e5301d6266f35296e5f2c0beb3b3782e13a9783eeb87dad5d5a3095a6",
-  "csv_metrics": 5460,
-  "scope": "Prefill last rows, cross-partition differences, not CPU-vs-engine error or additive causal fractions",
-  "zeros_not_replaced_with_epsilon": true
-}
