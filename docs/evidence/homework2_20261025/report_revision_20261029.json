@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-29",
+  "scope": "User-edited HW2 report with two localized corrections; no runtime change",
+  "user_baseline_sha256": "e41ef0c808747a6033e201f6880e3133741745bad116243ac7009dcef3f24a68",
+  "report_sha256": "dc0d6e195af9e42c4a56bbecce6ba7a7ef706781189359f3822142793b3e7729",
+  "pdf_sha256": "05aacafd6003df8b93bc4d7edcb8d7fe6d76b4752961ac54310bdd712bc45713",
+  "pdf_pages": 8,
+  "localized_replacements": 2,
+  "user_structure_deletions_and_tables_preserved": true,
+  "root_repository_markdown_identical": true,
+  "links_and_images_verified": 20,
+  "slow_round_evidence": {
+    "0.8b_tp1_matrix": {
+      "repetition": 2,
+      "output_tokens_per_second": 33.91028414407303
+    },
+    "0.8b_tp2_matrix": {
+      "repetition": 1,
+      "output_tokens_per_second": 50.261968225259345
+    }
+  },
+  "strategy_configuration_verified": true,
+  "core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "unchanged_runtime_files": 1531,
+  "all_pdf_pages_rendered_and_visually_reviewed": true,
+  "new_npu_experiment": false,
+  "previous_delivery_commit": "3d10406b0a829da64a47d3d7c0bca56d93ec5482"
+}
