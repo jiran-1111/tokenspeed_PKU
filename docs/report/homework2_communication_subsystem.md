@@ -14,9 +14,9 @@
 
 ### 1.1 环境与实现范围
 
-实验设备为 Huawei Atlas 800I A3，SoC 为 `Ascend910_9362`，CANN 系列为 `Ascend910_93`；每次 TP2 选择同一 NPU ID 下两个 chip，四模型分别加载、运行。环境为 Python 3.11、PyTorch `2.9.0+cpu`、torch_npu 2.9.0、Transformers 5.12.0、Triton-Ascend 3.2.1、CANN 8.5.0。包版本中的 `+cpu` 按元数据记录；实际 NPU 执行由设备映射、worker 日志及运行记录证明。[硬件身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/hardware_identity_20261014.md)、[依赖记录](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/runtime_dependencies.json)
+实验设备为 Huawei Atlas 800I A3，SoC 为 `Ascend910_9362`，CANN 系列为 `Ascend910_93`；每次 TP2 选择同一 NPU ID 下两个 chip，四模型分别加载、运行。环境为 Python 3.11、PyTorch `2.9.0+cpu`、torch_npu 2.9.0、Transformers 5.12.0、Triton-Ascend 3.2.1、CANN 8.5.0。包版本中的 `+cpu` 按元数据记录；实际 NPU 执行由设备映射、worker 日志及运行记录证明。[硬件身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/project/hardware_identity_20261014.md)、[依赖记录](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/runtime_dependencies.json)
 
-实现复用 TokenSpeed 的 Engine、C++ 调度器、分片加载器和 HCCL 后端。四组 `qwen35_*_tp{1,2}.yaml` 成对配置仅改变 `tp_size`；TP2 启动两个 worker，设置 rank 并绑定逻辑设备，以互补分片共同计算同一模型。四模型主实验沿用1531项核心运行源，SHA256 为 `2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3`；采集与分析工具另留身份。各模型 revision、权重文件和精度在比较前后核对。主计算为 BF16，GDN SSM 状态为 FP32；9B 输出头另为 FP32，两种 TP 保持一致。[源清单](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/source_manifest.json)、[模型身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/model_artifacts.json)
+实现复用 TokenSpeed 的 Engine、C++ 调度器、分片加载器和 HCCL 后端。四组 `qwen35_*_tp{1,2}.yaml` 成对配置仅改变 `tp_size`；TP2 启动两个 worker，设置 rank 并绑定逻辑设备，以互补分片共同计算同一模型。四模型主实验沿用1531项核心运行源，SHA256 为 `2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3`；采集与分析工具另留身份。各模型 revision、权重文件和精度在比较前后核对。主计算为 BF16，GDN SSM 状态为 FP32；9B 输出头另为 FP32，两种 TP 保持一致。[源清单](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/source_manifest.json)、[模型身份](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/model_artifacts.json)
 
 本轮功能、性能及 Profiler 允许在获准的共享条件下执行，每次重新读取映射、后台进程身份及显存余量；只清理自身实验进程。共享占用对性能和 HBM 归属的限制在第3、4章分别说明。
 
@@ -24,7 +24,7 @@
 
 ### 1.2 典型4B层的切分与通信
 
-4B 的 hidden 宽度为2560，MLP中间宽度为9216，共32层，其中8层 FA、24层 GDN。权重按 `[输出维,输入维]` 表示，T 为实际调度行数；以下是配置与加载器推导的逻辑形状。两 rank 同形但持有互补 heads 或通道，输入 hidden 与残差复制。[模型几何](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/model_geometry.json)、[切分与代码位置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/homework2_tp_layout.md)
+4B 的 hidden 宽度为2560，MLP中间宽度为9216，共32层，其中8层 FA、24层 GDN。权重按 `[输出维,输入维]` 表示，T 为实际调度行数；以下是配置与加载器推导的逻辑形状。两 rank 同形但持有互补 heads 或通道，输入 hidden 与残差复制。[模型几何](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/model_geometry.json)、[切分与代码位置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/project/homework2_tp_layout.md)
 
 | 步骤                     | rank0                                                       | rank1                | 分布与通信                                              |
 | ------------------------ | ----------------------------------------------------------- | -------------------- | ------------------------------------------------------- |
@@ -54,7 +54,7 @@ FA K/V cache 沿 KV heads、GDN 卷积及 SSM 状态沿本地 heads 切分；请
 
 四模型 FA head_dim 均为256，GDN K/V head_dim 均为128，卷积核宽度为4；`A_log`、`dt_bias` 沿 V heads 分片并保留 FP32。词表大小均为248320；0.8B/4B共享 embedding 与输出头权重，9B/27B不共享。
 
-四模型均已完成同卡双 chip 连续生成。首轮 TP2 的 rank0/1 位于 NPU ID 1 的 chip0/1（逻辑设备2/3），保存启动、正式请求窗口中的真实前向调用、逐 chip HBM 及退出记录。图重放不会逐 token 触发 Python 前向观察器，调用数不能当作 Decode 步数；运行记录也不等于已抓取全部层中间张量。[双 rank 实机证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/hardware_supplements_20261024.json)
+四模型均已完成同卡双 chip 连续生成。首轮 TP2 的 rank0/1 位于 NPU ID 1 的 chip0/1（逻辑设备2/3），保存启动、正式请求窗口中的真实前向调用、逐 chip HBM 及退出记录。图重放不会逐 token 触发 Python 前向观察器，调用数不能当作 Decode 步数；运行记录也不等于已抓取全部层中间张量。[双 rank 实机证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/hardware_supplements_20261024.json)
 
 ## 2. 任务二：验证并行正确性
 
@@ -71,9 +71,9 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 | 9B   | 8/16                          | 未新增通过结论                        | 128输入首差为第10个输出：25389/35378         |
 | 27B  | 16/16                         | 新TP2与同源前次TP1逐条96/96一致       | 两侧均为95%预算；前次TP1耗时不构成新性能配对 |
 
-首轮协议为128/2048输入×并发1/4，每格4预热、4正式、1轮；TP1参考事前固定为原补测同格第1轮的请求0–3。4B、9B的8个失败均来自128输入，2048输入一致。新增主矩阵每格4预热、3轮各8正式，共96正式、16预热。**所有这些重复调用只覆盖128、2048两个独特输入，不是16或96个独立样例。**[首轮比较与失败](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/hardware_supplements_20261024.json)、[新增矩阵与序列证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/shared_performance.json)
+首轮协议为128/2048输入×并发1/4，每格4预热、4正式、1轮；TP1参考事前固定为原补测同格第1轮的请求0–3。4B、9B的8个失败均来自128输入，2048输入一致。新增主矩阵每格4预热、3轮各8正式，共96正式、16预热。**所有这些重复调用只覆盖128、2048两个独特输入，不是16或96个独立样例。**[首轮比较与失败](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/hardware_supplements_20261024.json)、[新增矩阵与序列证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/shared_performance.json)
 
-27B默认TP1因缓存/调度容量不足拒绝请求，`num_lcm_blocks=31`，不能写成权重已证实放不下；事前固定的95%预算候选获得47页并完成96正式请求，TP2使用同预算。默认失败与候选均保留。9B早期两次采集因退出监控冲突失败，未追认为成功。2026-10-15/18的旧源结果另保留身份，不与本轮源拼接。CPU软件测试亦不替代上述NPU证据。[软件验证范围](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/software_verification.json)
+27B默认TP1因缓存/调度容量不足拒绝请求，`num_lcm_blocks=31`，不能写成权重已证实放不下；事前固定的95%预算候选获得47页并完成96正式请求，TP2使用同预算。默认失败与候选均保留。9B早期两次采集因退出监控冲突失败，未追认为成功。2026-10-15/18的旧源结果另保留身份，不与本轮源拼接。CPU软件测试亦不替代上述NPU证据。[软件验证范围](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/software_verification.json)
 
 ### 2.3 对照结论与限制
 
@@ -118,7 +118,7 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 
 图1：2048输入、并发4的正式批次。每5毫秒显示该类区间覆盖率，各行可以重叠；精确统计来自原始区间而非图像像素。灰色为保留的未归类活动，包括控制或标记任务，不能算作“空闲”。主机等待与设备工作可以同时发生，等待多不等于通信完全没有执行。
 
-较长输入的计算区间明显增加；分片带来的矩阵计算变化、集合通信及调度共同影响端到端表现。观察到的重叠只说明被分类范围在时间上相交，不能据此认定采用了最优通信重叠算法，范围内也可能包含等待。完整逐格统计、锚和输入文件SHA见[设备时间线证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/native_profile_summary.json)。
+较长输入的计算区间明显增加；分片带来的矩阵计算变化、集合通信及调度共同影响端到端表现。观察到的重叠只说明被分类范围在时间上相交，不能据此认定采用了最优通信重叠算法，范围内也可能包含等待。完整逐格统计、锚和输入文件SHA见[设备时间线证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/native_profile_summary.json)。
 
 ## 4. 任务四：对比实验与通信策略
 
@@ -171,7 +171,7 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 | 2048 | 1    | 5.59 [5.58, 5.59]    | 5726.61  | 31252 / 37987 | 31040 / 33888 |
 | 2048 | 4    | 6.82 [6.81, 6.85]    | 18778.63 | 32018 / 38753 | 31806 / 34654 |
 
-独立容量探针实际完成4095输入+1输出，1预热、1正式请求，两rank均执行真实前向并正常退出；这证明当前配置的4096边界请求能运行，不是独占硬件最大上下文或数值正确性的证明。前一次容量探针请求完成但退出清理检查失败，仍保留为失败。默认预算的TP1缓存页不足也保留；未将较早TP1耗时与本表相除构造大模型加速比。[27B容量实测](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/large_model_capacity.json)
+独立容量探针实际完成4095输入+1输出，1预热、1正式请求，两rank均执行真实前向并正常退出；这证明当前配置的4096边界请求能运行，不是独占硬件最大上下文或数值正确性的证明。前一次容量探针请求完成但退出清理检查失败，仍保留为失败。默认预算的TP1缓存页不足也保留；未将较早TP1耗时与本表相除构造大模型加速比。[27B容量实测](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/large_model_capacity.json)
 
 ### 4.5 通信粒度实验：Prefill分块4096与512
 
@@ -191,9 +191,9 @@ TP1/TP2 保持 revision、权重、dtype、tokenizer、输入 IDs 和采样参�
 | 512  | 0    | {'[512]': 16}    | 3736.68  | 3277.18 | 328.86 | 242.83 |
 | 512  | 1    | {'[512]': 16}    | 3736.68  | 3275.77 | 420.94 | 202.76 |
 
-每rank的Prefill由2次4096行变为16次512行，总输入仍为8192行。这直接证明Prefill前向次数增加；按第3.1节固定通信位置，支持集合通信启动次数随之增加的机制解释，不能用内外层设备事件数充当逻辑调用数。通信并集和批次时间需结合表中实测，不用事件数量简单相加。普通计时中512的吞吐比4096下降12.52%，E2E中位数升高。本协议下没有观察到吞吐收益；不能推断小分块在所有混合负载都更差，也不能把全部代价单独归因于HCCL。[完整普通计时、所有轮次与HBM](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/shared_performance.json)
+每rank的Prefill由2次4096行变为16次512行，总输入仍为8192行。这直接证明Prefill前向次数增加；按第3.1节固定通信位置，支持集合通信启动次数随之增加的机制解释，不能用内外层设备事件数充当逻辑调用数。通信并集和批次时间需结合表中实测，不用事件数量简单相加。普通计时中512的吞吐比4096下降12.52%，E2E中位数升高。本协议下没有观察到吞吐收益；不能推断小分块在所有混合负载都更差，也不能把全部代价单独归因于HCCL。[完整普通计时、所有轮次与HBM](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/shared_performance.json)
 
 ## 5. 结论与复现材料
 
 
-核心运行源1531项清单SHA为`2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3`。硬件、性能与Profiler测量均对应这一固定实现。四模型基础配置位于`configs/homework2/`；0.8B的512分块策略配置分别见[普通计时配置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/runners/measurement_r1/effective_qwen35_0.8b_tp2_chunk512.json)和[Profiler配置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/runners/profile_r4/effective_qwen35_0.8b_tp2_chunk512.json)；软件与首轮运行材料见[软件与双rank证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261023/README.md)，性能、通信及容量见[实测证据与复现入口](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/evidence/homework2_20261025/README.md)，逐条核对见[要求核对表](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/in-progress/docs/project/homework2_requirements_audit_20261028.md)。包含服务器账户或私有路径的原始日志保留在工作区，不随公开源码发布。教学网提交由小组本人处理。
+核心运行源1531项清单SHA为`2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3`。硬件、性能与Profiler测量均对应这一固定实现。四模型基础配置位于`configs/homework2/`；0.8B的512分块策略配置分别见[普通计时配置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/runners/measurement_r1/effective_qwen35_0.8b_tp2_chunk512.json)和[Profiler配置](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/runners/profile_r4/effective_qwen35_0.8b_tp2_chunk512.json)；软件与首轮运行材料见[软件与双rank证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261023/README.md)，性能、通信及容量见[实测证据与复现入口](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/evidence/homework2_20261025/README.md)，逐条核对见[要求核对表](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/docs/project/homework2_requirements_audit_20261028.md)。包含服务器账户或私有路径的原始日志保留在工作区，不随公开源码发布。教学网提交由小组本人处理。

@@ -2,8 +2,8 @@
   "date": "2026-10-29",
   "scope": "User-edited HW2 report with two localized corrections; no runtime change",
   "user_baseline_sha256": "e41ef0c808747a6033e201f6880e3133741745bad116243ac7009dcef3f24a68",
-  "report_sha256": "dc0d6e195af9e42c4a56bbecce6ba7a7ef706781189359f3822142793b3e7729",
-  "pdf_sha256": "05aacafd6003df8b93bc4d7edcb8d7fe6d76b4752961ac54310bdd712bc45713",
+  "report_sha256": "2498a7ee2cabf14cf5c5d93f3dfb3d434272c750cac6e19fb601b81896b2ba5c",
+  "pdf_sha256": "94710933fb4737754ff7bf841704311560bb4a32c4a43df9252bd2844760216c",
   "pdf_pages": 8,
   "localized_replacements": 2,
   "user_structure_deletions_and_tables_preserved": true,
@@ -24,5 +24,7 @@
   "unchanged_runtime_files": 1531,
   "all_pdf_pages_rendered_and_visually_reviewed": true,
   "new_npu_experiment": false,
-  "previous_delivery_commit": "3d10406b0a829da64a47d3d7c0bca56d93ec5482"
+  "previous_delivery_commit": "82729f9eff229b36d3c0868e66fa831a75d7f169",
+  "delivery_branch": "homework2/completed",
+  "branch_links_updated": true
 }
