@@ -6,6 +6,8 @@
 
 **当前分支：`project/develop`。用途：继续完成、整合和维护整个四模型Agent大项目。**
 
+已接入作业2的双chip配置、测量/分析工具和测试，未合入作业2报告。[当前接续与剩余核对项](docs/project/project_handoff_20261031.md)优先于历史进度表；作业2完成版保留在[`homework2/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/completed)。
+
 | 入口 | 状态 | 用途 |
 | --- | --- | --- |
 | `project/develop` | **大项目继续开发** | 四模型运行时、原生Session/KV、Agent实验、开源维护与后续整合主线 |

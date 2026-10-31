@@ -1,0 +1,388 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026 LightSeek Foundation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib
+import json
+import os
+import subprocess
+import sys
+import time
+from contextlib import nullcontext
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+
+from benchmarks.course_project.core import build_serve_command, load_model_config
+from benchmarks.course_project.tp_matrix import (
+    build_inputs,
+    capture_profile,
+    run_matrix,
+    validate_protocol,
+)
+from scripts.run_session_kv import _engine_cli_args, _local_model_path
+
+
+def parse_chip_logic_ids(value: str) -> dict[int, int]:
+    """Parse explicit physical-chip:logical-device pairs without duplicates."""
+    try:
+        pairs = [tuple(map(int, item.split(":"))) for item in value.split(",")]
+        if (
+            not pairs
+            or any(len(pair) != 2 or min(pair) < 0 for pair in pairs)
+            or len({pair[0] for pair in pairs}) != len(pairs)
+            or len({pair[1] for pair in pairs}) != len(pairs)
+        ):
+            raise ValueError("duplicate or invalid chip/device mapping")
+        return dict(pairs)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(
+            "expected chip:logical pairs, e.g. 0:2,1:3"
+        ) from error
+
+
+def source_mismatches(manifest: dict[str, str]) -> list[str]:
+    """Return changed or missing files relative to the explicit source manifest."""
+    return [
+        name
+        for name, expected in manifest.items()
+        if not (REPO_ROOT / name).is_file()
+        or hashlib.sha256((REPO_ROOT / name).read_bytes()).hexdigest() != expected
+    ]
+
+
+def _read_parent_pid(pid: int) -> int:
+    """Read Linux PPID without splitting a process name containing spaces."""
+    stat = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+    identity, separator, remainder = stat.partition("(")
+    fields = remainder.rsplit(")", 1)[-1].split()
+    if (
+        not separator
+        or int(identity.strip()) != pid
+        or ")" not in remainder
+        or len(fields) < 2
+    ):
+        raise ValueError(f"invalid process stat for PID {pid}")
+    return int(fields[1])
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Run a source-pinned native Engine TP matrix."
+    )
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--protocol", type=Path, required=True)
+    parser.add_argument("--source-manifest", type=Path, required=True)
+    parser.add_argument("--npu-id", type=int, required=True)
+    parser.add_argument("--chip-logic-ids", type=parse_chip_logic_ids, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--profile-mode", choices=("off", "all-batches"), required=True)
+    args = parser.parse_args()
+    config = load_model_config(args.config)
+    protocol = json.loads(args.protocol.read_text(encoding="utf-8"))
+    validate_protocol(protocol, max_model_len=config["max_model_len"])
+    if max(protocol["concurrency"]) > config["max_num_seqs"]:
+        raise ValueError("requested concurrency exceeds configured max_num_seqs")
+    profiler_level = os.environ.get("TOKENSPEED_NPU_PROFILER_LEVEL")
+    if args.profile_mode == "all-batches" and profiler_level != "Level1":
+        raise ValueError(
+            "all-batches profiling requires TOKENSPEED_NPU_PROFILER_LEVEL=Level1"
+        )
+    if (
+        args.npu_id < 0
+        or config["device"] != "npu"
+        or config["tp_size"] not in (1, 2)
+        or len(args.chip_logic_ids) != config["tp_size"]
+        or config["prefix_caching"] is not False
+        or config.get("disable_kvstore") is not True
+    ):
+        raise ValueError(
+            "matrix requires explicit NPU TP mapping and disabled prefix cache/KVStore"
+        )
+    out = args.output_dir.resolve()
+    if not out.is_relative_to(REPO_ROOT):
+        raise ValueError("output directory must be inside the project")
+    manifest_path = args.source_manifest.resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    out.mkdir(parents=True, exist_ok=False)
+    for name, path in (("config.json", args.config), ("protocol.json", args.protocol)):
+        with (out / name).open("xb") as file:
+            file.write(path.read_bytes())
+    record = {
+        "config": config,
+        "protocol": protocol,
+        "config_sha256": hashlib.sha256((out / "config.json").read_bytes()).hexdigest(),
+        "protocol_sha256": hashlib.sha256(
+            (out / "protocol.json").read_bytes()
+        ).hexdigest(),
+        "source_manifest_sha256": hashlib.sha256(
+            manifest_path.read_bytes()
+        ).hexdigest(),
+        "device": {"npu_id": args.npu_id, "chip_logic_ids": args.chip_logic_ids},
+        "clock": {
+            "name": "perf_counter_ns",
+            "implementation": time.get_clock_info("perf_counter").implementation,
+            "resolution_seconds": time.get_clock_info("perf_counter").resolution,
+        },
+        "sampling_params": {"temperature": 0, "ignore_eos": True, "stream_interval": 1},
+        "profile_mode": args.profile_mode,
+        "profiler_level": profiler_level,
+        "normal_performance_eligible": args.profile_mode == "off",
+        "process_samples": [],
+        "foreign_processes": [],
+        "runtime_origins_unchanged": False,
+        "status": "started",
+        "scope": "fixed exact token inputs; no Session; client stream chunks, not device token times; sampled HBM, not instantaneous peak",
+    }
+    try:
+        # The lease checks idle devices and source identity before any Torch import.
+        from benchmarks.course_project.tp_devices import (
+            hardware_lease,
+            is_descendant,
+            target_process_pids,
+            verify_module_origins,
+        )
+
+        with hardware_lease(
+            REPO_ROOT,
+            npu_id=args.npu_id,
+            chip_logic_ids=args.chip_logic_ids,
+            tp_size=config["tp_size"],
+            output_dir=out,
+            source_manifest=manifest_path,
+        ) as guard:
+            record["guard"] = guard
+            from transformers import AutoTokenizer
+
+            tokenizer = AutoTokenizer.from_pretrained(
+                _local_model_path(config),
+                revision=config["model_revision"],
+                local_files_only=True,
+            )
+            inputs = build_inputs(
+                tokenizer.encode(protocol["seed_text"], add_special_tokens=False),
+                lengths=protocol["input_lengths"],
+            )
+            with (out / "inputs.json").open("x", encoding="utf-8") as file:
+                file.write(json.dumps(inputs, indent=2) + "\n")
+            record["inputs"] = inputs
+            record["inputs_sha256"] = hashlib.sha256(
+                (out / "inputs.json").read_bytes()
+            ).hexdigest()
+            command = build_serve_command(
+                config, host="127.0.0.1", port=protocol["engine_port"]
+            )
+            record["engine_cli_args"] = _engine_cli_args(command)
+            runtime_modules = {
+                name: importlib.import_module(name)
+                for name in (
+                    "tokenspeed.runtime.entrypoints.engine",
+                    "tokenspeed_kernel",
+                    "tokenspeed_kernel_npu",
+                    "tokenspeed_scheduler",
+                    "tokenspeed_scheduler.tokenspeed_scheduler_ext",
+                )
+            }
+            module_files = {
+                name: Path(module.__file__) for name, module in runtime_modules.items()
+            }
+            dependencies_path = (
+                REPO_ROOT / "docs/evidence/homework2_20261023/runtime_dependencies.json"
+            )
+            dependencies_raw = dependencies_path.read_bytes()
+            with (out / "runtime_dependencies.json").open("xb") as file:
+                file.write(dependencies_raw)
+            record["runtime_dependencies_sha256"] = hashlib.sha256(
+                dependencies_raw
+            ).hexdigest()
+            dependencies = json.loads(dependencies_raw)
+            record["runtime_origins"] = verify_module_origins(
+                REPO_ROOT,
+                module_files,
+                external_extensions=dependencies["external_extensions"],
+            )
+            for name, origin in record["runtime_origins"].items():
+                if (
+                    "path" in origin
+                    and manifest.get(origin["path"]) != origin["sha256"]
+                ):
+                    pinned_scheduler = (
+                        name == "tokenspeed_scheduler.tokenspeed_scheduler_ext"
+                        and module_files[name].suffix in {".so", ".pyd"}
+                        and dependencies["external_extensions"].get(
+                            module_files[name].name
+                        )
+                        == origin["sha256"]
+                    )
+                    if not pinned_scheduler:
+                        raise ValueError(
+                            f"loaded module differs from source manifest: {name}"
+                        )
+            Engine = runtime_modules["tokenspeed.runtime.entrypoints.engine"].Engine
+            from tokenspeed.runtime.utils.server_args import prepare_server_args
+
+            def query_hbm() -> str:
+                table = subprocess.check_output(
+                    ["npu-smi", "info"], text=True, timeout=10
+                )
+                sample = {
+                    "observed_ns": time.perf_counter_ns(),
+                    "root_pid": os.getpid(),
+                    "chips": {},
+                    "raw_table": f'npu_smi_{len(record["hbm_samples"]):05d}.txt',
+                }
+                record["process_samples"].append(sample)
+                foreign_before = len(record["foreign_processes"])
+                try:
+                    processes = target_process_pids(
+                        table, npu_id=args.npu_id, chip_ids=set(args.chip_logic_ids)
+                    )
+                    for chip, pids in sorted(processes.items()):
+                        row = {
+                            "pids": sorted(pids),
+                            "foreign_pids": [],
+                            "unknown_pids": [],
+                            "parents": {},
+                        }
+                        sample["chips"][chip] = row
+                        for pid in sorted(pids):
+                            unknown_errors = []
+
+                            def read_parent(current_pid: int) -> int:
+                                try:
+                                    parent_pid = _read_parent_pid(current_pid)
+                                    row["parents"][current_pid] = parent_pid
+                                    return parent_pid
+                                except (OSError, ValueError) as error:
+                                    unknown_errors.append(
+                                        f"PID {current_pid}: {type(error).__name__}: {error}"
+                                    )
+                                    raise
+
+                            if is_descendant(
+                                pid,
+                                root_pid=sample["root_pid"],
+                                read_parent=read_parent,
+                            ):
+                                continue
+                            status = "unknown" if unknown_errors else "foreign"
+                            row[f"{status}_pids"].append(pid)
+                            rejected = {
+                                "observed_ns": sample["observed_ns"],
+                                "chip_id": chip,
+                                "pid": pid,
+                                "status": status,
+                            }
+                            if unknown_errors:
+                                rejected["error"] = "; ".join(unknown_errors)
+                            record["foreign_processes"].append(rejected)
+                    if len(record["foreign_processes"]) != foreign_before:
+                        raise ValueError("foreign or unknown target process detected")
+                except ValueError as error:
+                    sample["error"] = str(error)
+                    sample["raw_table"] = (
+                        f'rejected_process_table_{len(record["process_samples"]) - 1:05d}.txt'
+                    )
+                    with (out / sample["raw_table"]).open(
+                        "x", encoding="utf-8"
+                    ) as file:
+                        file.write(table)
+                    if len(record["foreign_processes"]) == foreign_before:
+                        record["foreign_processes"].append(
+                            {
+                                "observed_ns": sample["observed_ns"],
+                                "chip_id": None,
+                                "pid": None,
+                                "status": "unknown",
+                                "error": str(error),
+                            }
+                        )
+                    raise
+                return table
+
+            try:
+                with Engine(
+                    server_args=prepare_server_args(record["engine_cli_args"])
+                ) as engine:
+                    profile = (
+                        capture_profile(
+                            engine,
+                            output_dir=out,
+                            tp_size=config["tp_size"],
+                            record=record,
+                        )
+                        if args.profile_mode == "all-batches"
+                        else nullcontext()
+                    )
+                    with profile:
+                        run_matrix(
+                            engine,
+                            protocol=protocol,
+                            inputs=inputs,
+                            output_dir=out,
+                            npu_id=args.npu_id,
+                            chip_logic_ids=args.chip_logic_ids,
+                            query_hbm=query_hbm,
+                            record=record,
+                        )
+            finally:
+                record["runtime_dependencies_after_sha256"] = hashlib.sha256(
+                    dependencies_path.read_bytes()
+                ).hexdigest()
+                origins_after = verify_module_origins(
+                    REPO_ROOT,
+                    module_files,
+                    external_extensions=dependencies["external_extensions"],
+                )
+                if (
+                    record["runtime_dependencies_after_sha256"]
+                    != record["runtime_dependencies_sha256"]
+                    or origins_after != record["runtime_origins"]
+                ):
+                    raise ValueError(
+                        "runtime dependencies or loaded module files changed during measurement"
+                    )
+                record["runtime_origins_unchanged"] = True
+        if source_mismatches(manifest):
+            raise ValueError("source changed during matrix measurement")
+        record["status"] = "passed"
+    except BaseException as error:
+        record.update(
+            {
+                "status": "failed",
+                "normal_performance_eligible": False,
+                "error_type": type(error).__name__,
+                "error": str(error),
+            }
+        )
+        raise
+    finally:
+        record["source_after_mismatches"] = source_mismatches(manifest)
+        with (out / "run.json").open("x", encoding="utf-8") as file:
+            file.write(json.dumps(record, indent=2) + "\n")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,14 @@
+{
+  "local_cpu": {
+    "passed": 878,
+    "skipped": 33,
+    "failures": 0,
+    "errors": 0
+  },
+  "hw2_core_byte_identical_files": 1531,
+  "additional_measured_config_byte_identical": true,
+  "source_files_in_integrated_manifest": 1532,
+  "server_cpu_status": "not_run_ssh_authentication_unavailable",
+  "new_npu_experiments": false,
+  "homework2_reports_imported": false
+}

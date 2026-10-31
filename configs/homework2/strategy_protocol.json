@@ -1,0 +1,11 @@
+{
+  "input_lengths": [2048],
+  "concurrency": [4],
+  "max_new_tokens": 32,
+  "warmup_requests": 4,
+  "requests_per_cell": 8,
+  "repetitions": 3,
+  "seed_text": "Explain how a computer moves and processes information. Memory stores the input while processors perform calculations and communicate partial results. ",
+  "hbm_interval_seconds": 0.25,
+  "engine_port": 39280
+}
