@@ -1,0 +1,83 @@
+{
+  "passed": true,
+  "checked_utc": "2026-11-01T05:31:37.212939+00:00",
+  "npu_experiment_started": false,
+  "server_cpu": {
+    "tests": 999,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 8,
+    "passed": 991
+  },
+  "model_files_full_sha_matched": 55,
+  "model_stat_freshly_collected": true,
+  "startup_modes": [
+    "parent",
+    "spawn",
+    "forkserver"
+  ],
+  "startup_origins": {
+    "tokenspeed": {
+      "relative_path": "python/tokenspeed/__init__.py",
+      "sha256": "26874f9f5095e39da01e0da92dbe180bab58232bbd700ba735358e41796623de"
+    },
+    "tokenspeed_scheduler": {
+      "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/__init__.py",
+      "sha256": "d3616da4ed2ed6a4f9b610e2966f91eef623bca8a4ae359fd0c7769c66047384"
+    },
+    "scheduler_extension": {
+      "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/tokenspeed_scheduler_ext.cpython-311-aarch64-linux-gnu.so",
+      "sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae"
+    }
+  },
+  "timeout_selftest": {
+    "passed": true,
+    "cases": [
+      {
+        "parent_exited_before_cleanup": false,
+        "owned_child_stopped": true,
+        "unrelated_control_alive": true
+      },
+      {
+        "parent_exited_before_cleanup": true,
+        "owned_child_stopped": true,
+        "unrelated_control_alive": true
+      }
+    ]
+  },
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "precommit_provenance": "inherited measured-source receipt; NOT a newly executed precommit",
+  "dependency_versions": {
+    "torch": "2.9.0+cpu",
+    "torch-npu": "2.9.0",
+    "transformers": "5.12.0",
+    "tokenspeed-scheduler": "0.1.23",
+    "triton-ascend": "3.2.1",
+    "tokenspeed-triton": "3.8.10.post20260920"
+  },
+  "scheduler_extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+  "bootstrap_sha256": "54521ce0ad11aafba5ada99028010a18fb1b183347db8b98628c78e085e09912",
+  "ready_sha256": "85d7fda6a0271823849240e1e300b5a241c00c438cf36eaf483315f199af1118",
+  "model_state_sha256": "a173598ff9d87ec99fa285342cf46d7805bfe1051f23f60dc8b6412295e3e905",
+  "cpu_xml_sha256": "dd0c5089f66a6503ccec9b697f990829e50a185322e8b1737e8015ae8a72a44c",
+  "check_files": {
+    "cleanup-child-0.txt": "847e66c806145c2dc34589373e52e7e18995c7f46dff3840fabd49998b12ad1f",
+    "cleanup-child-1.txt": "468c70ac1137167e540a23e2cab0476d458cd0fd8bf9b155d5f54740c1743acd",
+    "controller.py": "0f5d2e628d1ab65d0a0a2c5e59a40a71de87bb3d4d5f551bddb09a421ad84af7",
+    "cpu.xml": "dd0c5089f66a6503ccec9b697f990829e50a185322e8b1737e8015ae8a72a44c",
+    "forkserver.json": "3ba9a4ed6ed7e528b2dd267a8a0aca03e584946ca0182b3944d169db9ed9f291",
+    "jobs.json": "3be3157d07c576e5a99ad410d5057d409e101c737643b7d2f13fd688914bbd05",
+    "model_state.json": "a173598ff9d87ec99fa285342cf46d7805bfe1051f23f60dc8b6412295e3e905",
+    "owned_processes.py": "cae097a5c6fa0b968c3092d7998bb50d4f747f89ecde0d59da356bd60740cde8",
+    "parent.json": "3ba9a4ed6ed7e528b2dd267a8a0aca03e584946ca0182b3944d169db9ed9f291",
+    "ready_current.json": "85d7fda6a0271823849240e1e300b5a241c00c438cf36eaf483315f199af1118",
+    "software_0.log": "3669ef9bfc9e84b334c7bf8025b2a2a6d03e922d60e790eaf79e16d75e5993f9",
+    "software_1.log": "56a92f7daf8a0f5285b5cbd676ca1f515d3794d76bc20418db9bf2c844f4ceb7",
+    "software_2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "spawn.json": "3ba9a4ed6ed7e528b2dd267a8a0aca03e584946ca0182b3944d169db9ed9f291",
+    "test_owned_processes.py": "a8d9c8e70b12a641f2388193da7e07ab50d01e41e78452eabf1517362629a31e",
+    "timeout_selftest.json": "ec791dbaa94e6369583a4ffeb6a9d8ec137f5cd7d15fa773b23aef94f22eafec"
+  },
+  "helper_sha256": "a0df7162840dae2621d430b9b21bf1a1b7226fba750fe6adf8ace75753f1dacc",
+  "scope": "Post-measurement reproduction setup check on the measured server; not a new NPU run or pre-measurement weight rehash."
+}

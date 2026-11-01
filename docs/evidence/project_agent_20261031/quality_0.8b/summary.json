@@ -1,0 +1,281 @@
+{
+  "run_file_sha256": "e4603338b9037ad6c0bb6bc6dc624ec5b7f573d71eed0b686c079837be0c8b72",
+  "reported_status": "passed",
+  "reported_error": null,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "workload_sha256": "85f80193c06f36dd7e81fef80d99143bcf2ba0480a069e898eaa8d0580073e17",
+  "pairs_recorded": 32,
+  "pairs_expected": 32,
+  "output_pairs_matched": 32,
+  "context_pairs_validated": 32,
+  "independent_history_and_pair_checks_passed": true,
+  "violations": [],
+  "max_actual_context_tokens": 1000,
+  "tool_observations": [
+    {
+      "actual_delay_seconds": 2.00006757,
+      "tool_result": 465,
+      "expected_tool_result": 465,
+      "resumed_reused_context_tokens": 729,
+      "other_session_requests_completed_inside_window": [
+        [
+          1,
+          8
+        ]
+      ],
+      "other_session_requests_started_inside_window": [
+        [
+          1,
+          9
+        ]
+      ],
+      "other_session_requests_both_started_and_completed_inside_window": [],
+      "kv_samples_inside_window": [
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 193.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 210.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 190.0,
+          "kv_lcm_blocks_allocated": 20.0
+        }
+      ],
+      "positive_held_block_samples_inside_window": 19
+    }
+  ],
+  "idle_before_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 210.0,
+    "kv_lcm_blocks_active": 14.0,
+    "kv_lcm_blocks_cached": 3.0,
+    "kv_lcm_blocks_empty": 193.0,
+    "kv_lcm_blocks_allocated": 17.0
+  },
+  "after_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 210.0,
+    "kv_lcm_blocks_active": 0.0,
+    "kv_lcm_blocks_cached": 5.0,
+    "kv_lcm_blocks_empty": 205.0,
+    "kv_lcm_blocks_allocated": 5.0
+  },
+  "closed_session_count": 2,
+  "close_errors": [],
+  "device_audit": {
+    "passed": true,
+    "devices": {
+      "npu_id": 1,
+      "chip_logic_ids": {
+        "0": 2
+      }
+    },
+    "resource_mode": "shared",
+    "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+    "post_exit_receipt_sha256": "12b766926f5f38b1e72ca83d7cdbcbb6d0e354ac96fffa373ba17fcc9375032c",
+    "guard_samples": 176,
+    "post_exit_samples": 1,
+    "scope": "selected chips observed; own processes released; shared background identities checked when still present; no exclusive or whole-card-idle claim; ancestry/model stat observations are not independently recoverable from raw npu-smi tables",
+    "violations": [],
+    "own_process_count": 2
+  },
+  "phase_audit": {
+    "run_sha256": "e4603338b9037ad6c0bb6bc6dc624ec5b7f573d71eed0b686c079837be0c8b72",
+    "phase_and_close_checks_passed": true,
+    "violations": [],
+    "controls_collected": 32,
+    "native_phase_seconds": 121.3252297,
+    "control_phase_seconds": 149.49547209,
+    "prior_trace_comparison": null,
+    "scope": "quality and phase audit; phase durations are not an OFF/ON performance estimate"
+  },
+  "scope": "finite native correctness/retention observations; explicit control schedule; no independent performance claim",
+  "independent_local_recomputation_matches_server": true,
+  "original_audit_sha256": "f3d46ee56ec0983f49d5862260ba04337992a73de2b62512d4086b2a7092b205",
+  "raw_archive_sha256": "5a265e4b749b5f12eed7c09cbe2d78d9ab2ab94c7151910436ccb7fdac8fe812",
+  "driver": {
+    "exit_code": 0,
+    "timed_out": false,
+    "started_utc": "2026-11-01T04:43:46.928686+00:00",
+    "ended_utc": "2026-11-01T04:50:16.042235+00:00",
+    "source_unchanged": true,
+    "model_files_unchanged": true,
+    "independent_audit_exit": 0
+  },
+  "source_config": "configs/final/qwen35_0.8b.yaml",
+  "source_config_sha256": "63c30484bd6de76a06760fb8adac2f21e5d3b6229ea6187f92be88313cd69545",
+  "effective_config": {
+    "model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "model_id": "Qwen/Qwen3.5-0.8B",
+    "local_model_path": "models/Qwen3.5-0.8B",
+    "served_model_name": "qwen35-0.8b",
+    "mm_attention_backend": "triton_attn",
+    "device": "npu",
+    "tp_size": 1,
+    "max_model_len": 4096,
+    "dtype": "bfloat16",
+    "max_num_seqs": 16,
+    "max_total_tokens": 65536,
+    "chunked_prefill_size": 4096,
+    "block_size": 128,
+    "memory_utilization": 0.9,
+    "graph_capture_sizes": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "prefix_caching": false,
+    "enable_metrics": true,
+    "prometheus_port": 39141,
+    "tokenspeed_metrics_port": 39982,
+    "mixed_batch": false,
+    "overlap_schedule": false,
+    "enforce_eager": false,
+    "disable_kvstore": true
+  }
+}

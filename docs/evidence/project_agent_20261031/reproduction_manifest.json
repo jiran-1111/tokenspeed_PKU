@@ -1,0 +1,10 @@
+{
+  "scope": "Post-measurement reproduction helpers; not part of the eight measured collection/analysis tools.",
+  "files": {
+    "runners/prepare_reproduction.py": "a0df7162840dae2621d430b9b21bf1a1b7226fba750fe6adf8ace75753f1dacc",
+    "runners/test_prepare_reproduction.py": "cc2fcdfa137d9c75ecb09e695c6e038eedbcf3ffd01d745491ecc1380a1474df",
+    "runners/import_bootstrap.txt": "54521ce0ad11aafba5ada99028010a18fb1b183347db8b98628c78e085e09912"
+  },
+  "cpu_regression_tests": 5,
+  "server_check_sha256": "7ef405691a466a6fb6f84ef97cc60ca9f0914384b3a949748825d3104e470dfa"
+}

@@ -1,0 +1,324 @@
+{
+  "run_file_sha256": "44840886481c10872fa64d3c35b46a56168b86dcb7de0a38d1943fff8e057879",
+  "reported_status": "passed",
+  "reported_error": null,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "workload_sha256": "85f80193c06f36dd7e81fef80d99143bcf2ba0480a069e898eaa8d0580073e17",
+  "pairs_recorded": 32,
+  "pairs_expected": 32,
+  "output_pairs_matched": 32,
+  "context_pairs_validated": 32,
+  "independent_history_and_pair_checks_passed": true,
+  "violations": [],
+  "max_actual_context_tokens": 968,
+  "tool_observations": [
+    {
+      "actual_delay_seconds": 2.00006305,
+      "tool_result": 465,
+      "expected_tool_result": 465,
+      "resumed_reused_context_tokens": 715,
+      "other_session_requests_completed_inside_window": [
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ]
+      ],
+      "other_session_requests_started_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ]
+      ],
+      "other_session_requests_both_started_and_completed_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ]
+      ],
+      "kv_samples_inside_window": [
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 47.0,
+          "kv_lcm_blocks_active": 13.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 31.0,
+          "kv_lcm_blocks_allocated": 16.0
+        }
+      ],
+      "positive_held_block_samples_inside_window": 19
+    }
+  ],
+  "idle_before_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 47.0,
+    "kv_lcm_blocks_active": 13.0,
+    "kv_lcm_blocks_cached": 3.0,
+    "kv_lcm_blocks_empty": 31.0,
+    "kv_lcm_blocks_allocated": 16.0
+  },
+  "after_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 47.0,
+    "kv_lcm_blocks_active": 0.0,
+    "kv_lcm_blocks_cached": 4.0,
+    "kv_lcm_blocks_empty": 43.0,
+    "kv_lcm_blocks_allocated": 4.0
+  },
+  "closed_session_count": 2,
+  "close_errors": [],
+  "device_audit": {
+    "passed": true,
+    "devices": {
+      "npu_id": 1,
+      "chip_logic_ids": {
+        "0": 2,
+        "1": 3
+      }
+    },
+    "resource_mode": "shared",
+    "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+    "post_exit_receipt_sha256": "b30a6b4a475017f52c616754600a31f0e3d4f1ecc09e2443869425160d55613a",
+    "guard_samples": 174,
+    "post_exit_samples": 1,
+    "scope": "selected chips observed; own processes released; shared background identities checked when still present; no exclusive or whole-card-idle claim; ancestry/model stat observations are not independently recoverable from raw npu-smi tables",
+    "violations": [],
+    "own_process_count": 3
+  },
+  "phase_audit": {
+    "run_sha256": "44840886481c10872fa64d3c35b46a56168b86dcb7de0a38d1943fff8e057879",
+    "phase_and_close_checks_passed": true,
+    "violations": [],
+    "controls_collected": 32,
+    "native_phase_seconds": 100.64784677,
+    "control_phase_seconds": 189.83145464,
+    "prior_trace_comparison": null,
+    "scope": "quality and phase audit; phase durations are not an OFF/ON performance estimate"
+  },
+  "scope": "finite native correctness/retention observations; explicit control schedule; no independent performance claim",
+  "independent_local_recomputation_matches_server": true,
+  "original_audit_sha256": "d0c79da72691efb8a9553320f21d4839ed452e0b284280e59de1bdc9da44db2b",
+  "raw_archive_sha256": "53df9f804c22935d8abdc58cec33324d60a4648e3a594b7f73e30e56a8b7f7b5",
+  "source_config": "configs/final/qwen35_27b.yaml",
+  "source_config_sha256": "bc1fec0c85c2e8cc751c2ab78ed3d3f77b29359706a8ef079f9e6686cf8d9a58",
+  "effective_config": {
+    "model_revision": "fc05daec18b0a78c049392ed2e771dde82bdf654",
+    "model_id": "Qwen/Qwen3.5-27B",
+    "local_model_path": "models/Qwen3.5-27B",
+    "served_model_name": "qwen35-27b",
+    "mm_attention_backend": "triton_attn",
+    "device": "npu",
+    "tp_size": 2,
+    "max_model_len": 4096,
+    "dtype": "bfloat16",
+    "max_num_seqs": 4,
+    "max_total_tokens": 16384,
+    "chunked_prefill_size": 4096,
+    "block_size": 128,
+    "memory_utilization": 0.9,
+    "graph_capture_sizes": [
+      1,
+      2,
+      4
+    ],
+    "prefix_caching": false,
+    "enable_metrics": true,
+    "prometheus_port": 39141,
+    "tokenspeed_metrics_port": 39982,
+    "mixed_batch": false,
+    "overlap_schedule": false,
+    "enforce_eager": false,
+    "disable_kvstore": true
+  },
+  "resource_observations": {
+    "before_engine_mb": {
+      "0": 15857,
+      "1": 15267
+    },
+    "guard_all_phases_observed_peak_mb": {
+      "0": 46930,
+      "1": 46228
+    },
+    "after_process_exit_mb": {
+      "0": 15857,
+      "1": 15267
+    },
+    "background_process_count_per_chip": {
+      "0": 4,
+      "1": 1
+    },
+    "scope": "Shared total used HBM at observed query points; includes background services; not a model-only or instantaneous-peak measurement."
+  },
+  "driver": {
+    "exit_code": 0,
+    "timed_out": false,
+    "started_utc": "2026-11-01T04:57:55.084866+00:00",
+    "ended_utc": "2026-11-01T05:04:17.186649+00:00",
+    "source_unchanged": true,
+    "model_files_unchanged": true,
+    "independent_audit_exit": 0
+  }
+}

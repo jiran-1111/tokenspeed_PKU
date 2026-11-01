@@ -1,0 +1,88 @@
+{
+  "passed": true,
+  "checked_utc": "2026-11-01T05:28:06.958992+00:00",
+  "source_files": 1535,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "source_mismatches": [],
+  "model_stat_files_checked": 55,
+  "model_stat_mismatches": [],
+  "full_weight_sha_recomputed_at_final": false,
+  "dependency_versions": {
+    "torch": "2.9.0+cpu",
+    "torch-npu": "2.9.0",
+    "transformers": "5.12.0",
+    "tokenspeed-scheduler": "0.1.23",
+    "triton-ascend": "3.2.1",
+    "tokenspeed-triton": "3.8.10.post20260920"
+  },
+  "scheduler_extension_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+  "measured_tools_matched": 8,
+  "bootstrap_sha256": "54521ce0ad11aafba5ada99028010a18fb1b183347db8b98628c78e085e09912",
+  "completed_jobs": 8,
+  "all_exits_and_audits_zero": true,
+  "timed_out_jobs": 0,
+  "releases": [
+    {
+      "job": "quality_0.8b",
+      "post_exit_sha256": "12b766926f5f38b1e72ca83d7cdbcbb6d0e354ac96fffa373ba17fcc9375032c",
+      "own_processes_released": true
+    },
+    {
+      "job": "quality_4b",
+      "post_exit_sha256": "d5b5f17ee8551fc2f884660f212c0cc4c874d8b36df2315e1b3771570559aede",
+      "own_processes_released": true
+    },
+    {
+      "job": "quality_9b",
+      "post_exit_sha256": "e2ff133b64cb86dbc784fae3451b8aa791998ec022e326bc984865cf1e0e2cdb",
+      "own_processes_released": true
+    },
+    {
+      "job": "quality_27b",
+      "post_exit_sha256": "b30a6b4a475017f52c616754600a31f0e3d4f1ecc09e2443869425160d55613a",
+      "own_processes_released": true
+    },
+    {
+      "job": "performance_0.8b",
+      "post_exit_sha256": "2b954ab6a403ac7a336c642d95568ab3520e05860ec4a6a21b49903e544c51fb",
+      "own_processes_released": true
+    },
+    {
+      "job": "performance_4b",
+      "post_exit_sha256": "f71fe9ae6b22f1f69909ae726ad5f2ea54c2e1238c66b46deebf43b1d3086feb",
+      "own_processes_released": true
+    },
+    {
+      "job": "performance_9b",
+      "post_exit_sha256": "7642585d0187658f8e434ae9300b5ec56e0a00cc24bef9502ee571b349a1518d",
+      "own_processes_released": true
+    },
+    {
+      "job": "performance_27b",
+      "post_exit_sha256": "3642022300787591ab73b6132210dba104dce05eace43ea986436d444ea71cf6",
+      "own_processes_released": true
+    }
+  ],
+  "current_devices": {
+    "npu_id": 1,
+    "chip_logic_ids": {
+      "0": 2,
+      "1": 3
+    }
+  },
+  "current_hbm": {
+    "0": {
+      "used_mb": 15857,
+      "capacity_mb": 65536
+    },
+    "1": {
+      "used_mb": 15265,
+      "capacity_mb": 65536
+    }
+  },
+  "present_background_identities_matched": 5,
+  "mapping_sha256": "b136fca78c12ff74cc018363522abbeae3b0a30738444d1618265f763609497f",
+  "device_table_sha256": "91ffecad295780f85b5c0b130cb9e54fade337cb3f616d14c58f80f57ba625d1",
+  "suite_state_sha256": "6a903e3044e51ae1aa106e8789b5ba8e0ced7442776d42053c1ec8ca584953b0",
+  "scope": "Final same-source/model-stat/software/device observations; no new full-weight rehash or whole-device-idle/exclusive claim."
+}

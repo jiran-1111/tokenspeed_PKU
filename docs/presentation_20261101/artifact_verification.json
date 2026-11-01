@@ -1,0 +1,102 @@
+{
+  "passed": true,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "data_sha256": "2d1a34e2898166c2519bb5b31553ab826b0dba305a14c59c2b7a38677e6b952e",
+  "slides": 10,
+  "notes": 10,
+  "embedded_png_sha_matched": 10,
+  "pdf_pages": 10,
+  "pdf_rendered_with": "Poppler pdftoppm; final lossless PDF all ten pages rendered after export changes",
+  "visual_review": "Independent read-only review of montage, slides 5/6/8/10 and PDF counterparts; two clarity suggestions fixed and affected pages rechecked.",
+  "office_application_rerendered": false,
+  "raster_pages": true,
+  "files": {
+    "course_defense.pptx": "da81ae9cb77f73aa1e884daba636a46e162914efa70404bdd6396cc9de04872f",
+    "rendered/course_defense.pdf": "16c067539dd747fdcf5f241aa66dad4eeca6706f529ca9f4a8cce2ba5078b2f8",
+    "rendered/render_manifest.json": "6fbdb004c7f9f48c364e0f14df9d9320aa312c97babf774586ecce81d991eaa9",
+    "runners/render.py": "bd71c1f0fa10b28846438b01bed84ae0b6d971a18d09063ee38fbc0bbce19c4f",
+    "runners/package_deck.cjs": "cbebc3803c58b8441d4f584d2c75079f99ef9018662ac1f1b25c740bbc917e74"
+  },
+  "pdf_pixel_comparison": [
+    {
+      "page": 1,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 2,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 3,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 4,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 5,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 6,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 7,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 8,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 9,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    },
+    {
+      "page": 10,
+      "size": [
+        1280,
+        720
+      ],
+      "pixel_exact": false
+    }
+  ]
+}

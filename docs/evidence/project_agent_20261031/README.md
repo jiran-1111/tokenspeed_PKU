@@ -4,6 +4,23 @@
 
 最终配置保持0.8B TP1、4B TP1、9B FP32输出头 TP1、27B TP2。原生质量负载继续使用两会话、16轮、每轮8个输出token及脚本工具等待；性能继续使用原固定参考IDs、完整预热和三轮交替Session ON/OFF。它们验证有限轨迹，不代表未知统一评测或任意输入语义质量已通过。
 
+## 当前已完成的同源实测
+
+被测实现固定`1d6099da5909e38fdbc737fe77bcb4176c978de1`，1535项清单SHA `633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23`。完整结果见[验收汇总](final_verification.json)、[整轮最终核查](server_final.json)和[当期报告](../../report/course_project_final_20261101.md)。四质量和四性能运行均退出0/无超时，独立设备/阶段/释放审计通过；1710原始运行文件跨端SHA匹配，本地分析与服务器JSON语义相同。
+
+| 模型 | 原生输出/context各通过 | 正式/预热请求 | 三轮TTFT P50下降 | 三轮吞吐比 |
+|---|---:|---:|---:|---:|
+| 0.8B TP1 | 32/32 | 192/64 | 87.99%–89.15% | 3.51–4.39× |
+| 4B TP1 | 32/32 | 192/64 | 94.04%–94.61% | 4.51–5.66× |
+| 9B FP32头 TP1 | 32/32 | 192/64 | 93.43%–94.00% | 4.20–4.25× |
+| 27B TP2 | 32/32 | 192/64 | 89.24%–89.79% | 3.84–4.76× |
+
+全部为共享观察，非独占收益保证。每模型三轮同Engine，不是独立进程样本，不报告CI或显著性。TTFT/E2E和近似TPOT完整P50/P95见[24正式臂CSV](performance_arms.csv)，配对见[摘要CSV](paired_summary.csv)，逐请求数据在各`performance_*/requests.csv`。共享HBM见[资源CSV](resource_summary.csv)：包括背景用量、非瞬时峰/模型净占用，单臂无完整覆盖即null。
+
+每个`quality_*`和`performance_*`目录公开脱敏`summary.json`与`raw_manifest.json`，后者关联本地保留的原始tar SHA及每文件SHA；原始含私有路径/设备PID/不透明请求ID的日志不发布。离线审计可重算历史、配对、阶段和设备原表；PID祖先链/UID/starttime和模型stat只能核查当时收据及哈希，不能冒称可从npu表重新获取。
+
+`software_current.json`记录当前999课程测试，本地966/33、服务器991/8；[逐项跳过](software_skips.json)列明原因与JUnit SHA。`startup_imports.json`核对parent/spawn/forkserver来自当前源码和同一隔离扩展；`environment_current.json`保留实际主机与运行Python，不能把系统探针Python3.11.6混为运行Python3.11.16，也不能把可见cgroup当课程规定预算。
+
 ## 已完成的软件和身份核查
 
 - `software_initial.json`：整合提交528ebba7的1532项源码，在新服务器副本上903通过、8项Windows专用测试跳过；源码前后全部匹配。首次副本目录命名为baseline导致报告分类测试4项失败，更正本次副本目录名后完整重跑通过，原日志和哈希保留，未修改被测源码或断言。
@@ -11,6 +28,8 @@
 - 当前设备入口与共享守卫已通过规格和代码质量审查。守卫轮询观察实时设备、背景PID及UID/starttime，只能中断自身采集父进程；它不能预留其他用户的设备。
 
 当前完整源码和工具在实验前分别固定清单。CPU检查、NPU运行和独立分析按实际记录分类，不能互相替代。新的硬件结论只在对应运行、退出释放和独立审计均有效时成立。
+
+测量实际8工具为`tool_manifest.json`；后补`prepare_reproduction.py`、其5项CPU回归和实际bootstrap快照另见`reproduction_manifest.json`，不混称测量前工具。完整新机器准备及运行命令见[当前复现入口](../../project/final_delivery_20261101.md)。历史模型全SHA检查和各次模型stat核查分别记录；后补复现检查重新计算模型SHA不追认成测量前的另一次全权重检查。
 
 ## 当前入口
 

@@ -1,0 +1,65 @@
+{
+  "implementation_commit": "1d6099da5909e38fdbc737fe77bcb4176c978de1",
+  "source_files": 1535,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "local_cpu": {
+    "tests": 999,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 33,
+    "passed": 966
+  },
+  "server_cpu": {
+    "tests": 999,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 8,
+    "passed": 991
+  },
+  "source_mismatches": [],
+  "precommit": {
+    "command": "pre-commit run --all-files",
+    "exit_code": 0,
+    "log_sha256": "dc73913d9a1174df6d1ac1c35032ba1ad792aee97ad976742992c7500aa81200"
+  },
+  "git_blobs_matched": 1550,
+  "startup_import_modes": [
+    "parent",
+    "spawn",
+    "forkserver"
+  ],
+  "timeout_cleanup_selftest": {
+    "passed": true,
+    "cases": [
+      {
+        "parent_exited_before_cleanup": false,
+        "owned_child_stopped": true,
+        "unrelated_control_alive": true
+      },
+      {
+        "parent_exited_before_cleanup": true,
+        "owned_child_stopped": true,
+        "unrelated_control_alive": true
+      }
+    ]
+  },
+  "retained_preparation_failures": [
+    {
+      "kind": "source_copy_directory_name",
+      "effect": "initial 4 report classification failures; original 899 passed/8 skipped log retained; renamed only own copy to neutral name and reran 903 passed/8 skipped"
+    },
+    {
+      "kind": "startup_probe_unix_socket_path_length",
+      "effect": "forkserver rejected a too-long task TMPDIR path; shortened only own source-copy path; 1535 source hashes unchanged; all startup modes and complete 991 passed/8 skipped rerun succeeded"
+    },
+    {
+      "kind": "readiness_import_path",
+      "effect": "readiness script did not add the tool directory before importing controller; fixed only readiness import path before any NPU run"
+    },
+    {
+      "kind": "analysis_hbm_record_schema",
+      "effect": "new analyzer initially required redundant per-sample device field not emitted by collector; regression failed then passed after using run devices and raw-table identity; original collectors and references unchanged"
+    }
+  ],
+  "scope": "Software and environment preparation only. NPU results are separately collected and audited; no hidden-course or general-quality acceptance."
+}

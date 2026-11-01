@@ -1,0 +1,5 @@
+model,output_context_pairs,max_context,other_completed,positive_held_samples,resumed_tokens,idle_close_active
+0.8B,32 / 32,1000,1,19,729,14 / 0
+4B,32 / 32,968,6,19,715,14 / 0
+9B,32 / 32,968,6,19,715,14 / 0
+27B,32 / 32,968,3,19,715,13 / 0

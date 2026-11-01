@@ -1,0 +1,62 @@
+{
+  "parent": {
+    "tokenspeed": {
+      "inside_snapshot": true,
+      "relative_path": "python/tokenspeed/__init__.py",
+      "sha256": "26874f9f5095e39da01e0da92dbe180bab58232bbd700ba735358e41796623de"
+    },
+    "tokenspeed_scheduler": {
+      "inside_snapshot": true,
+      "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/__init__.py",
+      "sha256": "d3616da4ed2ed6a4f9b610e2966f91eef623bca8a4ae359fd0c7769c66047384"
+    },
+    "scheduler_extension": {
+      "inside_snapshot": true,
+      "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/tokenspeed_scheduler_ext.cpython-311-aarch64-linux-gnu.so",
+      "sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae"
+    }
+  },
+  "children": {
+    "spawn": {
+      "exit_code": 0,
+      "origins": {
+        "tokenspeed": {
+          "inside_snapshot": true,
+          "relative_path": "python/tokenspeed/__init__.py",
+          "sha256": "26874f9f5095e39da01e0da92dbe180bab58232bbd700ba735358e41796623de"
+        },
+        "tokenspeed_scheduler": {
+          "inside_snapshot": true,
+          "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/__init__.py",
+          "sha256": "d3616da4ed2ed6a4f9b610e2966f91eef623bca8a4ae359fd0c7769c66047384"
+        },
+        "scheduler_extension": {
+          "inside_snapshot": true,
+          "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/tokenspeed_scheduler_ext.cpython-311-aarch64-linux-gnu.so",
+          "sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae"
+        }
+      }
+    },
+    "forkserver": {
+      "exit_code": 0,
+      "origins": {
+        "tokenspeed": {
+          "inside_snapshot": true,
+          "relative_path": "python/tokenspeed/__init__.py",
+          "sha256": "26874f9f5095e39da01e0da92dbe180bab58232bbd700ba735358e41796623de"
+        },
+        "tokenspeed_scheduler": {
+          "inside_snapshot": true,
+          "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/__init__.py",
+          "sha256": "d3616da4ed2ed6a4f9b610e2966f91eef623bca8a4ae359fd0c7769c66047384"
+        },
+        "scheduler_extension": {
+          "inside_snapshot": true,
+          "relative_path": "tokenspeed-scheduler/python/tokenspeed_scheduler/tokenspeed_scheduler_ext.cpython-311-aarch64-linux-gnu.so",
+          "sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae"
+        }
+      }
+    }
+  },
+  "passed": true
+}

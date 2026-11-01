@@ -1,0 +1,341 @@
+{
+  "run_file_sha256": "b828529db8b24175c1c5a722d7103e8c75586b4862c8a7635192e88d173f674c",
+  "reported_status": "passed",
+  "reported_error": null,
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "workload_sha256": "85f80193c06f36dd7e81fef80d99143bcf2ba0480a069e898eaa8d0580073e17",
+  "pairs_recorded": 32,
+  "pairs_expected": 32,
+  "output_pairs_matched": 32,
+  "context_pairs_validated": 32,
+  "independent_history_and_pair_checks_passed": true,
+  "violations": [],
+  "max_actual_context_tokens": 968,
+  "tool_observations": [
+    {
+      "actual_delay_seconds": 2.00006049,
+      "tool_result": 465,
+      "expected_tool_result": 465,
+      "resumed_reused_context_tokens": 715,
+      "other_session_requests_completed_inside_window": [
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ]
+      ],
+      "other_session_requests_started_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ]
+      ],
+      "other_session_requests_both_started_and_completed_inside_window": [
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ]
+      ],
+      "kv_samples_inside_window": [
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 14.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 88.0,
+          "kv_lcm_blocks_allocated": 17.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 85.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 85.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 85.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 85.0,
+          "kv_lcm_blocks_allocated": 20.0
+        },
+        {
+          "requests_running": 1.0,
+          "kv_lcm_blocks_total": 105.0,
+          "kv_lcm_blocks_active": 17.0,
+          "kv_lcm_blocks_cached": 3.0,
+          "kv_lcm_blocks_empty": 85.0,
+          "kv_lcm_blocks_allocated": 20.0
+        }
+      ],
+      "positive_held_block_samples_inside_window": 19
+    }
+  ],
+  "idle_before_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 105.0,
+    "kv_lcm_blocks_active": 14.0,
+    "kv_lcm_blocks_cached": 3.0,
+    "kv_lcm_blocks_empty": 88.0,
+    "kv_lcm_blocks_allocated": 17.0
+  },
+  "after_close_last_metrics": {
+    "requests_running": 0.0,
+    "kv_lcm_blocks_total": 105.0,
+    "kv_lcm_blocks_active": 0.0,
+    "kv_lcm_blocks_cached": 5.0,
+    "kv_lcm_blocks_empty": 100.0,
+    "kv_lcm_blocks_allocated": 5.0
+  },
+  "closed_session_count": 2,
+  "close_errors": [],
+  "device_audit": {
+    "passed": true,
+    "devices": {
+      "npu_id": 1,
+      "chip_logic_ids": {
+        "0": 2
+      }
+    },
+    "resource_mode": "shared",
+    "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+    "post_exit_receipt_sha256": "d5b5f17ee8551fc2f884660f212c0cc4c874d8b36df2315e1b3771570559aede",
+    "guard_samples": 154,
+    "post_exit_samples": 1,
+    "scope": "selected chips observed; own processes released; shared background identities checked when still present; no exclusive or whole-card-idle claim; ancestry/model stat observations are not independently recoverable from raw npu-smi tables",
+    "violations": [],
+    "own_process_count": 2
+  },
+  "phase_audit": {
+    "run_sha256": "b828529db8b24175c1c5a722d7103e8c75586b4862c8a7635192e88d173f674c",
+    "phase_and_close_checks_passed": true,
+    "violations": [],
+    "controls_collected": 32,
+    "native_phase_seconds": 97.56791311,
+    "control_phase_seconds": 165.55567497,
+    "prior_trace_comparison": null,
+    "scope": "quality and phase audit; phase durations are not an OFF/ON performance estimate"
+  },
+  "scope": "finite native correctness/retention observations; explicit control schedule; no independent performance claim",
+  "independent_local_recomputation_matches_server": true,
+  "original_audit_sha256": "23b96477eafc2051de0d57f2b4510c74cae4d114f36b6ffe3692534980e97fc1",
+  "raw_archive_sha256": "9ca235d666798c4a38f8ea86ad49322309dcd475266c1280c4b7a8e72e3c529a",
+  "source_config": "configs/final/qwen35_4b.yaml",
+  "source_config_sha256": "e62b789e77d478848a03e9e1c4ca7fb648b691caa56e36f8a9162fb387e7f679",
+  "effective_config": {
+    "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "model_id": "Qwen/Qwen3.5-4B",
+    "local_model_path": "models/Qwen3.5-4B",
+    "served_model_name": "qwen35-4b",
+    "mm_attention_backend": "triton_attn",
+    "device": "npu",
+    "tp_size": 1,
+    "max_model_len": 4096,
+    "dtype": "bfloat16",
+    "max_num_seqs": 8,
+    "max_total_tokens": 32768,
+    "chunked_prefill_size": 4096,
+    "block_size": 128,
+    "memory_utilization": 0.9,
+    "graph_capture_sizes": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "prefix_caching": false,
+    "enable_metrics": true,
+    "prometheus_port": 39141,
+    "tokenspeed_metrics_port": 39982,
+    "mixed_batch": false,
+    "overlap_schedule": false,
+    "enforce_eager": false,
+    "disable_kvstore": true
+  },
+  "driver": {
+    "exit_code": 0,
+    "timed_out": false,
+    "started_utc": "2026-11-01T04:50:17.831097+00:00",
+    "ended_utc": "2026-11-01T04:55:52.911895+00:00",
+    "source_unchanged": true,
+    "model_files_unchanged": true,
+    "independent_audit_exit": 0
+  }
+}

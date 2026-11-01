@@ -6,7 +6,9 @@
 
 **当前分支：`project/develop`。用途：继续完成、整合和维护整个四模型Agent大项目。**
 
-已接入作业2的双chip配置、测量/分析工具和测试，未合入作业2报告。[当前接续与剩余核对项](docs/project/project_handoff_20261031.md)优先于历史进度表；作业2完成版保留在[`homework2/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/completed)。
+当前交付见[20261101完整报告](docs/report/course_project_final_20261101.md)、[复现入口](docs/project/final_delivery_20261101.md)、[演示PPTX/PDF](docs/presentation_20261101/README.md)和[同源证据](docs/evidence/project_agent_20261031/README.md)。四最终配置完成有限原生组合与Session ON/OFF共享实测：128输出及128context配对，768正式/256预热请求；本地966通过/33跳过，服务器991通过/8跳过。未知课程统一负载、规定主机预算及细则尚未取得，未宣称通过。
+
+已接入作业2的双chip配置、测量/分析工具和测试，未合入作业2报告。[当前接续与验证边界](docs/project/project_handoff_20261031.md)优先于历史进度表；作业2完成版保留在[`homework2/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework2/completed)。
 
 | 入口 | 状态 | 用途 |
 | --- | --- | --- |
@@ -20,7 +22,7 @@
 整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；后续工作在本分支继续。
 
 - [课程阶段交付及冻结复现入口](docs/project/final_delivery_20261018.md)：四模型配置、精确命令、性能和TP候选边界。
-- [课程总报告](docs/report/course_project_final_20261018.md)、[作业1统一报告](docs/report/homework1_compute_subsystem.md)、[答辩材料](docs/presentation/README.md)。
+- [20261018历史阶段总报告](docs/report/course_project_final_20261018.md)、[作业1统一报告](docs/report/homework1_compute_subsystem.md)、[历史答辩材料](docs/presentation/README.md)。
 - [阶段验证证据](docs/evidence/course_final_20261018/README.md)、[HW1原证据](docs/evidence/hw1_20261015/README.md)、[HW1补充证据](docs/evidence/hw1_supplement_20261022/README.md)。失败、旧门槛和适用范围一并保留。
 - [维护与协作核查](docs/project/oss_maintenance_20261018.md)：维护修复与其他成员分支的关系。
 
@@ -93,7 +95,7 @@ ASCEND_RT_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 \
 bash scripts/serve.sh configs/final/qwen35_4b.yaml
 ```
 
-四模型分别使用 `configs/final/qwen35_{0.8b,4b,9b,27b}.yaml`。9B 最终配置显式选择 FP32 输出头。普通服务提供 OpenAI 兼容接口，原生 Session 复用须通过 Engine 会话 API；完整实验和分析命令见 [最终交付入口](docs/project/final_delivery_20261018.md)。
+四模型分别使用 `configs/final/qwen35_{0.8b,4b,9b,27b}.yaml`。9B 最终配置显式选择 FP32 输出头。普通服务提供 OpenAI 兼容接口，原生 Session 复用须通过 Engine 会话 API；当前完整实验和分析命令见 [20261101交付入口](docs/project/final_delivery_20261101.md)。
 
 ## 产物、协作和维护
 

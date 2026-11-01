@@ -1,0 +1,34 @@
+{
+  "slides": 10,
+  "size_pixels": [
+    1280,
+    720
+  ],
+  "raster_pages": true,
+  "font": "msyh.ttc",
+  "bold_font": "msyhbd.ttc",
+  "font_sha256": "d79c55e68b1131eea0cc1c47be4f572d964f28c682e143db2ad09c1e4cb07a3f",
+  "bold_font_sha256": "4508821b3dffe01f0ef5e5326a3e60df705a44633858811f67b6982dce3f6ee6",
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "data_sha256": "2d1a34e2898166c2519bb5b31553ab826b0dba305a14c59c2b7a38677e6b952e",
+  "renderer_sha256": "bd71c1f0fa10b28846438b01bed84ae0b6d971a18d09063ee38fbc0bbce19c4f",
+  "files": {
+    "course_defense.pdf": "16c067539dd747fdcf5f241aa66dad4eeca6706f529ca9f4a8cce2ba5078b2f8",
+    "montage.png": "a7b028f33b1538d04a1f4a2a6b4d371f4b52fabcdee3ef6776728ac8e55e1e7b",
+    "slide-01.png": "d120f53663c60852288f7af5aea5a7e14d3d753a72b9bf791bf5949bf5bc6fe5",
+    "slide-02.png": "379963a3c50179ed993463af82ab5f738fb400540319b41865f05545276ded5e",
+    "slide-03.png": "8591ecb12accec0102b1f7ac01be675093c1d9cf730047c31387e64392deef99",
+    "slide-04.png": "4c8fa206527dde51b6b747e543535cb62a949f445f1c4d0858a3233da0c78fd7",
+    "slide-05.png": "04e46827787bc9e7ca4c5bbd4cb78b52d20bfcb026b0e43885e1773e1fdca77d",
+    "slide-06.png": "491f2a34ff539af2b9c680bb662bde6f9b95dcfe7adc540457a9a4c5d1becfe9",
+    "slide-07.png": "e5dda19f09db30dce235fd0af79054ba373b02827a38f59b8d6af281589a7e5b",
+    "slide-08.png": "c0b47af3c70b58eef6ae23a081a47a03cc9c198e2fd996b201cc110c08484c25",
+    "slide-09.png": "27b79af8dfe9eefbe2bb32f64c92cacc6834482578909d93b6787860799fdb9b",
+    "slide-10.png": "e6151084b5953a8ff2c19812c268e6d88848a282f7e33033f473eb5de452c79d",
+    "slides.json": "537229c79135851aedb44ff2eabc538c7080a48e1ae6d76c2386197bf49c2ad7",
+    "figures/e2e_p95.png": "d06f18e724bf891d4bd4b03bab943939fcd643ca7645e226fedddda2eb53961c",
+    "figures/observed_hbm.png": "f01bb9e84f899b088b57a2874531766b413565a84d18928c5d26873be9ea0207",
+    "figures/throughput_ratio.png": "dfff6b0eab4314b6d1b3aed99d0c00536adbb000509bd2e2b7585045e78a495b",
+    "figures/ttft.png": "bea35abc70c6f4d6510c8e09fb464f6c6ef5fdccb84d02bb5f80e564678a8835"
+  }
+}

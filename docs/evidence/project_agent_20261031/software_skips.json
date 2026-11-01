@@ -1,0 +1,178 @@
+{
+  "local": {
+    "xml_sha256": "3f279124f42e90ee4f6178cf09314defb0ac2da1a228bc191a5d1541eb5bbd4d",
+    "skipped": 33,
+    "tests": [
+      {
+        "test": "test.course_project.test_calibration_inputs_cli::test_symlink_escape_is_rejected",
+        "reason": "Directory symlink creation is unavailable"
+      },
+      {
+        "test": "test.course_project.test_homework1_reference_collection::test_symlink_escape_and_dangling",
+        "reason": "Windows symlink privilege unavailable"
+      },
+      {
+        "test": "test.course_project.test_homework1_reference_collection::test_tensor_comparison",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_reference_collection::test_projection_identity",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_reference_collection::test_case_collection_windows_and_raw_states",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_capture_and_force_preserve_logits",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_invalid_vectors_or_sampler_are_rejected[nonfinite]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_invalid_vectors_or_sampler_are_rejected[shape]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_invalid_vectors_or_sampler_are_rejected[wrong_sampler]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_text_mrope_preserves_all_three_position_axes[False]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_stage_b_capture::test_text_mrope_preserves_all_three_position_axes[True]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_homework1_validation_reference::test_cached_reference_consumes_exact_frontiers",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_scheduler_snapshot_exports_lcm_block_partition[3-2-10]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_scheduler_snapshot_exports_lcm_block_partition[0-4-10]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_scheduler_snapshot_exports_lcm_block_partition[0-0-0]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_event_loop_snapshot_reaches_metrics_without_losing_cached_blocks[3-5]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_event_loop_snapshot_reaches_metrics_without_losing_cached_blocks[0-6]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_kv_block_metrics::test_event_loop_snapshot_reaches_metrics_without_losing_cached_blocks[0-10]",
+        "reason": "could not import 'prometheus_client': No module named 'prometheus_client'"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode::test_port_probe_accepts_closed_listener_with_time_wait",
+        "reason": "POSIX TIME_WAIT reuse semantics"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode::test_dry_run_rejects_model_symlink_escape_when_supported",
+        "reason": "directory symlinks are unavailable in this environment: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: '<LOCAL_PATH>"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode_report::test_analyze_run_rejects_input_symlink_escape[run.json]",
+        "reason": "symlink creation is unavailable: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: '<LOCAL_PATH>"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode_report::test_analyze_run_rejects_input_symlink_escape[config-round-01-chunk-4096.json]",
+        "reason": "symlink creation is unavailable: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: '<LOCAL_PATH>"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode_report::test_analyze_run_rejects_input_symlink_escape[trials.jsonl]",
+        "reason": "symlink creation is unavailable: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: '<LOCAL_PATH>"
+      },
+      {
+        "test": "test.course_project.test_long_prefill_decode_report::test_analyze_run_rejects_input_symlink_to_sibling_raw_run",
+        "reason": "symlink creation is unavailable: [WinError 1314] \u5ba2\u6237\u7aef\u6ca1\u6709\u6240\u9700\u7684\u7279\u6743\u3002: '<LOCAL_PATH>"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_fp32_expansion_preserves_parameter_values_and_recovers_near_tie",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_omitted_override_does_not_inspect_or_modify_other_models",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[device-NPU]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[dtype-float32]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[model-Qwen3.5]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[tied-untied]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[encoder-LM head]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[quantized-unquantized]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      },
+      {
+        "test": "test.course_project.test_npu_lm_head_precision::test_unsupported_explicit_requests_fail_instead_of_being_ignored[weight_dtype-BF16]",
+        "reason": "could not import 'torch': No module named 'torch'"
+      }
+    ]
+  },
+  "server": {
+    "xml_sha256": "f70916a35109574e49cbe2dde138eac92ccb57207448a5127bf8fc8ca0295502",
+    "skipped": 8,
+    "tests": [
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_default_activation_uses_checkout_environment_and_caches",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_explicit_existing_environment_keeps_caches_in_checkout",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_failed_environment_creation_stops_before_installing",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_missing_default_does_not_reuse_an_unrequested_environment",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_relative_activation_uses_powershell_location",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_relative_setup_uses_powershell_location_before_create",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_setup_preserves_a_drive_root_separator",
+        "reason": "requires Windows PowerShell"
+      },
+      {
+        "test": "test.course_project.test_project_env.TestPowerShellProjectEnvironment::test_trailing_separator_matches_condas_normalized_prefix",
+        "reason": "requires Windows PowerShell"
+      }
+    ]
+  }
+}

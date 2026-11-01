@@ -1,0 +1,6 @@
+model,chip,before_mb,performance_sampler_peak_mb,guard_peak_mb,after_mb,background_processes
+0.8B,0,15856,21308,21308,15858,4
+4B,0,15857,29729,29729,15857,4
+9B,0,15857,41739,41739,15857,4
+27B,0,15856,47154,47154,15858,4
+27B,1,15266,46451,46451,15266,1
