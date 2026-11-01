@@ -27,7 +27,6 @@ import hashlib
 import json
 import math
 import os
-import re
 import socket
 import subprocess
 import sys
@@ -40,6 +39,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.course_project.core import build_serve_command, load_model_config
+from benchmarks.course_project.native_devices import (
+    add_device_arguments,
+    native_hardware_lease,
+    validate_resource_policy,
+)
 from benchmarks.course_project.native_performance import (
     arm_order,
     parse_target_hbm,
@@ -211,6 +215,7 @@ async def measure_performance(
     max_model_len: int,
     metrics_url: str,
     output_dir: Path,
+    npu_id: int,
     chip_logic_ids: dict[int, int],
     record: dict,
 ) -> None:
@@ -265,7 +270,7 @@ async def measure_performance(
                 table = output_dir / f'npu_smi_{len(record["hbm_samples"]):05d}.txt'
                 table.write_text(query.stdout)
                 values = parse_target_hbm(
-                    query.stdout, npu_id=1, chip_logic_ids=chip_logic_ids
+                    query.stdout, npu_id=npu_id, chip_logic_ids=chip_logic_ids
                 )
                 item = {
                     "started_ns": start,
@@ -367,24 +372,16 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--engine-port", type=int, required=True)
     parser.add_argument("--metrics-port", type=int, required=True)
+    add_device_arguments(parser)
     args = parser.parse_args()
     out = args.output_dir.resolve()
     if not out.is_relative_to(REPO_ROOT):
         raise ValueError("output directory must be inside the project")
     if out.exists():
         raise FileExistsError("output directory already exists")
-    sources = json.loads(args.source_manifest.read_text(encoding="utf-8"))
-
-    def source_mismatches():
-        return [
-            n
-            for n, s in sources.items()
-            if not (REPO_ROOT / n).is_file()
-            or hashlib.sha256((REPO_ROOT / n).read_bytes()).hexdigest() != s
-        ]
-
-    if source_mismatches():
-        raise ValueError("performance source manifest mismatch")
+    validate_resource_policy(
+        resource_mode=args.resource_mode, min_free_mb=args.min_free_mb
+    )
     config = load_model_config(args.config)
     protocol = json.loads(args.protocol.read_text(encoding="utf-8"))
     assert (
@@ -414,37 +411,18 @@ def main() -> None:
         max_new_tokens=protocol["max_new_tokens"],
         max_model_len=config["max_model_len"],
     )
-    expected_visible = "2,3" if config["tp_size"] == 2 else "2"
-    assert os.environ.get("ASCEND_RT_VISIBLE_DEVICES") == expected_visible
     assert not any(
         k.startswith("TOKENSPEED_DIAG_")
         or k.startswith("TOKENSPEED_9B_")
         or k == "TOKENSPEED_STAGE_B_ARM"
         for k in os.environ
     )
-    chips = {chip: chip + 2 for chip in range(config["tp_size"])}
-    mapping = subprocess.check_output(["npu-smi", "info", "-m"], text=True)
-    for chip, logic in chips.items():
-        assert re.search(
-            rf"(?m)^\s*1\s+{chip}\s+{logic}\s+{logic}\s+Ascend910\s*$", mapping
-        )
-    processes = subprocess.check_output(
-        ["npu-smi", "info", "-t", "proc-mem", "-i", "1"], text=True
-    )
-    assert re.search(r"No process in device\.\s*Chip ID\s*:\s*0(?:\s|$)", processes)
-    if config["tp_size"] == 2:
-        assert processes.count("No process in device.") == 2
     for port in (args.engine_port, args.engine_port + 1, args.metrics_port):
         with socket.socket() as sock:
             assert sock.connect_ex(("127.0.0.1", port)) != 0
     _local_model_path(config)
-    from tokenspeed.runtime.entrypoints.engine import Engine
-    from tokenspeed.runtime.utils.server_args import prepare_server_args
-
     config = {**config, "tokenspeed_metrics_port": args.metrics_port}
     out.mkdir(parents=True, exist_ok=False)
-    (out / "mapping.txt").write_text(mapping)
-    (out / "before_processes.txt").write_text(processes)
     record = {
         "config": config,
         "protocol": protocol,
@@ -462,31 +440,52 @@ def main() -> None:
             args.source_manifest.read_bytes()
         ).hexdigest(),
         "protocol_sha256": hashlib.sha256(args.protocol.read_bytes()).hexdigest(),
+        "devices": {"npu_id": args.npu_id, "chip_logic_ids": args.chip_logic_ids},
+        "resource_mode": args.resource_mode,
+        "device_guard": {},
         "status": "started",
         "scope": "fixed real-trajectory conditional replay; scripted tool; client stream latency; observed HBM, not instantaneous peak",
     }
     try:
-        with Engine(
-            server_args=prepare_server_args(
-                _engine_cli_args(
-                    build_serve_command(config, host="127.0.0.1", port=args.engine_port)
+        with native_hardware_lease(
+            REPO_ROOT,
+            npu_id=args.npu_id,
+            chip_logic_ids=args.chip_logic_ids,
+            tp_size=config["tp_size"],
+            resource_mode=args.resource_mode,
+            min_free_mb=args.min_free_mb,
+            output_dir=out,
+            source_manifest=args.source_manifest,
+            receipt=record["device_guard"],
+        ) as stop_monitor:
+            from tokenspeed.runtime.entrypoints.engine import Engine
+            from tokenspeed.runtime.utils.server_args import prepare_server_args
+
+            with Engine(
+                server_args=prepare_server_args(
+                    _engine_cli_args(
+                        build_serve_command(
+                            config, host="127.0.0.1", port=args.engine_port
+                        )
+                    )
                 )
-            )
-        ) as engine:
-            asyncio.run(
-                measure_performance(
-                    engine,
-                    trace=trace,
-                    protocol=protocol,
-                    max_model_len=config["max_model_len"],
-                    metrics_url=f"http://127.0.0.1:{args.metrics_port}",
-                    output_dir=out,
-                    chip_logic_ids=chips,
-                    record=record,
-                )
-            )
-        if source_mismatches():
-            raise ValueError("performance source changed during measurement")
+            ) as engine:
+                try:
+                    asyncio.run(
+                        measure_performance(
+                            engine,
+                            trace=trace,
+                            protocol=protocol,
+                            max_model_len=config["max_model_len"],
+                            metrics_url=f"http://127.0.0.1:{args.metrics_port}",
+                            output_dir=out,
+                            npu_id=args.npu_id,
+                            chip_logic_ids=args.chip_logic_ids,
+                            record=record,
+                        )
+                    )
+                finally:
+                    stop_monitor()
         record.update({"status": "passed", "source_unchanged": True})
     except BaseException as error:
         record.update(
@@ -498,7 +497,6 @@ def main() -> None:
         )
         raise
     finally:
-        record["source_after_mismatches"] = source_mismatches()
         (out / "run.json").write_text(
             json.dumps(record, indent=2) + "\n", encoding="utf-8"
         )

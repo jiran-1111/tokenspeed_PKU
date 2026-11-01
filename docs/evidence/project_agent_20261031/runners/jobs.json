@@ -1,0 +1,198 @@
+[
+  {
+    "name": "quality_0.8b",
+    "kind": "validation",
+    "model": "0.8b",
+    "config": "configs/final/qwen35_0.8b.yaml",
+    "protocol": "configs/validation/native_agent_16turn_afterrun_20261017.json",
+    "output": "results/raw/project_agent_20261031/quality_0.8b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 900,
+    "admission_free_mb": 16755,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/audit_native.py",
+      "{run}",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "quality_4b",
+    "kind": "validation",
+    "model": "4b",
+    "config": "configs/final/qwen35_4b.yaml",
+    "protocol": "configs/validation/native_agent_16turn_afterrun_20261017.json",
+    "output": "results/raw/project_agent_20261031/quality_4b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 900,
+    "admission_free_mb": 25177,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/audit_native.py",
+      "{run}",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "quality_9b",
+    "kind": "validation",
+    "model": "9b",
+    "config": "configs/final/qwen35_9b.yaml",
+    "protocol": "configs/validation/native_agent_16turn_afterrun_20261017.json",
+    "output": "results/raw/project_agent_20261031/quality_9b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 900,
+    "admission_free_mb": 37255,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/audit_native.py",
+      "{run}",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "quality_27b",
+    "kind": "validation",
+    "model": "27b",
+    "config": "configs/final/qwen35_27b.yaml",
+    "protocol": "configs/validation/native_agent_16turn_afterrun_20261017.json",
+    "output": "results/raw/project_agent_20261031/quality_27b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 900,
+    "admission_free_mb": 43020,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/audit_native.py",
+      "{run}",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "performance_0.8b",
+    "kind": "performance",
+    "model": "0.8b",
+    "config": "configs/final/qwen35_0.8b.yaml",
+    "protocol": "configs/validation/native_agent_performance_20261018.json",
+    "output": "results/raw/project_agent_20261031/performance_0.8b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 1800,
+    "admission_free_mb": 16755,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [
+      "quality_0.8b"
+    ],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/analyze.py",
+      "{run}",
+      "{repo}/docs/evidence/native_afterrun_20261017/0.8b/native_trace.jsonl",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "performance_4b",
+    "kind": "performance",
+    "model": "4b",
+    "config": "configs/final/qwen35_4b.yaml",
+    "protocol": "configs/validation/native_agent_performance_20261018.json",
+    "output": "results/raw/project_agent_20261031/performance_4b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 1800,
+    "admission_free_mb": 25177,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [
+      "quality_4b"
+    ],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/analyze.py",
+      "{run}",
+      "{repo}/docs/evidence/native_afterrun_20261017/4b/native_trace.jsonl",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "performance_9b",
+    "kind": "performance",
+    "model": "9b",
+    "config": "configs/final/qwen35_9b.yaml",
+    "protocol": "configs/validation/native_agent_performance_20261018.json",
+    "output": "results/raw/project_agent_20261031/performance_9b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 1800,
+    "admission_free_mb": 37255,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [
+      "quality_9b"
+    ],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/analyze.py",
+      "{run}",
+      "{repo}/docs/evidence/native_afterrun_20261017/9b/native_trace.jsonl",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  },
+  {
+    "name": "performance_27b",
+    "kind": "performance",
+    "model": "27b",
+    "config": "configs/final/qwen35_27b.yaml",
+    "protocol": "configs/validation/native_agent_performance_20261018.json",
+    "output": "results/raw/project_agent_20261031/performance_27b",
+    "engine_port": 18780,
+    "metrics_port": 39982,
+    "budget_seconds": 1800,
+    "admission_free_mb": 43020,
+    "admission_basis": "historical final-config observed HBM peak plus 8192 MB safety reserve; not a quality threshold or peak-memory guarantee",
+    "after": [
+      "quality_27b"
+    ],
+    "audit_args": [
+      "{repo}/docs/evidence/project_agent_20261031/runners/analyze.py",
+      "{run}",
+      "{repo}/docs/evidence/native_afterrun_20261017/27b/native_trace.jsonl",
+      "{out}",
+      "--source-root",
+      "{repo}",
+      "--source-manifest",
+      "{manifest}"
+    ]
+  }
+]

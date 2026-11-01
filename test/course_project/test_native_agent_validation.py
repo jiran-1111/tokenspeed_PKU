@@ -383,6 +383,12 @@ def test_output_guards_run_before_config_dependency_or_hardware_access(
             "18780",
             "--metrics-port",
             "39982",
+            "--npu-id",
+            "5",
+            "--chip-logic-ids",
+            "1:11",
+            "--resource-mode",
+            "idle",
         ],
     )
     with pytest.raises(error, match="output directory"):

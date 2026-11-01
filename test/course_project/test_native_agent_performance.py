@@ -271,7 +271,7 @@ def test_measurement_joins_sampling_before_return_and_keeps_failures(
             time.sleep(0.005)
             return SimpleNamespace(
                 returncode=0,
-                stdout="| 1 Ascend910 | OK | irrelevant |\n| 0 2 | 0000:03:00.0 | 0 / 0 1234 / 65536 |",
+                stdout="| 5 Ascend910 | OK | irrelevant |\n| 1 11 | 0000:03:00.0 | 0 / 0 1234 / 65536 |",
                 stderr="",
             )
         finally:
@@ -309,7 +309,8 @@ def test_measurement_joins_sampling_before_return_and_keeps_failures(
             max_model_len=4096,
             metrics_url="http://unused-local-test",
             output_dir=tmp_path,
-            chip_logic_ids={0: 2},
+            npu_id=5,
+            chip_logic_ids={1: 11},
             record=record,
         )
 
@@ -374,6 +375,12 @@ def test_performance_output_guards_precede_configuration_and_hardware(
             "18780",
             "--metrics-port",
             "39982",
+            "--npu-id",
+            "5",
+            "--chip-logic-ids",
+            "1:11",
+            "--resource-mode",
+            "idle",
         ],
     )
     with pytest.raises(

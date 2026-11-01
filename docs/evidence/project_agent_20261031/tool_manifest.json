@@ -1,0 +1,14 @@
+{
+  "source_manifest_sha256": "633f4b745e540048325b997dc8357ab8383380dcf70cfe8a1052f6d3865f0d23",
+  "files": {
+    "runners/analyze.py": "6ad448e7f5ad5fadfca8d79c4a21bcfc9dec772ba11bc24fd824edac9568eae8",
+    "runners/audit_devices.py": "0142e72e607a16893b55d0cc2236afe4499f15ca906aa7ae35c85da6e839aaae",
+    "runners/audit_native.py": "eaa8cb5812f07538551708271a77ea1421c19699d4815e21ebd706a182a0859c",
+    "runners/audit_phases.py": "e7451f793e225c44dfce7964d7434c084008e5c56b62dd013ade675fa139c2f2",
+    "runners/controller.py": "0f5d2e628d1ab65d0a0a2c5e59a40a71de87bb3d4d5f551bddb09a421ad84af7",
+    "runners/jobs.json": "3be3157d07c576e5a99ad410d5057d409e101c737643b7d2f13fd688914bbd05",
+    "runners/owned_processes.py": "cae097a5c6fa0b968c3092d7998bb50d4f747f89ecde0d59da356bd60740cde8",
+    "runners/test_owned_processes.py": "a8d9c8e70b12a641f2388193da7e07ab50d01e41e78452eabf1517362629a31e"
+  },
+  "scope": "Current collection, outer process cleanup and independent analysis tools; separate from runtime source inventory."
+}

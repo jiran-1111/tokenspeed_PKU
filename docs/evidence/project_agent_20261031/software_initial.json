@@ -1,0 +1,41 @@
+{
+  "commit": "528ebba7ccb6ddbab0a25f1937ed72932f55aeb9",
+  "source_files": 1532,
+  "source_manifest_sha256": "bc0df7a18858397d3956458090673f01da6bbd0db05d206c27f0bfeac81a4f99",
+  "source_mismatches_before": [],
+  "source_mismatches_after": [],
+  "server_cpu": {
+    "tests": 911,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 8,
+    "passed": 903
+  },
+  "imports": {
+    "runtime_from_snapshot": true,
+    "scheduler_from_snapshot": true,
+    "scheduler_sha256": "3931f548933ea65f3449fa032c1e9ff4c71610bdb26ce26872d77cc0afffbeae",
+    "torch_version": "2.9.0+cpu",
+    "npu_autoload_disabled": true
+  },
+  "retained_first_attempt": {
+    "server_cpu": {
+      "tests": 911,
+      "errors": 0,
+      "failures": 4,
+      "skipped": 8,
+      "passed": 899
+    },
+    "cause": "The collector named the source checkout baseline, which the report classifier recognized as an ancestor result family. Renamed only our checkout to source_initial, without changing tested files or assertions.",
+    "raw_log_sha256": "90fb852316d2d1599338023c90bdfd49fb0c677b8a9fa17646604d60a2795181"
+  },
+  "raw_artifacts": {
+    "baseline_cpu.log": "90fb852316d2d1599338023c90bdfd49fb0c677b8a9fa17646604d60a2795181",
+    "baseline_cpu_r2.log": "0a3e6babe4cd83ccfffbdf68eda5d790655d05612e828d0cc1381a2e66a37f59",
+    "server_cpu.xml": "fd6da2990fd8b8da5adb8a0f57cafa463fa04c7d7cce43d181ac11751c3756ac",
+    "server_cpu_r2.xml": "83d6ac8627083798c13c30d510b180feb6bcdd1e34772a4e954e65584bdf3ce9",
+    "baseline_preparation.json": "094c1f0b91e2941ec76635ac5822398fa39a750ac1720a5c82457ee72a9dc4ed",
+    "baseline_imports.json": "d9997fb1a1322a3804727dbe438b6eb4dc33a5f9dc472173e42502429fe7dfe4"
+  },
+  "scope": "Current integrated snapshot CPU/software verification only; no NPU experiment or hidden course assessment acceptance."
+}

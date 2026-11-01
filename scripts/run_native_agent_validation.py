@@ -26,10 +26,7 @@ import asyncio
 import hashlib
 import json
 import math
-import os
-import re
 import socket
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -42,6 +39,11 @@ from benchmarks.course_project.core import build_serve_command, load_model_confi
 from benchmarks.course_project.native_agent import (
     append_qwen_user_suffix,
     initial_qwen_context,
+)
+from benchmarks.course_project.native_devices import (
+    add_device_arguments,
+    native_hardware_lease,
+    validate_resource_policy,
 )
 from benchmarks.course_project.telemetry import fetch_server_metrics
 from scripts.run_session_kv import (
@@ -343,21 +345,16 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--engine-port", type=int, required=True)
     parser.add_argument("--metrics-port", type=int, required=True)
+    add_device_arguments(parser)
     args = parser.parse_args()
     out = args.output_dir.resolve()
     if not out.is_relative_to(REPO_ROOT):
         raise ValueError("output directory must be inside the project")
     if out.exists():
         raise FileExistsError("output directory already exists")
-    sources = json.loads(args.source_manifest.read_text(encoding="utf-8"))
-
-    def check_source():
-        assert all(
-            hashlib.sha256((REPO_ROOT / name).read_bytes()).hexdigest() == sha
-            for name, sha in sources.items()
-        )
-
-    check_source()
+    validate_resource_policy(
+        resource_mode=args.resource_mode, min_free_mb=args.min_free_mb
+    )
     config = load_model_config(args.config)
     assert (
         config["device"] == "npu"
@@ -370,36 +367,13 @@ def main() -> None:
         and config["disable_kvstore"] is True
         and config["enable_metrics"] is True
     )
-    expected_visible = "2,3" if config["tp_size"] == 2 else "2"
-    assert os.environ.get("ASCEND_RT_VISIBLE_DEVICES") == expected_visible
-    mapping = subprocess.check_output(["npu-smi", "info", "-m"], text=True)
-    for chip in range(config["tp_size"]):
-        assert re.search(
-            rf"(?m)^\s*1\s+{chip}\s+{chip + 2}\s+{chip + 2}\s+Ascend910\s*$", mapping
-        )
-    processes = subprocess.check_output(
-        ["npu-smi", "info", "-t", "proc-mem", "-i", "1"], text=True
-    )
-    assert re.search(r"No process in device\.\s*Chip ID\s*:\s*0(?:\s|$)", processes)
-    if config["tp_size"] == 2:
-        assert processes.count("No process in device.") == 2
     for port in (args.engine_port, args.engine_port + 1, args.metrics_port):
         with socket.socket() as sock:
             assert sock.connect_ex(("127.0.0.1", port)) != 0, port
     model_path = _local_model_path(config)
-    from transformers import AutoTokenizer
-
-    from tokenspeed.runtime.entrypoints.engine import Engine
-    from tokenspeed.runtime.utils.server_args import prepare_server_args
-
-    tokenizer = AutoTokenizer.from_pretrained(
-        str(model_path), revision=config["model_revision"], local_files_only=True
-    )
     workload = json.loads(args.workload.read_text(encoding="utf-8"))
     config = {**config, "tokenspeed_metrics_port": args.metrics_port}
     out.mkdir(parents=True, exist_ok=False)
-    (out / "mapping.txt").write_text(mapping)
-    (out / "before_processes.txt").write_text(processes)
     record = {
         "config": config,
         "workload": workload,
@@ -410,31 +384,59 @@ def main() -> None:
         "turns": [],
         "tools": [],
         "metric_snapshots": [],
+        "devices": {"npu_id": args.npu_id, "chip_logic_ids": args.chip_logic_ids},
+        "resource_mode": args.resource_mode,
+        "device_guard": {},
         "status": "started",
     }
     try:
-        with Engine(
-            server_args=prepare_server_args(
-                _engine_cli_args(
-                    build_serve_command(config, host="127.0.0.1", port=args.engine_port)
-                )
+        with native_hardware_lease(
+            REPO_ROOT,
+            npu_id=args.npu_id,
+            chip_logic_ids=args.chip_logic_ids,
+            tp_size=config["tp_size"],
+            resource_mode=args.resource_mode,
+            min_free_mb=args.min_free_mb,
+            output_dir=out,
+            source_manifest=args.source_manifest,
+            receipt=record["device_guard"],
+        ) as stop_monitor:
+            from transformers import AutoTokenizer
+
+            from tokenspeed.runtime.entrypoints.engine import Engine
+            from tokenspeed.runtime.utils.server_args import prepare_server_args
+
+            tokenizer = AutoTokenizer.from_pretrained(
+                str(model_path),
+                revision=config["model_revision"],
+                local_files_only=True,
             )
-        ) as engine:
-            asyncio.run(
-                run_native_validation(
-                    engine,
-                    tokenizer,
-                    workload=workload,
-                    control_schedule=workload["control_schedule"],
-                    tool_metrics_interval_seconds=workload[
-                        "tool_metrics_interval_seconds"
-                    ],
-                    max_model_len=config["max_model_len"],
-                    metrics_url=f"http://127.0.0.1:{args.metrics_port}",
-                    record=record,
+            with Engine(
+                server_args=prepare_server_args(
+                    _engine_cli_args(
+                        build_serve_command(
+                            config, host="127.0.0.1", port=args.engine_port
+                        )
+                    )
                 )
-            )
-        check_source()
+            ) as engine:
+                try:
+                    asyncio.run(
+                        run_native_validation(
+                            engine,
+                            tokenizer,
+                            workload=workload,
+                            control_schedule=workload["control_schedule"],
+                            tool_metrics_interval_seconds=workload[
+                                "tool_metrics_interval_seconds"
+                            ],
+                            max_model_len=config["max_model_len"],
+                            metrics_url=f"http://127.0.0.1:{args.metrics_port}",
+                            record=record,
+                        )
+                    )
+                finally:
+                    stop_monitor()
         record.update({"status": "passed", "source_unchanged": True})
     except BaseException as error:
         record.update(

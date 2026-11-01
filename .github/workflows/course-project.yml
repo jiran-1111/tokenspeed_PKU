@@ -13,6 +13,7 @@ on:
       - "tokenspeed-kernel/python/**"
       - "tokenspeed-scheduler/**"
       - "test/course_project/**"
+      - "docs/evidence/project_agent_20261031/runners/**"
   pull_request:
     paths:
       - ".github/workflows/course-project.yml"
@@ -24,6 +25,7 @@ on:
       - "tokenspeed-kernel/python/**"
       - "tokenspeed-scheduler/**"
       - "test/course_project/**"
+      - "docs/evidence/project_agent_20261031/runners/**"
   workflow_dispatch:
 
 permissions:
