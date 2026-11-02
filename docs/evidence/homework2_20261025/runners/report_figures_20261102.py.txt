@@ -1,0 +1,233 @@
+"""Redraw the HW2 report figures from the unchanged measured inputs."""
+
+import hashlib
+import json
+import os
+import sys
+from pathlib import Path
+
+WORKSPACE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(WORKSPACE / ".deps/hw2-publication"))
+os.environ["MPLCONFIGDIR"] = str(WORKSPACE / ".cache/matplotlib-hw2")
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.lines import Line2D
+
+TASK = Path(__file__).resolve().parent
+OUTPUT = TASK / "figures"
+OUTPUT.mkdir(exist_ok=True)
+INPUT_DIR = WORKSPACE / ".tmp/hw2-20261023"
+REPO = WORKSPACE / "delivery/homework2-20261023"
+EVIDENCE = REPO / "docs/evidence/homework2_20261025"
+INPUT_HASHES = {
+    "shared_measurement_summary_20261025T071723.json": "bd186b3eaa122f456f7e565a57a8d6f87f3cf7e132f5281beb4f90dabc002076",
+    "shared_profile_summary_r7_20261025.json": "f95f61c87f4e82aa3e3c0817eb3c8d77e7cda71e765c67fa73a765506a3ce056",
+    "shared_profile_plot_data_r7_20261025.json": "3999707c881b0f95ca7c884f29baf79e7a0033d4ca4aefce7e0f414269f838c9",
+}
+for name, expected in INPUT_HASHES.items():
+    assert hashlib.sha256((INPUT_DIR / name).read_bytes()).hexdigest() == expected
+performance = json.loads((INPUT_DIR / next(iter(INPUT_HASHES))).read_text())
+profile = json.loads((INPUT_DIR / "shared_profile_summary_r7_20261025.json").read_text())
+plot = json.loads((INPUT_DIR / "shared_profile_plot_data_r7_20261025.json").read_text())
+public_performance = json.loads((EVIDENCE / "shared_performance.json").read_text())
+public_profile = json.loads((EVIDENCE / "native_profile_summary.json").read_text())
+assert profile["all_passed"]
+
+plt.rcParams.update(
+    {
+        "font.family": "Microsoft YaHei",
+        "font.size": 9,
+        "axes.unicode_minus": False,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "pdf.fonttype": 42,
+        "svg.fonttype": "path",
+    }
+)
+exported = []
+
+
+def export(fig, name, height):
+    # Keep explicit panel and caption positions; pubfig's automatic tight_layout
+    # overrides the reserved caption space in this report's fixed-size figures.
+    fig.set_size_inches(180 / 25.4, height / 25.4, forward=True)
+    for suffix in ("png", "pdf", "svg"):
+        path = OUTPUT / f"{name}.{suffix}"
+        fig.savefig(path, format=suffix, dpi=240, facecolor="white")
+        exported.append(path)
+    plt.close(fig)
+
+
+# Each marker is one complete measured round, not an independent request.
+fig = plt.figure(figsize=(7.08, 4.02))
+# Reserve physical space for the two-line categories and reading guide.
+ax = fig.add_axes([0.14, 0.29, 0.84, 0.53])
+categories = np.arange(4)
+round_offsets = (-0.055, 0, 0.055)
+triples = {}
+for tp, color, marker, shift in ((1, "#0072B2", "o", -0.17), (2, "#D55E00", "s", 0.17)):
+    job = performance["jobs"][f"0.8b_tp{tp}_matrix"]
+    cells = job["cells"]
+    assert cells == public_performance["ordinary_measurements"][f"0.8b_tp{tp}_matrix"]["cells"]
+    for position, cell in zip(categories, cells):
+        rounds = sorted(
+            (batch for batch in job["batches"] if batch["phase"] == "formal"
+             and batch["input_length"] == cell["input_length"]
+             and batch["concurrency"] == cell["concurrency"]),
+            key=lambda batch: batch["repetition"],
+        )
+        values = [r["output_tokens_per_second"] for r in rounds]
+        assert len(values) == 3
+        assert np.median(values) == cell["throughput"]["median"]
+        triples[f"tp{tp}_cell{position}"] = values
+        ax.scatter(
+            position + shift + np.asarray(round_offsets),
+            values,
+            color=color,
+            marker=marker,
+            s=30,
+            edgecolors="white",
+            linewidths=0.5,
+            zorder=4,
+        )
+        middle = cell["throughput"]["median"]
+        ax.plot([position + shift - 0.09, position + shift + 0.09], [middle, middle], color=color, lw=2.2)
+        ax.text(position + shift, middle + 5.5, f"{middle:.2f}", ha="center", color=color, fontsize=8)
+        if position == 1:
+            slow_index = int(np.argmin(values))
+            ax.annotate(
+                f"第{slow_index + 1}轮：{values[slow_index]:.2f}",
+                (position + shift + round_offsets[slow_index], values[slow_index]),
+                xytext=(-35 if tp == 1 else 25, -22),
+                textcoords="offset points",
+                color=color,
+                fontsize=8,
+                ha="center",
+                arrowprops={"arrowstyle": "-", "color": color, "lw": 0.7},
+            )
+ax.set_xticks(categories, ["输入128\n并发1", "输入128\n并发4", "输入2048\n并发1", "输入2048\n并发4"])
+ax.set_ylabel("系统输出吞吐（token/s，越高越快）")
+ax.set_ylim(0, 215)
+ax.set_yticks(np.arange(0, 201, 40))
+ax.set_xlim(-0.5, 3.5)
+ax.grid(axis="y", color="#dddddd", linewidth=0.6)
+ax.set_axisbelow(True)
+ax.legend(
+    handles=[
+        Line2D([], [], color="#0072B2", marker="o", linestyle="none", label="单芯片（TP=1）", markersize=5),
+        Line2D([], [], color="#D55E00", marker="s", linestyle="none", label="双芯片（TP=2）", markersize=5),
+    ],
+    frameon=False,
+    ncol=2,
+    loc="upper right",
+    fontsize=8.5,
+)
+fig.suptitle("0.8B：单芯片与双芯片的输出吞吐", y=0.98, fontsize=11)
+fig.text(0.5, 0.89, "共享环境；每请求固定输出32 token；全部三轮均保留", ha="center", fontsize=8.5, color="#555555")
+fig.text(0.14, 0.065, "每个小点 = 一轮（8个正式请求）；横向错开仅为辨认轮次。", fontsize=8)
+fig.text(0.14, 0.025, "粗短横线及其数字 = 三轮中位数；相近的点可能重合。", fontsize=8)
+export(fig, "homework2_throughput_20261025", 102)
+
+
+duration_ms = plot["batch"]["wall_ns"] / 1e6
+edges = np.append(np.arange(0, duration_ms, 5), duration_ms)
+palette = {"device_compute": "#D55E00", "device_collective": "#0072B2"}
+names = ["芯片0 / 计算", "芯片0 / 通信", "芯片1 / 计算", "芯片1 / 通信"]
+
+
+def relative_intervals(rank, kind):
+    start = float(plot["native_window_us"][rank][0])
+    items = plot["ranks"][rank]["intervals_us"][kind]
+    return [(max(0, (a - start) / 1000), min(duration_ms, (b - start) / 1000)) for a, b in items]
+
+
+def coverage(intervals):
+    result = np.zeros(len(edges) - 1)
+    for a, b in intervals:
+        if b <= a:
+            continue
+        left = max(0, np.searchsorted(edges, a, side="right") - 1)
+        right = min(len(result), np.searchsorted(edges, b, side="left") + 1)
+        for i in range(left, right):
+            result[i] += max(0, min(b, edges[i + 1]) - max(a, edges[i]))
+    result /= np.diff(edges)
+    assert np.all(result <= 1 + 1e-8)
+    return np.clip(result, 0, 1)
+
+
+strips = []
+relative = {}
+for rank in ("0", "1"):
+    for kind, color in palette.items():
+        intervals = relative_intervals(rank, kind)
+        relative[rank, kind] = intervals
+        fraction = coverage(intervals)
+        rgb = np.asarray(colors.to_rgb(color))
+        strips.append(1 - fraction[:, None] * (1 - rgb[None, :]))
+fig = plt.figure(figsize=(7.08, 5.9))
+grid = fig.add_gridspec(3, 1, height_ratios=[1.25, 1.25, 0.7], hspace=0.93)
+full = fig.add_subplot(grid[0])
+zoom = fig.add_subplot(grid[1])
+host = fig.add_subplot(grid[2])
+fig.suptitle("0.8B 双芯片：计算、通信与主机等待", y=0.99, fontsize=11)
+fig.text(0.5, 0.945, "每请求输入2048 / 最多并发4 / 输出16；Profiler独立采集", ha="center", fontsize=8.5, color="#555555")
+
+full.pcolormesh(edges / 1000, np.arange(5), np.stack(strips), shading="flat", rasterized=True)
+full.set_ylim(4, 0)
+full.set_yticks(np.arange(4) + 0.5, names)
+full.set_xlim(0, duration_ms / 1000)
+full.set_title("A  设备全程：整批约3.09秒", loc="left", fontsize=9.5, pad=8)
+full.set_xlabel("批次开始后的时间（s）", fontsize=8)
+full.axhline(2, color="#777777", lw=0.7)
+for y in (1, 3):
+    full.axhline(y, color="white", lw=1.3)
+zoom_start, zoom_end = 2980, 3080
+full.axvspan(zoom_start / 1000, zoom_end / 1000, facecolor="none", edgecolor="#333333", linewidth=1, linestyle="--")
+
+for row, (rank, kind) in enumerate(relative):
+    parts = [(max(a, zoom_start) / 1000, (min(b, zoom_end) - max(a, zoom_start)) / 1000) for a, b in relative[rank, kind] if b > zoom_start and a < zoom_end]
+    zoom.broken_barh(parts, (row + 0.13, 0.74), facecolors=palette[kind], edgecolors="none")
+zoom.set_ylim(4, 0)
+zoom.set_yticks(np.arange(4) + 0.5, names)
+zoom.set_xlim(zoom_start / 1000, zoom_end / 1000)
+zoom.set_xticks([2.98, 3.00, 3.02, 3.04, 3.06, 3.08])
+zoom.set_title("B  虚线框局部放大：2.98–3.08秒（100毫秒）", loc="left", fontsize=9.5, pad=8)
+zoom.set_xlabel("批次开始后的时间（s）", fontsize=8)
+zoom.axhline(2, color="#777777", lw=0.7)
+
+for row, rank in enumerate(("0", "1")):
+    parts = [(a / 1000, (b - a) / 1000) for a, b in relative_intervals(rank, "host_wait") if b > a]
+    host.broken_barh(parts, (row + 0.13, 0.74), facecolors="#009E73", edgecolors="none")
+host.set_ylim(2, 0)
+host.set_yticks([0.5, 1.5], ["主机 / rank0等待", "主机 / rank1等待"])
+host.set_xlim(0, duration_ms / 1000)
+host.set_title("C  主机同步等待：等待时芯片仍可能工作", loc="left", fontsize=9.5, pad=8)
+host.set_xlabel("批次开始后的时间（s）", fontsize=8)
+for ax in (full, zoom, host):
+    ax.tick_params(axis="both", labelsize=8, length=2)
+    ax.spines["left"].set_visible(False)
+fig.text(0.18, 0.052, "A：每5毫秒覆盖率，颜色越深表示覆盖越多；B、C：事件区间。", fontsize=7.7)
+fig.text(0.18, 0.024, "白色仅表示该类事件未覆盖；各行可重叠，不能相加或据此判定空闲。", fontsize=7.7)
+fig.subplots_adjust(left=0.18, right=0.98, bottom=0.15, top=0.885)
+export(fig, "homework2_timeline_20261025", 150)
+
+for path in exported:
+    if path.suffix == ".svg":
+        path.write_text("\n".join(line.rstrip() for line in path.read_text(encoding="utf-8").splitlines()) + "\n", encoding="utf-8", newline="\n")
+receipt = {
+    "figures": {p.name: {"sha256": hashlib.sha256(p.read_bytes()).hexdigest(), "bytes": p.stat().st_size} for p in exported},
+    "inputs": INPUT_HASHES,
+    "revision": "2026-11-02",
+    "changes": ["all three throughput rounds plus median", "device overview and 100 ms enlargement", "host synchronization wait in a separate panel"],
+    "zoom_ms_after_batch_start": [zoom_start, zoom_end],
+    "input_data_unchanged": True,
+    "new_hardware_experiment": False,
+}
+(TASK / "figures_manifest.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+(TASK / "round_values.json").write_text(json.dumps(triples, indent=2) + "\n", encoding="utf-8")
+print(json.dumps({"figures": len(exported), "output": str(OUTPUT)}))

@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-02",
+  "scope": "Two report figures and adjacent reading instructions; no experiment or runtime change",
+  "previous_report_revision": "report_revision_20261029.json",
+  "previous_delivery_commit": "07d2a49a9cdfb3392ee9d559b8c78a1ac90939e1",
+  "report_baseline_sha256": "2498a7ee2cabf14cf5c5d93f3dfb3d434272c750cac6e19fb601b81896b2ba5c",
+  "report_sha256": "5ff384554b759ce2ecb4f57a320eb1b28825b1690cf4470941fd064c15c9df87",
+  "pdf_sha256": "acdc398b2f2f803ac388392ae86387ae9503cab3f2d044c769a40c2d659a6297",
+  "pdf_pages": 8,
+  "delivery_branch": "homework2/completed",
+  "root_repository_markdown_identical": true,
+  "root_repository_pngs_identical": true,
+  "localized_caption_replacements": 2,
+  "all_tables_headings_and_other_sections_preserved": true,
+  "throughput_rounds_shown": 24,
+  "all_slow_rounds_retained": true,
+  "timeline_zoom_ms_after_batch_start": [
+    2980,
+    3080
+  ],
+  "host_wait_separate_from_device_activity": true,
+  "unknown_activity_retained_in_original_evidence": true,
+  "source_core_manifest_sha256": "2a1a2196dba54928cc0bde375eb8412df0c222f8cf98cf4ff94c9f66c13f2af3",
+  "unchanged_runtime_files": 1531,
+  "all_pdf_pages_rendered_and_visually_reviewed": true,
+  "new_hardware_experiment": false,
+  "server_revalidation": "Not rerun; the 1531 server-validated runtime files are byte-identical"
+}

@@ -2,6 +2,10 @@
 
 本目录提供作业2要求的性能、逐chip HBM、双rank设备时间线、大模型容量与通信策略材料。[报告](../../report/homework2_communication_subsystem.md)及[要求核对](../../project/homework2_requirements_audit_20261028.md)按原文组织。原4B/9B短输入输出差异保留，不宣称四模型全部输出一致。
 
+2026-11-02重画报告两图并补充相邻读图说明：吞吐展示全部三轮和中位数，设备时间线增加末段100毫秒放大并单列主机等待。实验数据、全部慢轮和1531项运行源保持不变；图表身份见`figures_manifest.json`，当前报告及本地PDF身份见`report_revision_20261102.json`。`report_revision_20261029.json`保留为此前版本记录。
+
+绘图脚本快照为`runners/report_figures_20261102.py.txt`；恢复到工作区`.tmp/hw2-figures-20261102/make_figures.py`，使用既有工作区Python环境运行。三个输入按`figures_manifest.json`所列SHA从原归档恢复至`.tmp/hw2-20261023/`，不得用缺失输入补造时间线。脚本输出PNG、PDF、SVG到其同级`figures/`目录，使用工作区Matplotlib固定尺寸排版。
+
 ## 数据入口与适用范围
 
 - `shared_performance.json`：0.8B同卡TP1/TP2各96正式、27B TP2 96正式、两策略各24正式，共336正式请求；保留全部轮次、慢轮及主矩阵采样缺口。0.8B短输入HBM由另一张卡的独立延长补测取得，两TP各128正式，不回填原轮次。吞吐是三轮中位与范围，延迟是客户端观察；共享背景不等于独占加速比。
