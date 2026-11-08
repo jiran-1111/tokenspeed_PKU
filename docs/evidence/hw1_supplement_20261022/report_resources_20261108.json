@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-08",
+  "scope": "Repository-hosted image and attachment links; no experiment or numerical change",
+  "previous_local_markdown_sha256": "1caf6ad4158b63236a7f43c23cac861d4f7e144df7117c0ac55d6f45cebe922e",
+  "report_sha256": "540e762d02e94549ada7cd6ed2e7ffb486709af3b0637cfe0284285ba9a9bfc7",
+  "report_body_except_resource_urls_unchanged": true,
+  "root_and_repository_markdown_identical": true,
+  "images_hosted_in_repository": true,
+  "images_use_immutable_commit_urls": true,
+  "new_hardware_experiment": false,
+  "runtime_sources_changed": false,
+  "pdf_bytes_unchanged": true,
+  "pdf_sha256": "e9596eca07bb05fee5710f75dcbace85cd5f7e44089a7e23cfd5e9f3adbe1f4e",
+  "retained_original_evidence_and_failures": true
+}

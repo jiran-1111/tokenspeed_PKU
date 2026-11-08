@@ -2,6 +2,8 @@
 
 对应[实验记录](../../project/homework1_supplement_20261022.md)及[统一HW1报告](../../report/homework1_compute_subsystem.md)第3.5、3.6节。全部结果来自本组TokenSpeed计算路径的新运行；原模型、16条验证输入及固定续接保持不变。
 
+2026-11-08将报告图片和公开附件引用统一到GitHub仓库；只更新资源地址，数值、正文结论和运行源不变。当前Markdown及本地原PDF身份见`report_resources_20261108.json`。
+
 ## 文件
 
 | 文件 | 内容 |

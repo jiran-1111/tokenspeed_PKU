@@ -32,7 +32,7 @@
 | 调度与缓存 | 最大上下文 4096，block size=128，chunked prefill size=4096，max_num_seqs=16，max_total_tokens=65536，memory_utilization=0.9 |
 | 实验控制 | prefix cache、KVStore、mixed batch、overlap schedule 均关闭；性能测量的客户端并发为 1 |
 
-设备身份依据 SoC、CANN 设备系列和服务器板型确认，详见[硬件记录](../project/hardware_identity_20261014.md)。每项实验记录对应源码、配置和模型版本；本报告各数值与性能实验使用同一计算实现，未将诊断用的额外同步带入性能基线。
+设备身份依据 SoC、CANN 设备系列和服务器板型确认，详见[硬件记录](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework1/completed/docs/project/hardware_identity_20261014.md)。每项实验记录对应源码、配置和模型版本；本报告各数值与性能实验使用同一计算实现，未将诊断用的额外同步带入性能基线。
 
 ### 1.3 启动与连续推理
 
@@ -221,7 +221,7 @@ CPU重放同时改变了设备和累加实现。为单独观察输出舍入，�
 | 940 | 32 | 722.418 | 10.872 | 10.963 | 1060.191 | 30.101 |
 | 940 | 128 | 719.266 | 10.893 | 10.887 | 2103.297 | 60.891 |
 
-![图1：四种实际输入与输出长度下的首Token延迟和Decode时间](assets/homework1_latency.svg)
+![图1：四种实际输入与输出长度下的首Token延迟和Decode时间](https://raw.githubusercontent.com/jiran-1111/tokenspeed_PKU/0beca1be45f1adbb6687b64c8da2e0fd05fb7030/docs/report/assets/homework1_latency.svg)
 
 **图 1.** 同一配置下，输入从 130 增至 940 tokens 时，TTFT 从约 206 ms 升至约 720 ms；Decode TPOT 在四种条件下保持约 10.8–10.9 ms/token。柱顶为三轮汇总值，不表示置信区间。
 
@@ -260,7 +260,7 @@ CPU重放同时改变了设备和累加实现。为单独观察输出舍入，�
 | GDN Decode 状态更新 | 2286 | 3.223% |
 | 数据类型转换 Cast | 18415 | 2.840% |
 
-![图2：连续127步Decode的算子任务时间构成](assets/homework1_decode_profile.svg)
+![图2：连续127步Decode的算子任务时间构成](https://raw.githubusercontent.com/jiran-1111/tokenspeed_PKU/0beca1be45f1adbb6687b64c8da2e0fd05fb7030/docs/report/assets/homework1_decode_profile.svg)
 
 **图 2.** 分母为全部 108331 行算子记录的累计 Task Duration，合计约 981676.691 μs。不同任务可能重叠，因此图中的百分比不是请求墙钟时间的互斥分解；“其余类型”为剩余所有类型的合计。
 
@@ -297,7 +297,7 @@ Prefill: relative-L2 ≤ 0.04160680933973707，max-abs ≤ 0.4934459924697876
 Decode : relative-L2 ≤ 0.027781371644764415，max-abs ≤ 0.4458632469177246
 ```
 
-第3.5、3.6节的补充实验继续使用这1396项计算实现，另行记录诊断脚本与测试源身份，见[补充实验记录](../project/homework1_supplement_20261022.md)和[补充证据](../evidence/hw1_supplement_20261022/README.md)。补充实验使用实时查验为空闲的逻辑设备3（NPU1/chip1），不将其诊断耗时计入第4章性能样本。
+第3.5、3.6节的补充实验继续使用这1396项计算实现，另行记录诊断脚本与测试源身份，见[补充实验记录](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework1/completed/docs/project/homework1_supplement_20261022.md)和[补充证据](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework1/completed/docs/evidence/hw1_supplement_20261022/README.md)。补充实验使用实时查验为空闲的逻辑设备3（NPU1/chip1），不将其诊断耗时计入第4章性能样本。
 
 ### B. 测试与采集入口
 
@@ -305,12 +305,12 @@ Decode : relative-L2 ≤ 0.027781371644764415，max-abs ≤ 0.4458632469177246
 
 | 实验 | 入口与输出 |
 | --- | --- |
-| 关键算子/状态 | `test_homework1_norm_rope_npu.py`、`test_gemma_rmsnorm_canonical_npu.py`、`test_qk_norm_fp32_gamma.py`、`test_gdn_homework1.py`、`test_gdn_prefill.py`、`test_mha_homework1.py`、`test_causal_conv1d_homework1_npu.py`、`test_layernorm_gated_npu.py`、`test_homework1_session_npu.py`；完整路径见[复现命令](../evidence/hw1_20261015/README.md) |
+| 关键算子/状态 | `test_homework1_norm_rope_npu.py`、`test_gemma_rmsnorm_canonical_npu.py`、`test_qk_norm_fp32_gamma.py`、`test_gdn_homework1.py`、`test_gdn_prefill.py`、`test_mha_homework1.py`、`test_causal_conv1d_homework1_npu.py`、`test_layernorm_gated_npu.py`、`test_homework1_session_npu.py`；完整路径见[复现命令](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework1/completed/docs/evidence/hw1_20261015/README.md) |
 | 完整模型参考与采集 | `scripts/collect_homework1_validation_reference.py`、`scripts/run_homework1_stage_b.py`、`scripts/analyze_homework1_stage_b.py` |
 | 性能基线 | `scripts/serve.py`、`scripts/run_benchmark.py`；固定 2×2 编排文本在公开证据目录 |
 | Decode Profiler | `scripts/run_homework1_decode_profile.py`；数值验证通过且源码固定后，在独立干净进程运行 |
 
-以下公开数据均对应本报告的实验快照，可通过[证据目录](../evidence/hw1_20261015/README.md)查看文件说明及完整命令。大型 logits、原始 trace、退出日志和 XML 的文件哈希已记录；模型权重及完整原始采集不随报告打包。
+以下公开数据均对应本报告的实验快照，可通过[证据目录](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework1/completed/docs/evidence/hw1_20261015/README.md)查看文件说明及完整命令。大型 logits、原始 trace、退出日志和 XML 的文件哈希已记录；模型权重及完整原始采集不随报告打包。
 
 | 正文结果 | 对应数据 |
 | --- | --- |

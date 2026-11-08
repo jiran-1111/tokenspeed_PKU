@@ -1,5 +1,7 @@
 # E0 baseline configurations
 
+> 原始材料范围：本页保留的 `results/`、`.tmp/` 及本地笔记路径用于定位历史采集材料，对应原始文件未随仓库发布，故不作为可点击的仓库附件。可公开复核的汇总与身份清单见[HW1原始阶段公开证据](../../docs/evidence/hw1_20261015/README.md)和[HW1补充阶段公开证据](../../docs/evidence/hw1_supplement_20261022/README.md)；这些索引不等同于各条历史原始文件，也不替代其记录。
+
 These files are static, unmeasured E0 templates derived from their matching
 `configs/bringup/` configurations with `build_ablation_configs`. They preserve
 the bring-up model and runtime settings, omit only the bring-up `status` field,
@@ -9,9 +11,9 @@ and set `chunked_prefill_size` to `max_model_len`, `prefix_caching` to `false`,
 
 Measured default-config baseline results for Qwen3.5-0.8B, 4B, and 9B are
 documented in [`docs/project/baseline.md`](../../docs/project/baseline.md), with
-their raw summaries in the [0.8B](../../results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/),
-[4B](../../results/raw/baseline/qwen35_4b_20261009_full/), and
-[9B](../../results/raw/baseline/qwen35_9b_20261009_full/) result directories.
+their raw summaries in the 0.8B（原始路径：`../../results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/`）,
+4B（原始路径：`../../results/raw/baseline/qwen35_4b_20261009_full/`）, and
+9B（原始路径：`../../results/raw/baseline/qwen35_9b_20261009_full/`） result directories.
 Those default-config measurements are separate from these E0 templates, which
 remain unmeasured and do not imply E0 results.
 

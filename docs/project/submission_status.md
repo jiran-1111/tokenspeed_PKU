@@ -1,5 +1,7 @@
 # 课程提交验收状态（HW1补充至2026-10-22）
 
+> 原始材料范围：本页保留的 `results/`、`.tmp/` 及本地笔记路径用于定位历史采集材料，对应原始文件未随仓库发布，故不作为可点击的仓库附件。可公开复核的汇总与身份清单见[HW1原始阶段公开证据](../evidence/hw1_20261015/README.md)和[HW1补充阶段公开证据](../evidence/hw1_supplement_20261022/README.md)；这些索引不等同于各条历史原始文件，也不替代其记录。
+
 2026-10-22 HW1补充：原1396项计算实现不变，新增[最后评分与GDN困难输入实验](homework1_supplement_20261022.md)，统一[作业1报告](../report/homework1_compute_subsystem.md)第3.5、3.6节已补实际结果。最终1407项快照同源服务器114项回归通过、零跳过；552个补充张量与已下载独立复算结果逐文件SHA一致，目标chip释放。原13处argmax差异和68个1%失败保留；局部FP32重放为9处差异（消除8处、新增4处），不能宣布自由生成一致。此分支针对HW1补充；以下保留原日期的项目状态，整个项目后续进度见后续项目分支。
 
 依据任务书第 54 节验收清单及第 41 节重点实验核对。项目整体尚未通过验收；文件存在与软件测试通过均不能替代设备实验。这里列出当前证据和继续完成所需工作。
@@ -31,7 +33,7 @@
 
 | 要求 | 当前证据 | 缺项 |
 |---|---|---|
-| 0.8B 运行与正确性 | TP1 服务、多长度连续推理、模块/state与Session验收已有；[历史官方固定样例](../../results/raw/correctness/gdn_fp32_candidate_0.8b_20261011_bringup_max64_reference_compare.json) raw 1/8、stop-aligned 7/8 | 完整模型数值未闭环；最终版本回归及验收方向待确认 |
+| 0.8B 运行与正确性 | TP1 服务、多长度连续推理、模块/state与Session验收已有；历史官方固定样例（原始路径：`../../results/raw/correctness/gdn_fp32_candidate_0.8b_20261011_bringup_max64_reference_compare.json`） raw 1/8、stop-aligned 7/8 | 完整模型数值未闭环；最终版本回归及验收方向待确认 |
 | 4B 运行与正确性 | [当前生产源码TP1复验](current_4b_correctness_20261014.md) max64八样例raw/stop-aligned 8/8、20文件cross-SHA；此前Session KV配对通过 | 固定样例不是任意长度/语义普遍正确；TP2、最终同版本Session/性能仍需复验 |
 | 9B 运行与正确性 | [当前生产源码TP1复验](current_9b_correctness_20261014.md) max64八样例raw/stop-aligned均7/8、20文件cross-SHA；8组输入/引擎输出IDs与旧固定运行相同 | long_context_recall index59仍分叉，不是全通过；其他配置/Session/优化及最终版本验证仍欠 |
 | 27B 运行与双 chip 策略 | [当前TP2八样例复验](current_27b_correctness_20261014.md)raw/stop-aligned 8/8、23文件cross-SHA；此前4095+1边界及[E0 Workload A](27b_e0_workload_a_20261013.md)480请求/15 summaries已有 | 当前8例不替代任意长度/Session/语义普遍正确；旧E0性能不冒充新源码，匹配TP/通信性能及最终发布复验仍欠 |
@@ -59,7 +61,7 @@
 | C：Context length vs TTFT | Session context 延迟与多轮 TTFT 已有 | 独立长 Prefill 长度矩阵 |
 | D：Chunk size vs 延迟/吞吐 | 0.8B/4B重复prompt的512/1024矩阵，4B staged 4096/512干扰配对已验收 | 更多负载/模型、完整瓶颈归因和最终默认值选择 |
 | E：Prefix ratio vs TTFT/吞吐 | 已有 pilot 与多轮共享比例数据 | 异常长尾解释及一般收益验收 |
-| F：Conversation turn vs TTFT OFF/ON | [64 对 CSV](../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv)及 SVG 已有 | 当前范围为 4B 原生 Engine 串行测量 |
+| F：Conversation turn vs TTFT OFF/ON | 64 对 CSV（原始路径：`../../results/analysis/session_kv_ttft_20261010T125937824616Z-92dd0788c7c0406e8d81a7aa6eaa806a/session_kv_multiturn_ttft.csv`）及 SVG 已有 | 当前范围为 4B 原生 Engine 串行测量 |
 | G：KV block size vs HBM/并发/吞吐 | 使用率曲线已有 | block-size sweep 不具备，不能伪造粒度可调性或最优结论 |
 | H：Baseline vs Full System | [消融分析](../report/ablation_analysis.md)有 E0–E3 | E4–E7/最终系统、相同协议下完整对照 |
 | I：TP1 vs TP2 | 4B TP2 smoke/诊断；27B HCCL基础通信、TP2恢复及E0实测 | 严格正确性闭环及匹配协议TP吞吐/时延/每chip HBM/通信对比 |

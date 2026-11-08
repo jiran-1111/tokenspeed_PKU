@@ -26,7 +26,7 @@ SM107 support requires CuTe DSL 4.8.0 or newer and a compatible CUDA toolkit.
 ## Performance Numbers
 
 ### Prefill Performance
-![Prefill Latency Comparison](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comp_prefill.png)
+![Prefill Latency Comparison](assets/latency_comp_prefill.png)
 
 Where:
 ```
@@ -57,8 +57,8 @@ python ./tokenspeed-mla/python/tokenspeed_mla/fmha.py \
 
 ### Decode Performance
 
-![Decode Latency Comparison for num_heads=16](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comparison_numHead16.png)
-![Decode Latency Comparison for num_heads=32](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comparison_numHead32.png)
+![Decode Latency Comparison for num_heads=16](assets/latency_comparison_numHead16.png)
+![Decode Latency Comparison for num_heads=32](assets/latency_comparison_numHead32.png)
 
 In the above test cases, `q_seqlen = 4` and `kv_seqlen = 80K`.
 
