@@ -3,7 +3,12 @@
 This is the **CuTe-DSL** implementation of MSA, shipped inside the
 `fmha_sm100` Python package. For the package overview, install steps, and
 the dense csrc JIT path, see the
-[top-level README](../../../../README.md).
+[top-level README](../README.md).
+
+Examples, tests, and build scaffolding mentioned below are upstream-only and
+are not shipped in this vendored subset. Their paths are shown as text rather
+than local download links; the top-level README records the pinned upstream
+source.
 
 The rest of this file documents the **sparse (CuTe-DSL)** surface only: CSR
 metadata, schedules, sparse page attention, FP8 / NVFP4 / FP4 quantization,
@@ -130,7 +135,7 @@ out, lse, lse_temperature_out = sparse_atten_func(
 ```
 
 For a complete customer-scale example with NVTX ranges around CSR build and
-FWD, see [`example.py`](./example.py).
+FWD, see upstream `example.py` (path: `./example.py`; not vendored).
 
 ## Input Metadata
 
@@ -348,7 +353,7 @@ decode score kernel. Compact causal scheduling can also initialize scores with
 
 ### FP4 Indexer Benchmark
 
-[`test_fp4_indexer.py`](./test_fp4_indexer.py) provides the correctness tests
+Upstream `test_fp4_indexer.py` (path: `./test_fp4_indexer.py`; not vendored) provides the correctness tests
 and benchmark CLI for the FP4 indexer.
 
 List the built-in benchmark cases:
@@ -434,7 +439,7 @@ pytest -q test_sparse_atten.py -k test_sparse_page_atten
 
 ## Benchmark
 
-[`test_sparse_atten.py`](./test_sparse_atten.py) is the benchmark and profile
+Upstream `test_sparse_atten.py` (path: `./test_sparse_atten.py`; not vendored) is the benchmark and profile
 entrypoint for this repo. It uses the public interface only.
 
 Default sparse attention benchmark:
@@ -666,13 +671,13 @@ High-signal files:
 
 - [`interface.py`](./interface.py): public sparse attention interface
 - [`fp4_indexer_interface.py`](./fp4_indexer_interface.py): public FP4 indexer block-score interface
-- [`example.py`](./example.py): customer-facing e2e CSR schedule + attention example with NVTX
+- `example.py` (upstream path: `./example.py`; not vendored): customer-facing e2e CSR schedule + attention example with NVTX
 - [`sparse_index_utils.py`](./sparse_index_utils.py): public CSR build wrapper and reference helpers
 - [`src/sm100/prepare_k2q_csr.py`](./src/sm100/prepare_k2q_csr.py): SM100 CUDA CSR builder dispatcher
 - [`src/sm100/fp4_indexer.py`](./src/sm100/fp4_indexer.py): SM100 FP4 indexer kernel classes
-- [`test_sparse_atten.py`](./test_sparse_atten.py): interface-level tests, benchmark CLI, and profile entrypoint
-- [`test_fp4_indexer.py`](./test_fp4_indexer.py): FP4 indexer correctness tests and benchmark CLI
-- [`Makefile`](./Makefile): setup, test, benchmark, and profiling shortcuts
+- `test_sparse_atten.py` (upstream path: `./test_sparse_atten.py`; not vendored): interface-level tests, benchmark CLI, and profile entrypoint
+- `test_fp4_indexer.py` (upstream path: `./test_fp4_indexer.py`; not vendored): FP4 indexer correctness tests and benchmark CLI
+- `Makefile` (upstream path: `./Makefile`; not vendored): setup, test, benchmark, and profiling shortcuts
 - [`src/sm100/fwd`](./src/sm100/fwd): forward kernels (prefill)
 - [`src/sm100/fwd_decode`](./src/sm100/fwd_decode): forward kernels (paged FP8 decode)
 
