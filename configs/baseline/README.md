@@ -8,10 +8,14 @@ and set `chunked_prefill_size` to `max_model_len`, `prefix_caching` to `false`,
 `false`.
 
 Measured default-config baseline results for Qwen3.5-0.8B, 4B, and 9B are
-documented in [`docs/project/baseline.md`](../../docs/project/baseline.md), with
-their raw summaries in the [0.8B](../../results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/),
-[4B](../../results/raw/baseline/qwen35_4b_20261009_full/), and
-[9B](../../results/raw/baseline/qwen35_9b_20261009_full/) result directories.
+documented in [`docs/project/baseline.md`](../../docs/project/baseline.md).
+Their raw summaries are retained in local archival directories, which are not
+included in this public repository:
+
+- 0.8B: `../../results/raw/baseline/qwen35_0.8b_20261009_unique_prompt/`
+- 4B: `../../results/raw/baseline/qwen35_4b_20261009_full/`
+- 9B: `../../results/raw/baseline/qwen35_9b_20261009_full/`
+
 Those default-config measurements are separate from these E0 templates, which
 remain unmeasured and do not imply E0 results.
 
