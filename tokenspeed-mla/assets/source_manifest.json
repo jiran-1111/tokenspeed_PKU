@@ -1,0 +1,36 @@
+{
+  "publisher": "LightSeek Foundation",
+  "context": "Upstream TokenSpeed MLA GPU benchmark illustrations",
+  "source_article": "https://lightseek.org/blog/tokenspeed-mla-2.html",
+  "download_date": "2026-11-08",
+  "modifications": "none; original PNG bytes retained",
+  "figures": {
+    "tokenspeed-mla-2-recompiled-mla-1.png": {
+      "source_url": "https://lightseek.org/blog/images/202610/tokenspeed-mla-2-recompiled-mla-1.png",
+      "dimensions": [
+        3200,
+        2448
+      ],
+      "sha256": "4f93c707aa95470c7dd5557f18a7bec890691785dee90fae5e3d05999916256c",
+      "bytes": 264722
+    },
+    "tokenspeed-mla-2-adapted-flashinfer.png": {
+      "source_url": "https://lightseek.org/blog/images/202610/tokenspeed-mla-2-adapted-flashinfer.png",
+      "dimensions": [
+        3200,
+        2448
+      ],
+      "sha256": "4f6ac87aa966e60e5191845d54535ed2ac250c0b0f85222dffa697620d08ba80",
+      "bytes": 267844
+    },
+    "tokenspeed-mla-2-cross-gpu-speedup.png": {
+      "source_url": "https://lightseek.org/blog/images/202610/tokenspeed-mla-2-cross-gpu-speedup.png",
+      "dimensions": [
+        3200,
+        3104
+      ],
+      "sha256": "68afe754b537617454aa71ce953ce52dcb6a448d0783ee4451879537f14f2514",
+      "bytes": 368095
+    }
+  }
+}

@@ -27,7 +27,7 @@ Decode compilation and GPU regression tests also reject CuTe DSL warnings.
 ## Performance numbers
 
 ### Prefill performance
-![Prefill Latency Comparison](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comp_prefill.png)
+![Prefill Latency Comparison](assets/latency_comp_prefill.png)
 
 Where:
 ```
@@ -58,8 +58,8 @@ python ./tokenspeed-mla/python/tokenspeed_mla/fmha.py \
 
 ### Decode performance
 
-![Decode Latency Comparison for num_heads=16](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comparison_numHead16.png)
-![Decode Latency Comparison for num_heads=32](https://raw.githubusercontent.com/lightseekorg/tokenspeed/main/tokenspeed-mla/assets/latency_comparison_numHead32.png)
+![Decode Latency Comparison for num_heads=16](assets/latency_comparison_numHead16.png)
+![Decode Latency Comparison for num_heads=32](assets/latency_comparison_numHead32.png)
 
 In these test cases, `q_seqlen = 4` and `kv_seqlen = 80K`.
 
@@ -237,7 +237,7 @@ MLA 2 has lower median latency than recompiled MLA 1 in 13 of 16 workloads,
 including all eight Q8 workloads. Three Q4 workloads are slower. Native Q8
 packing fills three M256 tiles, while Q4 fills only 75% of two tiles.
 
-![MLA 2 versus recompiled MLA 1 on the same GPU across 16 H96 FP8 workloads](https://lightseek.org/blog/images/202610/tokenspeed-mla-2-recompiled-mla-1.png)
+![MLA 2 versus recompiled MLA 1 on the same GPU across 16 H96 FP8 workloads](assets/tokenspeed-mla-2-recompiled-mla-1.png)
 
 The FlashInfer comparison uses the benchmarked
 [PR #6177](https://github.com/flashinfer-ai/flashinfer/pull/6177) implementation
@@ -246,7 +246,7 @@ query packing and output unpacking. It compares native H96 support and tuning
 against that adapted baseline, not native H128 performance or current
 FlashInfer releases.
 
-![MLA 2 versus adapted FlashInfer on the same GPU across 16 H96 FP8 workloads](https://lightseek.org/blog/images/202610/tokenspeed-mla-2-adapted-flashinfer.png)
+![MLA 2 versus adapted FlashInfer on the same GPU across 16 H96 FP8 workloads](assets/tokenspeed-mla-2-adapted-flashinfer.png)
 
 #### Cross-hardware comparison
 
@@ -262,7 +262,7 @@ Hardware, power, clocks, and implementations differ, so these ratios include
 both hardware and software changes and do not isolate architectural gains.
 These are kernel-latency results, not end-to-end serving results.
 
-![TokenSpeed MLA across B200, B300, GB200, GB300, and NVIDIA Vera Rubin, normalized to B200](https://lightseek.org/blog/images/202610/tokenspeed-mla-2-cross-gpu-speedup.png)
+![TokenSpeed MLA across B200, B300, GB200, GB300, and NVIDIA Vera Rubin, normalized to B200](assets/tokenspeed-mla-2-cross-gpu-speedup.png)
 
 The chart normalizes every series to B200 at 1×. For a comparison with GB200,
 divide the NVIDIA Vera Rubin ratio by the GB200 ratio for the same workload.
