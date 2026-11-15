@@ -112,6 +112,10 @@ public:
     std::int32_t HostPoolCachedBlocks() const { return coordinator_.NumHostCachedBlocks(); }
     std::int32_t HostPoolFreeBlocks() const { return coordinator_.NumFreeHostLcmBlocks(); }
     std::int32_t HostPoolPinnedBlocks() const { return coordinator_.NumPinnedHostCachedBlocks(); }
+    std::uint64_t HostEvictions() const { return coordinator_.HostEvictions(); }
+    std::uint64_t HostHits() const { return host_hits_; }
+    std::uint64_t HostMisses() const { return host_misses_; }
+    std::uint64_t IdleSessionReclaims() const { return idle_session_reclaims_; }
 
     // L3 storage (Mooncake Store, etc.) sits below Host. Python queries the
     // backend for existing objects, then registers the matching CacheKeys so
@@ -335,6 +339,9 @@ private:
     std::vector<WriteBackOperation> pending_write_back_operations_;
     std::vector<std::string> cache_group_ids_;
     std::int32_t max_single_request_tokens_{0};
+    std::uint64_t host_hits_{0};
+    std::uint64_t host_misses_{0};
+    std::uint64_t idle_session_reclaims_{0};
 
     // Stamped onto each retraction; the readmission order lives on the
     // Retracted states themselves (nextReadmission).

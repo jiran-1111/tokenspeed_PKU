@@ -13,6 +13,8 @@ from importlib import import_module, util
 from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock, Mock, call, patch
 
+from tokenspeed.runtime.cache.telemetry import CacheTrace
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ci_system.ci_register import register_cuda_ci
 
@@ -191,6 +193,7 @@ class GroupAwareWireTest(unittest.TestCase):
         executor = executor_module.L2CacheExecutor.__new__(
             executor_module.L2CacheExecutor
         )
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor.attn_tp_rank = 0
         executor._ready_load_acks = []
@@ -313,6 +316,7 @@ class GroupAwareWireTest(unittest.TestCase):
 
         tracker = Mock()
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor._load_trackers = [(tracker, 1)]
         executor._load_poisoned = False
@@ -328,6 +332,7 @@ class GroupAwareWireTest(unittest.TestCase):
         for second_outcome in ("success", "replica_miss", "exception", "empty"):
             with self.subTest(second_outcome=second_outcome):
                 executor = module.L2CacheExecutor.__new__(module.L2CacheExecutor)
+                executor._cache_trace = CacheTrace()
                 executor._l3_prefetch_ok = {}
                 executor._load_trackers = []
                 executor._start_loading = Mock(return_value=0)
@@ -405,6 +410,7 @@ class GroupAwareWireTest(unittest.TestCase):
     def _make_write_executor(self, executor_module):
         L2CacheExecutor = executor_module.L2CacheExecutor
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor.attn_tp_rank = 0
         device = SimpleNamespace(type="cuda")
@@ -1427,6 +1433,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
             return [True]
 
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor._write_acks = []
         executor._load_acks = []
@@ -1473,6 +1480,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
         executor = executor_module.L2CacheExecutor.__new__(
             executor_module.L2CacheExecutor
         )
+        executor._cache_trace = CacheTrace()
         executor._l3_unread = executor_module.L3UnreadKeySet(capacity=8)
         executor.l3_store = Mock()
         pages = [(0, 1, "new", 0), (0, 2, "missing", 0), (0, 3, "stale", 0)]
@@ -1502,6 +1510,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
                 executor = executor_module.L2CacheExecutor.__new__(
                     executor_module.L2CacheExecutor
                 )
+                executor._cache_trace = CacheTrace()
                 executor._l3_unread = executor_module.L3UnreadKeySet(capacity=8)
                 executor._l3_unread.mark(groups=[0], hashes=["h"], offsets=[0])
                 executor.l3_store = Mock()
@@ -1520,6 +1529,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
         executor = executor_module.L2CacheExecutor.__new__(
             executor_module.L2CacheExecutor
         )
+        executor._cache_trace = CacheTrace()
         executor._l3_unread = executor_module.L3UnreadKeySet(capacity=8)
         executor.l3_store = Mock()
 
@@ -1540,6 +1550,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
             self.skipTest(f"needs runtime dependencies: {exc}")
 
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor._write_acks = []
         executor._load_acks = []
@@ -1587,6 +1598,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
             self.skipTest(f"needs runtime dependencies: {exc}")
 
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor.l3_store = Mock()
         executor.l3_store.prefetch.return_value = [True, False]
         self.assertEqual(
@@ -1601,6 +1613,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
             self.skipTest(f"needs runtime dependencies: {exc}")
 
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor._ready_load_acks = []
         executor._load_poisoned = False
@@ -1632,6 +1645,7 @@ class L3FlatKvExecutorTest(unittest.TestCase):
             self.skipTest(f"needs runtime dependencies: {exc}")
 
         executor = L2CacheExecutor.__new__(L2CacheExecutor)
+        executor._cache_trace = CacheTrace()
         executor._ack_lock = threading.Lock()
         executor._write_acks = [
             _Ack(

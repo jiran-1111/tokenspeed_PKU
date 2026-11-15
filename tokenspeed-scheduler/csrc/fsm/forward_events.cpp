@@ -95,6 +95,10 @@ SessionPending QueueSessionTurnEvent::operator()(SessionIdle&& state) {
     return SessionPending{std::move(state.resources), computed_tokens_};
 }
 
+Submitted QueueSessionTurnEvent::operator()(SessionOffloaded&& state) {
+    return Submitted{state.token_container, state.prefix_granularity};
+}
+
 std::variant<PrefillDone, Prefilling> ScheduleSessionPrefillEvent::operator()(SessionPending&& state) {
     const TokenContainer::Window window{
         .begin = state.computed_tokens,
@@ -245,6 +249,11 @@ Retracted RetractEvent::operator()(RemotePrefilling&& state) {
 
 Retracted RetractEvent::operator()(Decoding&& state) {
     return retract(std::move(state));
+}
+
+SessionOffloaded RetractEvent::operator()(SessionIdle&& state) {
+    const auto released = retract(std::move(state));
+    return SessionOffloaded{released.token_container, released.prefix_granularity};
 }
 
 }  // namespace tokenspeed::fsm

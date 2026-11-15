@@ -37,10 +37,11 @@ Request::Request(const RequestSpec& spec, std::int32_t prefix_granularity, Role 
                                   : fsm::State{fsm::Bootstrapping{&token_container_, prefix_granularity}}} {}
 
 void Request::AppendSessionTurn(const RequestSpec& spec) {
-    if (session_id_.empty() || spec.session_id != session_id_ || !Is<fsm::SessionIdle>() || ResultsInFlight() != 0) {
+    if (session_id_.empty() || spec.session_id != session_id_ || !IsAnyOf<fsm::SessionIdle, fsm::SessionOffloaded>() ||
+        ResultsInFlight() != 0) {
         throw std::logic_error("Request::AppendSessionTurn: expected an idle session request");
     }
-    const std::int32_t computed_tokens = NumComputedTokens();
+    const std::int32_t computed_tokens = Is<fsm::SessionOffloaded>() ? 0 : NumComputedTokens();
     session_turn_start_computed_tokens_ = computed_tokens;
     session_turn_reuses_state_pages_ = computed_tokens > 0;
     token_container_.Extend(spec.tokens);

@@ -236,6 +236,7 @@ public:
                               [](const fsm::Decoding&) -> std::string { return "Decoding"; },
                               [](const fsm::SessionIdle&) -> std::string { return "SessionIdle"; },
                               [](const fsm::SessionPending&) -> std::string { return "SessionPending"; },
+                              [](const fsm::SessionOffloaded&) -> std::string { return "SessionOffloaded"; },
                               [](const fsm::Retracted&) -> std::string { return "Retracted"; },
                               [](const fsm::Finished&) -> std::string { return "Finished"; },
                           },

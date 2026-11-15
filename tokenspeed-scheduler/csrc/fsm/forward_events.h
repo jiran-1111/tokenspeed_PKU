@@ -105,6 +105,7 @@ struct QueueSessionTurnEvent : InvalidTransitionHandler<QueueSessionTurnEvent> {
     explicit QueueSessionTurnEvent(std::int32_t computed_tokens) : computed_tokens_{computed_tokens} {}
 
     SessionPending operator()(SessionIdle&& state);
+    Submitted operator()(SessionOffloaded&& state);
 
 private:
     std::int32_t computed_tokens_{};
@@ -165,6 +166,7 @@ struct FinishEvent : InvalidTransitionHandler<FinishEvent> {
     Finished operator()(PrefillAwaitingResult&& state);
     Finished operator()(Decoding&& state);
     Finished operator()(SessionIdle&& state);
+    Finished operator()(SessionOffloaded&&) { return Finished{}; }
     Finished operator()(Retracted&& state);
     Finished operator()(Finished&& state) { return std::move(state); }
 
@@ -189,6 +191,7 @@ struct AbortEvent : InvalidTransitionHandler<AbortEvent> {
     Finished operator()(Decoding&& state);
     Finished operator()(SessionIdle&& state);
     Finished operator()(SessionPending&& state);
+    Finished operator()(SessionOffloaded&&) { return Finished{}; }
     Finished operator()(Retracted&& state);
     Finished operator()(Finished&& state) { return std::move(state); }
 
@@ -226,6 +229,7 @@ struct RetractEvent : InvalidTransitionHandler<RetractEvent> {
     Retracted operator()(PrefillAwaitingResult&& state);
     Retracted operator()(RemotePrefilling&& state);
     Retracted operator()(Decoding&& state);
+    SessionOffloaded operator()(SessionIdle&& state);
 
 private:
     template <typename State>

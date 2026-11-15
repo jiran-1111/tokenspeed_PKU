@@ -214,6 +214,13 @@ struct SessionPending {
     std::int32_t computed_tokens{};
 };
 
+// Token history survives eviction of an idle session's device pages. A new
+// turn probes the shared cache and recomputes from its last complete hit.
+struct SessionOffloaded {
+    TokenContainer* token_container{};
+    std::int32_t prefix_granularity{};
+};
+
 struct Retracted {
     TokenContainer* token_container{};
     std::int32_t prefix_granularity{};

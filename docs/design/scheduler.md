@@ -662,3 +662,36 @@ no victim and nothing could free that page.
   (or is undeclared). Spending a partial reserve never makes it qualify: the
   exemption is judged against the budget open at admission, not the current
   remainder (4).
+
+
+## Idle session offloading
+
+Capacity recovery also considers parked `SessionIdle` requests, ahead of
+runnable victims, in last-turn submission order. An idle victim must have no
+outstanding forward result. Request-slot exhaustion enters the same capacity
+recovery path when a quiescent idle session can release that slot.
+
+`retractVictim` publishes only computed Attention KV and already materialized
+prefill checkpoints. Its existing stream-ordered D2H ticket fences destination
+page zeroing before any new owner uses the released blocks. Cache-op ACKs
+continue to converge across every cache-owning rank through `L2CacheHooks`.
+The victim enters `SessionOffloaded`, retaining token history and session
+identity while releasing all `ForwardResources`, including the request slot.
+This state does not join the runnable queue until a new turn arrives.
+
+A new turn extends the original token history and enters `Submitted`. The
+ordinary joint prefix probe chooses one complete boundary shared by Attention
+KV, GDN recurrence and convolution. The existing H2D load and first-prefill
+path restore that boundary and recompute its suffix. The last sampled token
+is part of that suffix because it has not yet had a forward. A missing or
+evicted Host snapshot falls back to available Device prefix state or full
+history prefill. Closing or aborting an offloaded session has no Device
+resource to free. Shared prefix identities remain content based, with
+per-rank Host buffers and existing namespace boundaries.
+
+`Scheduler.cache_stats()` exposes block occupancy, Host hit/miss/eviction
+counts and idle-session reclaims. A Host hit is a successful first-chunk
+admission whose Host prefix extends its Device prefix. A miss is a successful
+first-chunk admission starting at token zero. Device-only hits and failed
+admission retries contribute neither. Host eviction counts CacheBlock entries
+removed under capacity pressure, excluding an explicit cache flush.

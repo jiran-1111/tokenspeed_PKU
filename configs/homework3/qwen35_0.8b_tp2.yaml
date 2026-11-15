@@ -1,0 +1,27 @@
+{
+  "model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "model_id": "Qwen/Qwen3.5-0.8B",
+  "local_model_path": "models/Qwen3.5-0.8B",
+  "served_model_name": "qwen35-0.8b",
+  "mm_attention_backend": "triton_attn",
+  "device": "npu",
+  "tp_size": 2,
+  "max_model_len": 2048,
+  "dtype": "bfloat16",
+  "max_num_seqs": 1,
+  "max_total_tokens": 2048,
+  "chunked_prefill_size": 512,
+  "block_size": 128,
+  "memory_utilization": 0.4,
+  "graph_capture_sizes": [
+    1
+  ],
+  "prefix_caching": true,
+  "enable_metrics": false,
+  "prometheus_port": 39141,
+  "tokenspeed_metrics_port": 39142,
+  "mixed_batch": false,
+  "overlap_schedule": false,
+  "enforce_eager": true,
+  "disable_kvstore": false
+}

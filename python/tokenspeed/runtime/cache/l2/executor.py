@@ -47,6 +47,7 @@ from tokenspeed.runtime.cache.l3.backend import (
     l3_unread_key_capacity,
 )
 from tokenspeed.runtime.cache.l3.executor import L3HostStore, StoragePage
+from tokenspeed.runtime.cache.telemetry import CacheTrace
 from tokenspeed.runtime.cache.transfer.layout import combine_cache_transfer_layouts
 from tokenspeed.runtime.execution.forward_step import get_is_capture_mode
 from tokenspeed.runtime.utils import get_colorful_logger, get_device_module
@@ -141,6 +142,7 @@ class L2CacheExecutor:
         if io_backend not in ("direct", "kernel"):
             raise ValueError(f"unsupported KVStore IO backend {io_backend!r}")
         self.attn_tp_rank = attn_tp_rank
+        self._cache_trace = CacheTrace()
         self.transfer_backend = "dma" if io_backend == "direct" else "auto"
         target_layout = device_pool.cache_transfer_layout()
         draft_layout = (
@@ -175,6 +177,13 @@ class L2CacheExecutor:
             self.layout,
             num_host_lcm_blocks=host_lcm_blocks,
         )
+        if self._cache_trace.path is not None:
+            self._cache_trace.write(
+                "host_allocation",
+                rank=attn_tp_rank,
+                allocated_bytes=self.host_storage.host_buffer_bytes,
+                lcm_block_bytes=self.host_storage.host_lcm_block_bytes,
+            )
         self.l3_store = None
         self._l3_prefix_for_weight_version = None
         # L3 is attached after Host allocation via ``attach_l3_storage`` with
@@ -741,6 +750,7 @@ class L2CacheExecutor:
         # Behind the forwards that wrote the source pages: that is what lets
         # the copy read their final bytes.
         self.write_stream.wait_stream(prerequisite_stream)
+        trace_start = self._cache_trace.start_transfer(device_module, self.write_stream)
         # CPU writes are not ordered by stream FIFO. Retire the previous
         # metadata upload before refilling its pinned source, not at submit.
         if lane.metadata_done is not None and not lane.metadata_done.query():
@@ -784,8 +794,20 @@ class L2CacheExecutor:
             grid_cap=None,
             layer_ready_flags=None,
         )
-        finish = device_module.Event()
+        finish = (
+            device_module.Event(enable_timing=True)
+            if trace_start is not None
+            else device_module.Event()
+        )
         finish.record(self.write_stream)
+        if trace_start is not None:
+            self._cache_trace.track_transfer(
+                trace_start,
+                finish,
+                "d2h",
+                transfers,
+                self.host_storage.host_cache_block_bytes,
+            )
         with self._ack_lock:
             self._write_acks.append(
                 _Ack(
@@ -849,6 +871,9 @@ class L2CacheExecutor:
                     raise RuntimeError("target and draft Host-load trackers diverged")
                 load_events.start_event.record(prerequisite_stream)
                 load_events.start_event.wait(self.load_stream)
+            trace_start = self._cache_trace.start_transfer(
+                device_module, self.load_stream
+            )
             if load_index is None:
                 raise RuntimeError("cache transfer layout has no layer consumers")
 
@@ -897,7 +922,11 @@ class L2CacheExecutor:
                     layer_ready_flags=flags,
                     grid_cap=None,
                 )
-                finish = device_module.Event()
+                finish = (
+                    device_module.Event(enable_timing=True)
+                    if trace_start is not None
+                    else device_module.Event()
+                )
                 finish.record(self.load_stream)
                 for load_events, consumer_count in active_trackers:
                     load_events.set_completion(finish)
@@ -925,12 +954,24 @@ class L2CacheExecutor:
                             grid_cap=None,
                             layer_ready_flags=None,
                         )
-                        finish = device_module.Event()
+                        finish = (
+                            device_module.Event(enable_timing=True)
+                            if trace_start is not None
+                            else device_module.Event()
+                        )
                         finish.record(self.load_stream)
                         load_events.layer_done_events[layer_index] = finish
                         flat_layer_index += 1
             if finish is None:
                 raise RuntimeError("cache transfer layout has no layer consumers")
+            if trace_start is not None:
+                self._cache_trace.track_transfer(
+                    trace_start,
+                    finish,
+                    "h2d",
+                    transfers,
+                    self.host_storage.host_cache_block_bytes,
+                )
             with self._ack_lock:
                 self._load_acks.append(
                     _Ack(
@@ -976,6 +1017,7 @@ class L2CacheExecutor:
                         pass
 
     def poll_results(self) -> list:
+        self._cache_trace.poll()
         results: list = []
         with self._ack_lock:
             results.extend(

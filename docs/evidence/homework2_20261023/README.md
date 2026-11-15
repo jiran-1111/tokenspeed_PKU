@@ -22,7 +22,7 @@
 
 `configs/homework2/queue.json`固定16项任务，包括四模型TP1/TP2、27B条件性95%预算候选、4096上下文边界、4B通信粒度策略和独立Profiler采集。配置、负载和源清单在运行前固定；不根据结果更换输入或修改阈值。候选、跳过和失败必须各自保留。
 
-`runners/queue_driver.py.txt`是实际驱动的逐字节复现副本，`runners/sitecustomize.py.txt`是隔离启动钩子。两者遵循仓库[MIT许可](../../../LICENSE)。运行时需将钩子放到快照的 `.tmp/import_bootstrap/sitecustomize.py`，显式设置 `TOKENSPEED_SOURCE_SNAPSHOT`，并让该目录位于本次进程的PYTHONPATH前端；正常路径还须包含本快照的runtime、kernel、NPU kernel及scheduler Python目录。不能修改系统Python或其他任务的环境来替代隔离启动。
+`runners/queue_driver.py.txt`是实际驱动的逐字节复现副本，`runners/sitecustomize.py.txt`是隔离启动钩子。两者遵循仓库[MIT许可](https://github.com/jiran-1111/tokenspeed_PKU/blob/homework2/completed/LICENSE)。运行时需将钩子放到快照的 `.tmp/import_bootstrap/sitecustomize.py`，显式设置 `TOKENSPEED_SOURCE_SNAPSHOT`，并让该目录位于本次进程的PYTHONPATH前端；正常路径还须包含本快照的runtime、kernel、NPU kernel及scheduler Python目录。不能修改系统Python或其他任务的环境来替代隔离启动。
 
 驱动只有在准备凭据与源码、队列、模型指纹、依赖及自身SHA匹配后才启用。它每30秒重新查映射与整卡进程，等待同卡两chip空闲；同一对照保持同一张物理卡。每项实验预算1800秒，仅允许清理自己创建并核验身份的进程组。新的模型实验始终串行，不停止未知任务。
 

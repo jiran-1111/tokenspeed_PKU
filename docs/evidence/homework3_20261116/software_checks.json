@@ -1,0 +1,14 @@
+{
+  "cpu-release": {
+    "passed": 882,
+    "skipped": 33
+  },
+  "runtime-final": {
+    "passed": 302,
+    "skipped": 4
+  },
+  "scheduler-final": {
+    "passed": 599,
+    "skipped": 0
+  }
+}

@@ -4,13 +4,14 @@
 
 ## 当前分支与项目状态
 
-**当前分支：`homework2/completed`。按[作业2要求核对](docs/project/homework2_requirements_audit_20261028.md)，四项任务的实现、实验与[报告](docs/report/homework2_communication_subsystem.md)材料已齐备。0.8B/27B在有限协议下与TP1输出一致，4B/9B原短输入差异如实保留，不宣称四模型输出全部一致。**
+**当前分支为 `homework3/host-offloading`。作业3任务范围已完成，两模型 TP=2 十二组对照共 144/144 轮输出匹配独立参考。**
 
-[实机证据](docs/evidence/homework2_20261025/README.md)覆盖共享条件下两长度×两并发性能、每chip HBM、双rank时间线、27B容量与通信粒度实验。[当前状态](docs/project/homework2_status_20261023.md)以任务书为边界；完成分支对应作业2任务书范围，完整大项目状态单独记录。
+[作业3复现与验收](docs/project/homework3.md)列出缓存生命周期、三类状态的恢复边界、编译与实验入口。设备验证使用 0.8B 与 4B，并覆盖 TP=2。[实验报告](docs/report/homework3_storage_subsystem.md)与[原始证据](docs/evidence/homework3_20261116/README.md)可直接复现。
 
 | 入口 | 状态 | 用途 |
 | --- | --- | --- |
-| `homework2/completed` | **作业2已完成；对照差异如实报告** | 本分支；作业2报告、同卡TP2、性能与通信证据 |
+| `homework3/host-offloading` | **作业3已完成** | 本分支；两级缓存、容量回收、恢复与对照实验 |
+| `homework2/completed` | **作业2已完成；对照差异如实报告** | 作业2报告、同卡TP2、性能与通信证据 |
 | `project/develop` | **大项目继续开发** | 四模型运行时、原生Session/KV、Agent实验、开源维护与后续整合主线 |
 | [`homework1/completed`](https://github.com/jiran-1111/tokenspeed_PKU/tree/homework1/completed) | **作业1已完成** | 独立保留0.8B单chip验证、基线、Profiler、补充实验和报告 |
 | `jr` | **其他成员所有，本次未修改** | 保留独立工作；不跨分支覆盖或自动合并 |
@@ -18,7 +19,7 @@
 
 [BRANCHES.md](BRANCHES.md)记录完整归档表及恢复命令。R5、R9、课程最终、旧HW1和旧维护分支已转为同名附注标签，原源码、证据和历史GitHub链接继续保留。
 
-整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；本分支专门补齐作业2，整合主线仍为 `project/develop`。
+整理前大项目基线为标签 `project-baseline-20261023`（`415983de`）；原课程四模型实验仍属于 `course/final-20261018` 标签（`d41b6798`）。维护修复不追认成历史设备实验使用的源码。已有阶段材料和有限协议验收不等于整个项目最终验收或未知统一评测已通过；本分支继续完成作业3，整合主线为 `project/develop`。
 
 - [课程阶段交付及冻结复现入口](docs/project/final_delivery_20261018.md)：四模型配置、精确命令、性能和TP候选边界。
 - [课程总报告](docs/report/course_project_final_20261018.md)、[作业1统一报告](docs/report/homework1_compute_subsystem.md)、[答辩材料](docs/presentation/README.md)。

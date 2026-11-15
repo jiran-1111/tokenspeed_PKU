@@ -237,6 +237,7 @@ public:
     bool ContainsHostCachedBlock(const CacheKey& key) const;
     bool IsHostCachedBlock(CacheBlockLocation location) const;
     std::int32_t NumHostCachedBlocks() const;
+    std::uint64_t HostEvictions() const { return host_evictions_; }
     std::int32_t NumPinnedHostCachedBlocks() const;
     void CacheHostBlock(CacheBlockRef& block_ref, const CacheKey& key);
     // Publishes a filled Device destination after a successful L3 prefetch
@@ -309,6 +310,7 @@ private:
     void cacheDeviceCompletedBlocksForGroup(std::size_t group_index, BlockTable& table, const CompletedPages& completed,
                                             std::uint64_t access_epoch);
     bool evictCachedBlock(std::uint32_t group_id, CacheBlockLocation location);
+    std::uint64_t host_evictions_{0};
     bool deviceCacheIsClearable() const;
     bool hostCacheIsClearable() const;
     static void validateProgress(const RequestProgress& progress);

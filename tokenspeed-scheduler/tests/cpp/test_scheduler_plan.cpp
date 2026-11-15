@@ -819,6 +819,139 @@ TEST_F(SchedulerTestSuite, SessionFinishRetainsPagesUntilClose) {
     EXPECT_FALSE(scheduler_->HasSession("session-a"));
 }
 
+class SessionOffloadTestSuite : public SchedulerTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        auto cfg = SchedulerTestSuite::MakeConfig();
+        cfg.device_allocator.total_pages = 5;
+        cfg.cache_groups.front().total_pages = 5;
+        return cfg;
+    }
+
+    void ParkSession() {
+        ASSERT_TRUE(scheduler_->OpenSession("session-a"));
+        auto first = MakeRequestSpec("turn-1", 1);
+        first.session_id = "session-a";
+        Submit(first);
+        AckWriteBacks(PlanOnce());
+        SendForwardDone("turn-1", {99});
+        SendFinish("turn-1");
+        AckWriteBacks(PlanOnce());
+    }
+
+    ExecutionPlan ApplyPressure() {
+        Submit(MakeRequestSpec("other", 3, 100));
+        return PlanOnce();
+    }
+};
+
+TEST_F(SessionOffloadTestSuite, IdleSessionReleasesCapacityAndResumesFromHost) {
+    ParkSession();
+    auto pressure = ApplyPressure();
+    const auto* batch = FindForwardBatch(pressure);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"other"});
+    AckWriteBacks(pressure);
+    EXPECT_TRUE(scheduler_->CanSubmitSessionTurn("session-a"));
+    EXPECT_EQ(scheduler_->WaitingSize(), 0u) << "an idle offloaded session must not readmit itself";
+    SendForwardDone("other", {42});
+    SendFinish("other");
+    AckWriteBacks(PlanOnce());
+
+    auto second = MakeRequestSpec("turn-2", 1, 200);
+    second.session_id = "session-a";
+    EXPECT_NO_THROW(Submit(second));
+    EXPECT_EQ(scheduler_->RequestTokenSize("turn-2"), 5);
+    auto restored = PlanOnce();
+    EXPECT_FALSE(ExtractCacheOpsOfKind<LoadBackBatch>(restored).empty());
+    EXPECT_EQ(FindForwardBatch(restored)->request_ids, std::vector<std::string>{"turn-2"});
+}
+
+TEST_F(SessionOffloadTestSuite, OffloadedSessionCanCloseWithoutLeakingRequestSlot) {
+    ParkSession();
+    auto pressure = ApplyPressure();
+    AckWriteBacks(pressure);
+    EXPECT_TRUE(scheduler_->CloseSession("session-a"));
+    EXPECT_FALSE(scheduler_->HasSession("session-a"));
+    SendForwardDone("other", {42});
+    SendFinish("other");
+    AckWriteBacks(PlanOnce());
+    EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+}
+
+TEST_F(SessionOffloadTestSuite, MissingHostSnapshotRecomputesFullSessionHistory) {
+    ParkSession();
+    auto pressure = ApplyPressure();
+    AckWriteBacks(pressure);
+    SendForwardDone("other", {42});
+    SendFinish("other");
+    AckWriteBacks(PlanOnce());
+    ASSERT_TRUE(scheduler_->ClearCache());
+    auto second = MakeRequestSpec("turn-2", 1, 200);
+    second.session_id = "session-a";
+    Submit(second);
+    auto miss = PlanOnce();
+    EXPECT_TRUE(ExtractCacheOpsOfKind<LoadBackBatch>(miss).empty());
+    const auto* batch = FindForwardBatch(miss);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"turn-2"});
+}
+
+TEST_F(SessionOffloadTestSuite, RepeatedOffloadAndCloseReturnsAllActiveCapacity) {
+    for (int cycle = 0; cycle < 20; ++cycle) {
+        ParkSession();
+        auto pressure = ApplyPressure();
+        AckWriteBacks(pressure);
+        ASSERT_TRUE(scheduler_->CloseSession("session-a"));
+        SendForwardDone("other", {42});
+        SendFinish("other");
+        AckWriteBacks(PlanOnce());
+        EXPECT_EQ(scheduler_->ActiveLcmBlocks(), 0);
+    }
+    EXPECT_EQ(scheduler_->IdleSessionReclaims(), 20u);
+}
+
+class SessionTinyHostTestSuite : public SessionOffloadTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        auto cfg = SessionOffloadTestSuite::MakeConfig();
+        cfg.host_allocator.total_pages = 2;
+        return cfg;
+    }
+};
+
+class SessionOneSlotTestSuite : public SessionOffloadTestSuite {
+protected:
+    SchedulerConfig MakeConfig() override {
+        auto cfg = SessionOffloadTestSuite::MakeConfig();
+        cfg.max_batch_size = 1;
+        return cfg;
+    }
+};
+
+TEST_F(SessionOneSlotTestSuite, ParkedSessionCannotStarveTheOnlyRequestSlot) {
+    ParkSession();
+    auto pressure = ApplyPressure();
+    const auto* batch = FindForwardBatch(pressure);
+    ASSERT_NE(batch, nullptr);
+    EXPECT_EQ(batch->request_ids, std::vector<std::string>{"other"});
+    EXPECT_EQ(scheduler_->IdleSessionReclaims(), 1u);
+}
+
+TEST_F(SessionTinyHostTestSuite, HostBudgetEvictsUnpinnedEntriesAndKeepsSessionUsable) {
+    ParkSession();
+    auto pressure = ApplyPressure();
+    AckWriteBacks(pressure);
+    SendForwardDone("other", {42});
+    SendFinish("other");
+    AckWriteBacks(PlanOnce());
+    EXPECT_GT(scheduler_->HostEvictions(), 0u);
+    auto second = MakeRequestSpec("turn-2", 1, 200);
+    second.session_id = "session-a";
+    EXPECT_NO_THROW(Submit(second));
+    EXPECT_NE(FindForwardBatch(PlanOnce()), nullptr);
+}
+
 TEST_F(SchedulerTestSuite, SchedulerDestructionReleasesRetainedSessionResourcesBeforePools) {
     ASSERT_TRUE(scheduler_->OpenSession("session-a"));
     RequestSpec turn = MakeRequestSpec("turn-1", 1);

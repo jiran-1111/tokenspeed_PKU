@@ -392,6 +392,20 @@ NB_MODULE(tokenspeed_scheduler_ext, m) {
         .def("available_lcm_blocks", &tokenspeed::Scheduler::AvailableLcmBlocks)
         .def("empty_lcm_blocks", &tokenspeed::Scheduler::EmptyLcmBlocks)
         .def("active_lcm_blocks", &tokenspeed::Scheduler::ActiveLcmBlocks)
+        .def("cache_stats",
+             [](const tokenspeed::Scheduler& s) {
+                 nb::dict stats;
+                 stats["device_active_blocks"] = s.ActiveLcmBlocks();
+                 stats["device_available_blocks"] = s.EmptyLcmBlocks();
+                 stats["host_cached_blocks"] = s.HostPoolCachedBlocks();
+                 stats["host_free_blocks"] = s.HostPoolFreeBlocks();
+                 stats["host_pinned_blocks"] = s.HostPoolPinnedBlocks();
+                 stats["host_evictions"] = s.HostEvictions();
+                 stats["host_hits"] = s.HostHits();
+                 stats["host_misses"] = s.HostMisses();
+                 stats["idle_session_reclaims"] = s.IdleSessionReclaims();
+                 return stats;
+             })
         .def("request_token_size", &tokenspeed::Scheduler::RequestTokenSize, nb::arg("id"))
         .def("max_single_request_tokens", &tokenspeed::Scheduler::MaxSingleRequestTokens)
         .def("clear_l1_cache", &tokenspeed::Scheduler::ClearL1Cache)

@@ -152,6 +152,9 @@ class EventLoop:
         self.port_args = port_args
         self.gpu_id = gpu_id
         self.global_rank = global_rank
+        from tokenspeed.runtime.cache.telemetry import CacheTrace
+
+        self._cache_trace = CacheTrace()
         self.shutdown_event = shutdown_event or threading.Event()
 
         self.model_config = self._load_model_config(server_args.model)
@@ -1047,6 +1050,34 @@ class EventLoop:
                     self._cache_hooks.count_plan_ops(execution_plan)
 
                     forward_op = self._get_forward_op(execution_plan)
+                    if self._cache_trace.path is not None and (
+                        forward_op is not None or execution_plan.cache
+                    ):
+                        self._cache_trace.write(
+                            "scheduler",
+                            rank=self.global_rank,
+                            **self.scheduler.cache_stats(),
+                            request_ids=(
+                                list(forward_op.request_ids)
+                                if forward_op is not None
+                                else []
+                            ),
+                            input_lengths=(
+                                list(forward_op.input_lengths)
+                                if forward_op is not None
+                                else []
+                            ),
+                            restore_positions=(
+                                list(forward_op.extend_prefix_lens)
+                                if forward_op is not None
+                                else []
+                            ),
+                            block_tables=(
+                                dict(forward_op.block_tables)
+                                if forward_op is not None
+                                else {}
+                            ),
+                        )
                     forward_op, l3_prefetch_retracts = self._l3_hooks.prepare_forward(
                         execution_plan, forward_op
                     )

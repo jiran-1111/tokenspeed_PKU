@@ -292,6 +292,12 @@ std::optional<fsm::SchedulePrefillFirstChunkEvent> Scheduler::schedulePrefillFir
     ExecutionPlan& plan, AdmissionFeedback& feedback, Request* request, std::int32_t remaining,
     std::int32_t decode_input_tokens) {
     if (req_pool_allocator_.AvailableSlots() == 0) {
+        // Parked sessions retain request slots as well as cache pages. Let
+        // capacity recovery release one instead of waiting for an idle turn
+        // that cannot finish again until the client submits more tokens.
+        feedback.admission_failed = std::ranges::any_of(requests_, [](const auto& other) {
+            return other->template Is<fsm::SessionIdle>() && other->ResultsInFlight() == 0;
+        });
         return std::nullopt;
     }
 
@@ -428,6 +434,13 @@ std::optional<fsm::SchedulePrefillFirstChunkEvent> Scheduler::schedulePrefillFir
     }
 
     _assert(admission.has_value(), "first-chunk admission must produce a result");
+    // Count successful first-chunk admissions once, excluding retries and
+    // Device-only hits. A miss means the request must start from token zero.
+    if (admission->host_prefix_tokens > admission->device_prefix_tokens) {
+        ++host_hits_;
+    } else if (admission->device_prefix_tokens == 0) {
+        ++host_misses_;
+    }
     _assert(admission->promotion_boundary_tokens == promotion_boundary_tokens,
             "promotion boundary changed between probe and admission");
     _assert(admission->new_page_ids.size() == cache_group_ids_.size(),
@@ -652,6 +665,14 @@ std::optional<PrefillOperation> Scheduler::schedulePrefillCandidate(ExecutionPla
 // NOT redirect the choice; the caller waits for the chosen victim to
 // quiesce rather than sacrificing a worse-ranked request.
 Request* Scheduler::chooseVictim(std::span<Request* const> candidates) const {
+    // Idle sessions do not appear among runnable candidates. Reclaim the
+    // oldest idle session first, retaining its token history for its next turn.
+    for (const auto& request : requests_) {
+        if (request->Is<fsm::SessionIdle>() && request->ResultsInFlight() == 0 &&
+            coordinator_.NumNewlyReleasableLcmBlocks(request->BlockTablesRef()) > 0) {
+            return request.get();
+        }
+    }
     Request* victim = nullptr;
     for (Request* request : candidates) {
         const auto* prefilling = request->GetIf<fsm::Prefilling>();
@@ -681,6 +702,9 @@ Request* Scheduler::chooseVictim(std::span<Request* const> candidates) const {
 }
 
 void Scheduler::retractVictim(Request& victim, std::vector<WriteBackOperation>& write_back_operations) {
+    if (victim.Is<fsm::SessionIdle>()) {
+        ++idle_session_reclaims_;
+    }
     victim.NoteRetracted();
     // A host cache turns the retraction into an L2 snapshot the readmission
     // loads back; without one the victim re-prefills from scratch. On the

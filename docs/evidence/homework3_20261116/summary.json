@@ -1,0 +1,678 @@
+{
+  "0.8b-tp2-high-off": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 3.9517389923202497,
+    "offload_restore_observed": false,
+    "median_request_ms": 783.812640234828,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "0.8b-tp2-high-on-large": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 188743680,
+        "reallocated_blocks_between_sessions": 37,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 27,
+        "peak_host_pinned_blocks": 9,
+        "host_hits": 9,
+        "host_misses": 3,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 43462656,
+        "d2h_ms": 7.4090999364852905,
+        "h2d_bytes": 130387968,
+        "h2d_ms": 38.728139877319336,
+        "peak_host_occupied_bytes": 75497472
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 188743680,
+        "reallocated_blocks_between_sessions": 37,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 27,
+        "peak_host_pinned_blocks": 9,
+        "host_hits": 9,
+        "host_misses": 3,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 43462656,
+        "d2h_ms": 7.009080171585083,
+        "h2d_bytes": 130387968,
+        "h2d_ms": 37.82005977630615,
+        "peak_host_occupied_bytes": 75497472
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 17.608184568073774,
+    "offload_restore_observed": true,
+    "median_request_ms": 453.5446004010737,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "0.8b-tp2-high-on-small": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 25165824,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 91,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 169132032,
+        "d2h_ms": 28.349040031433105,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 25165824
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 25165824,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 91,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 169132032,
+        "d2h_ms": 29.458000123500824,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 25165824
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 10.184259350355106,
+    "offload_restore_observed": false,
+    "median_request_ms": 778.3079803921282,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "0.8b-tp2-low-off": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 11.495388979917246,
+    "offload_restore_observed": false,
+    "median_request_ms": 695.6569803878665,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "0.8b-tp2-low-on-large": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 188743680,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 72,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 36,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 173850624,
+        "d2h_ms": 28.27008032798767,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 188743680
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 188743680,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 72,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 36,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 173850624,
+        "d2h_ms": 32.22790002822876,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 188743680
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 11.675251591220977,
+    "offload_restore_observed": false,
+    "median_request_ms": 683.4354302845895,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "0.8b-tp2-low-on-small": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 25165824,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 97,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 173850624,
+        "d2h_ms": 31.752739906311035,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 25165824
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 25165824,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 97,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 173850624,
+        "d2h_ms": 30.93470013141632,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 25165824
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 11.398400261133073,
+    "offload_restore_observed": false,
+    "median_request_ms": 701.7665500752628,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-high-off": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 3.250818216429342,
+    "offload_restore_observed": false,
+    "median_request_ms": 1225.4575598053634,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-high-on-large": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 503316480,
+        "reallocated_blocks_between_sessions": 37,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 27,
+        "peak_host_pinned_blocks": 9,
+        "host_hits": 9,
+        "host_misses": 3,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 115015680,
+        "d2h_ms": 9.88040006160736,
+        "h2d_bytes": 345047040,
+        "h2d_ms": 53.49131965637207,
+        "peak_host_occupied_bytes": 201326592
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 503316480,
+        "reallocated_blocks_between_sessions": 37,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 27,
+        "peak_host_pinned_blocks": 9,
+        "host_hits": 9,
+        "host_misses": 3,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 115015680,
+        "d2h_ms": 9.249500155448914,
+        "h2d_bytes": 345047040,
+        "h2d_ms": 49.6986198425293,
+        "peak_host_occupied_bytes": 201326592
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 13.441505089322357,
+    "offload_restore_observed": true,
+    "median_request_ms": 595.8491498604417,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-high-on-small": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 67108864,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 91,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 447479808,
+        "d2h_ms": 39.14225971698761,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 67108864
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 67108864,
+        "reallocated_blocks_between_sessions": 42,
+        "restore_positions": [
+          0,
+          512,
+          768
+        ],
+        "peak_device_active_blocks": 12,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 91,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 447479808,
+        "d2h_ms": 40.14017975330353,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 67108864
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 6.505070353092442,
+    "offload_restore_observed": false,
+    "median_request_ms": 1229.8345300368965,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-low-off": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 0,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 0,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 0,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 0,
+        "d2h_ms": 0,
+        "h2d_bytes": 0,
+        "h2d_ms": 0
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 7.262877636395476,
+    "offload_restore_observed": false,
+    "median_request_ms": 1101.859450340271,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-low-on-large": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 503316480,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 72,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 36,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 460062720,
+        "d2h_ms": 37.9416002035141,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 503316480
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 503316480,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 72,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 36,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 460062720,
+        "d2h_ms": 36.611860036849976,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 503316480
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 7.313915796629468,
+    "offload_restore_observed": false,
+    "median_request_ms": 1093.6389700509608,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  },
+  "4b-tp2-low-on-small": {
+    "status": "passed",
+    "turns": 12,
+    "matched_controls": 12,
+    "ranks": [
+      {
+        "rank": 0,
+        "host_allocated_bytes": 67108864,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 97,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 460062720,
+        "d2h_ms": 35.73904025554657,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 67108864
+      },
+      {
+        "rank": 1,
+        "host_allocated_bytes": 67108864,
+        "reallocated_blocks_between_sessions": 49,
+        "restore_positions": [
+          0,
+          512
+        ],
+        "peak_device_active_blocks": 11,
+        "peak_device_available_blocks": 11,
+        "peak_host_cached_blocks": 11,
+        "peak_host_pinned_blocks": 0,
+        "host_hits": 0,
+        "host_misses": 12,
+        "host_evictions": 97,
+        "idle_session_reclaims": 11,
+        "d2h_bytes": 460062720,
+        "d2h_ms": 37.83203971385956,
+        "h2d_bytes": 0,
+        "h2d_ms": 0,
+        "peak_host_occupied_bytes": 67108864
+      }
+    ],
+    "measured_turns": 9,
+    "request_time_output_tps": 7.198329922785868,
+    "offload_restore_observed": false,
+    "median_request_ms": 1098.2332699932158,
+    "source_manifest_sha256": "169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756"
+  }
+}

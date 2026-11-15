@@ -125,7 +125,7 @@ bool Scheduler::CloseSession(const std::string& session_id) {
     }
     if (it->second != nullptr) {
         Request* request = it->second;
-        if (!request->Is<fsm::SessionIdle>() || request->ResultsInFlight() != 0) {
+        if (!request->IsAnyOf<fsm::SessionIdle, fsm::SessionOffloaded>() || request->ResultsInFlight() != 0) {
             return false;
         }
         request->Apply(fsm::FinishEvent{&coordinator_});
@@ -142,7 +142,8 @@ bool Scheduler::HasSession(const std::string& session_id) const {
 bool Scheduler::CanSubmitSessionTurn(const std::string& session_id) const {
     const auto it = sessions_.find(session_id);
     return it != sessions_.end() &&
-           (it->second == nullptr || (it->second->Is<fsm::SessionIdle>() && it->second->ResultsInFlight() == 0));
+           (it->second == nullptr ||
+            (it->second->IsAnyOf<fsm::SessionIdle, fsm::SessionOffloaded>() && it->second->ResultsInFlight() == 0));
 }
 
 bool Scheduler::CanDeferSessionTurn(const std::string& session_id) const {
@@ -164,7 +165,7 @@ std::optional<SessionInfo> Scheduler::SessionInfoForSession(const std::string& s
         .total_context_tokens = total_context_tokens,
         .newly_prefilled_tokens = total_context_tokens - reused_context_tokens,
         .reused_context_tokens = reused_context_tokens,
-        .turn_active = !request.Is<fsm::SessionIdle>() || request.ResultsInFlight() != 0,
+        .turn_active = !request.IsAnyOf<fsm::SessionIdle, fsm::SessionOffloaded>() || request.ResultsInFlight() != 0,
     };
 }
 
@@ -357,8 +358,8 @@ void Scheduler::SubmitRequests(const std::vector<RequestSpec>& request_specs) {
                                             "'");
             }
             session_request = session->second;
-            if (session_request != nullptr &&
-                (!session_request->Is<fsm::SessionIdle>() || session_request->ResultsInFlight() != 0)) {
+            if (session_request != nullptr && (!session_request->IsAnyOf<fsm::SessionIdle, fsm::SessionOffloaded>() ||
+                                               session_request->ResultsInFlight() != 0)) {
                 throw std::invalid_argument("Scheduler: session '" + spec.session_id + "' already has an active turn");
             }
         }

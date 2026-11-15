@@ -795,6 +795,7 @@ CacheCoordinator::HostAllocationBatch CacheCoordinator::AcquireHostBlocks(std::s
         for (std::size_t i = 0; i < victim_count; ++i) {
             _assert(groups_[group_id].Index().Evict(*host_pool_, local_victims[i].location).has_value(),
                     "selected Host child is not evictable");
+            ++host_evictions_;
         }
         std::vector<CacheBlockRef> refs =
             host_pool_->AcquireUpToBlocks(group_id, static_cast<std::int32_t>(unresolved.size()));
@@ -850,6 +851,7 @@ CacheCoordinator::HostAllocationBatch CacheCoordinator::AcquireHostBlocks(std::s
                     if (host_pool_->IsOccupied(location)) {
                         _assert(groups_[*bound_group].Index().Evict(*host_pool_, location).has_value(),
                                 "selected Host parent changed before eviction");
+                        ++host_evictions_;
                     }
                 }
 

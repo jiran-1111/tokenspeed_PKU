@@ -30,7 +30,7 @@
 namespace tokenspeed::fsm {
 
 using State = std::variant<Bootstrapping, Submitted, Prefilling, RemotePrefilling, PrefillAwaitingResult, PrefillDone,
-                           Decoding, SessionIdle, SessionPending, Retracted, Finished>;
+                           Decoding, SessionIdle, SessionPending, SessionOffloaded, Retracted, Finished>;
 
 inline State ToState(State state) {
     return state;
