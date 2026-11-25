@@ -14,7 +14,7 @@
 | 重复卸载恢复与资源生命周期 | 高复用每条会话续轮三次。C++ 另有 20 次重复回收／关闭的块数归零测试、关闭已卸载会话测试及请求槽耗尽回归测试。 |
 | 容量与性能对照 | 相同模型、TP、精度、设备缓存预算和访问序列，比较 Off、Host 比例 0.3 与 2。每组保存原始块表、传输、HBM 与请求时间。 |
 
-详细生命周期、保存粒度、保护与恢复流程见[复现与验收](../project/homework3.md)。任务书见[作业3要求](../project/homework3_requirements.md)。
+详细生命周期、保存粒度、保护与恢复流程见[复现与验收](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/project/homework3.md)。任务书见[作业3要求](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/project/homework3_requirements.md)。
 
 ## 小组分工
 
@@ -81,6 +81,6 @@ Attention K/V 按 128-token 前缀保存。递归与卷积状态保存已物化�
 - 六项调度器专项测试通过，覆盖空闲会话回收与恢复、卸载后关闭、未命中重算、反复回收后的资源释放、Host 预算淘汰及单请求槽下的会话调度。
 - 0.8B 和 4B 的 12 组 Ascend TP=2 实验均通过验收，144/144 轮输出与独立参考逐 token 一致，两个 rank 的恢复位置逐请求一致。
 
-源码清单摘要为 `169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756`，其中包含当前调度器二进制的 SHA-256。实验结束时再次校验源码，下载后核对本地工作树对应文件与服务器原始字节相同。Git 的换行处理另以 `canonical_source_manifest.json` 和 `source_normalization.json` 逐项记录，索引与实测源码只存在 CRLF/LF 差别，文本规范化后逐项一致。
+源码清单摘要为 `169c4e2eba4f4f66804710e02c56ad47110bcd952187540988ad7a540ac68756`，其中包含当前调度器二进制的 SHA-256。每组实验结束时再次校验源码。Git 索引与实测源码经换行规范化后逐项一致，见[规范化源码清单](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/evidence/homework3_20261116/canonical_source_manifest.json)和[换行核对记录](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/evidence/homework3_20261116/source_normalization.json)。
 
-[汇总与原始档案](../evidence/homework3_20261116/README.md)包含逐组 summary、逐轮恢复区间、块复用实例、退出码、设备映射、共享进程快照，以及十二个可独立解压的原始运行档案。[复现说明](../project/homework3.md)给出编译、单组运行和完整矩阵入口。
+[汇总与原始档案](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/evidence/homework3_20261116/README.md)包含逐组 summary、逐轮恢复区间、块复用实例、退出码、设备映射、共享进程快照，以及十二个可独立解压的原始运行档案。[复现说明](https://github.com/jiran-1111/tokenspeed_PKU/blob/d60373e091afd7b1a31a3d018d2a7396dcb893ef/docs/project/homework3.md)给出编译、单组运行和完整矩阵入口。
